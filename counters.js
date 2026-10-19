@@ -598,3 +598,192 @@ Array.prototype.forEach.call(document.querySelectorAll(".label"), function (el) 
   if (el.textContent.trim() === "Враги") el.textContent = "Враги (сколько видишь)";
   if (el.textContent.trim() === "Твоя команда") el.textContent = "Твоя команда (сколько видишь)";
 });
+
+// ===== СПИСОК КОНТР-ПИКОВ (esports.gg, 15.10.2026) =====
+var SOURCE_COUNTERS = {
+  "Alchemist": ["Ancient Apparition", "Doom", "Slardar", "Ursa", "Slark", "Axe"],
+  "Axe": ["Viper", "Outworld Destroyer", "Anti-Mage", "Lifestealer", "Timbersaw", "Venomancer", "Invoker"],
+  "Bristleback": ["Ancient Apparition", "Necrophos", "Axe", "Legion Commander", "Timbersaw", "Viper", "Slark", "Anti-Mage"],
+  "Centaur Warrunner": ["Necrophos", "Lifestealer", "Timbersaw", "Lina", "Underlord", "Dark Willow", "Outworld Destroyer", "Venomancer"],
+  "Chaos Knight": ["Earthshaker", "Sven", "Timbersaw", "Naga Siren", "Sand King", "Warlock", "Lich", "Axe"],
+  "Clockwerk": ["Necrophos", "Doom", "Underlord", "Morphling", "Ursa", "Rubick", "Skywrath Mage", "Anti-Mage", "Queen of Pain", "Mirana", "Vengeful Spirit"],
+  "Dawnbreaker": ["Silencer", "Winter Wyvern", "Elder Titan", "Ancient Apparition", "Naga Siren", "Disruptor"],
+  "Doom": ["Lifestealer", "Timbersaw", "Anti-Mage", "Phantom Lancer", "Terrorblade", "Shadow Demon"],
+  "Dragon Knight": ["Ancient Apparition", "Viper", "Outworld Destroyer", "Timbersaw", "Huskar", "Drow Ranger", "Necrophos", "Slark"],
+  "Earth Spirit": ["Silencer", "Abaddon", "Oracle", "Slark", "Puck", "Storm Spirit"],
+  "Earthshaker": ["Silencer", "Disruptor", "Rubick", "Clockwerk", "Venomancer", "Pugna", "Bane"],
+  "Elder Titan": ["Silencer", "Viper", "Drow Ranger", "Outworld Destroyer", "Necrophos", "Venomancer", "Ancient Apparition"],
+  "Huskar": ["Necrophos", "Ancient Apparition", "Viper", "Windranger", "Legion Commander", "Axe", "Winter Wyvern"],
+  "Kunkka": ["Lifestealer", "Timbersaw", "Juggernaut", "Huskar", "Witch Doctor", "Mirana", "Bounty Hunter"],
+  "Largo": ["Undying", "Earthshaker", "Anti-Mage", "Lion", "Crystal Maiden", "Dragon Knight", "Invoker"],
+  "Legion Commander": ["Dazzle", "Omniknight", "Treant Protector", "Chaos Knight", "Winter Wyvern", "Kunkka", "Oracle", "Tusk", "Shadow Demon"],
+  "Lifestealer": ["Ancient Apparition", "Necrophos", "Axe", "Slardar", "Ursa", "Troll Warlord", "Viper"],
+  "Lycan": ["Earthshaker", "Winter Wyvern", "Sven", "Axe", "Underlord", "Kunkka", "Leshrac", "Shadow Shaman"],
+  "Mars": ["Drow Ranger", "Sniper", "Outworld Destroyer", "Viper", "Timbersaw", "Silencer", "Shadow Demon"],
+  "Night Stalker": ["Viper", "Omniknight", "Ogre Magi", "Treant Protector", "Phoenix", "Razor", "Bane", "Winter Wyvern"],
+  "Ogre Magi": ["Phantom Lancer", "Naga Siren", "Anti-Mage", "Chaos Knight", "Shadow Demon"],
+  "Omniknight": ["Ancient Apparition", "Doom", "Silencer", "Shadow Demon", "Invoker", "Necrophos", "Disruptor"],
+  "Phoenix": ["Juggernaut", "Skywrath Mage", "Tinker", "Death Prophet", "Doom", "Zeus", "Oracle", "Lion"],
+  "Primal Beast": ["Viper", "Shadow Demon", "Winter Wyvern", "Oracle", "Puck", "Outworld Destroyer", "Necrophos"],
+  "Pudge": ["Slardar", "Lone Druid", "Bristleback", "Chaos Knight", "Void Spirit", "Terrorblade", "Undying", "Sven"],
+  "Slardar": ["Viper", "Razor", "Outworld Destroyer", "Necrophos", "Winter Wyvern", "Shadow Demon", "Venomancer"],
+  "Spirit Breaker": ["Underlord", "Tiny", "Clockwerk", "Mars", "Largo", "Timbersaw", "Treant Protector", "Razor"],
+  "Sven": ["Shadow Demon", "Winter Wyvern", "Troll Warlord", "Razor", "Pugna", "Viper", "Timbersaw"],
+  "Tidehunter": ["Ursa", "Lifestealer", "Slark", "Outworld Destroyer", "Silencer", "Doom", "Enigma"],
+  "Timbersaw": ["Jakiro", "Silencer", "Underlord", "Death Prophet", "Ember Spirit", "Ancient Apparition", "Mirana", "Doom"],
+  "Tiny": ["Lifestealer", "Timbersaw", "Outworld Destroyer", "Viper", "Ursa", "Slark", "Necrophos"],
+  "Treant Protector": ["Timbersaw", "Batrider", "Venomancer", "Phoenix", "Nature's Prophet", "Lina", "Enchantress"],
+  "Tusk": ["Shadow Demon", "Oracle", "Winter Wyvern", "Puck", "Timbersaw", "Viper", "Necrophos"],
+  "Underlord": ["Lifestealer", "Timbersaw", "Slark", "Ursa", "Viper", "Drow Ranger", "Ancient Apparition"],
+  "Undying": ["Snapfire", "Ursa", "Luna", "Earthshaker", "Timbersaw", "Necrophos", "Winter Wyvern", "Axe", "Lina", "Leshrac", "Drow Ranger"],
+  "Wraith King": ["Phantom Lancer", "Venomancer", "Warlock", "Timbersaw", "Phoenix", "Underlord", "Naga Siren"],
+  "Anti-Mage": ["Meepo", "Legion Commander", "Axe", "Bloodseeker", "Troll Warlord", "Nyx Assassin", "Shadow Shaman"],
+  "Bloodseeker": ["Juggernaut", "Medusa", "Wraith King", "Bounty Hunter", "Legion Commander", "Broodmother", "Troll Warlord"],
+  "Bounty Hunter": ["Slardar", "Bloodseeker", "Zeus", "Bristleback", "Axe", "Treant Protector", "Spirit Breaker"],
+  "Broodmother": ["Earthshaker", "Timbersaw", "Axe", "Ember Spirit", "Leshrac", "Sand King", "Sven", "Underlord"],
+  "Clinkz": ["Bloodseeker", "Bounty Hunter", "Zeus", "Spectre", "Phantom Lancer", "Terrorblade", "Hoodwink", "Ember Spirit"],
+  "Drow Ranger": ["Spectre", "Earth Spirit", "Phantom Assassin", "Night Stalker", "Clockwerk", "Spirit Breaker", "Sniper", "Ember Spirit"],
+  "Ember Spirit": ["Silencer", "Doom", "Bloodseeker", "Night Stalker", "Storm Spirit", "Puck", "Anti-Mage", "Nyx Assassin"],
+  "Faceless Void": ["Winter Wyvern", "Shadow Demon", "Pugna", "Oracle", "Viper", "Axe", "Templar Assassin", "Venomancer", "Disruptor"],
+  "Gyrocopter": ["Phantom Assassin", "Spectre", "Anti-Mage", "Sniper", "Nyx Assassin", "Clockwerk", "Storm Spirit"],
+  "Hoodwink": ["Storm Spirit", "Spectre", "Clockwerk", "Spirit Breaker", "Bounty Hunter", "Bloodseeker", "Zeus"],
+  "Juggernaut": ["Axe", "Winter Wyvern", "Shadow Demon", "Necrophos", "Troll Warlord", "Razor", "Phantom Lancer"],
+  "Kez": ["Axe", "Legion Commander", "Winter Wyvern", "Shadow Shaman", "Lion", "Viper", "Phantom Assassin"],
+  "Lone Druid": ["Sniper", "Dark Willow", "Nature's Prophet", "Spirit Breaker", "Slark", "Zeus", "Earthshaker", "Dawnbreaker"],
+  "Luna": ["Anti-Mage", "Medusa", "Sniper", "Phantom Assassin", "Spectre", "Nyx Assassin", "Clockwerk"],
+  "Medusa": ["Anti-Mage", "Nyx Assassin", "Slark", "Invoker", "Riki", "Wraith King", "Techies"],
+  "Meepo": ["Earthshaker", "Winter Wyvern", "Sven", "Underlord", "Pudge", "Lion", "Shadow Fiend", "Primal Beast"],
+  "Mirana": ["Clockwerk", "Bloodseeker", "Zeus", "Bounty Hunter", "Spirit Breaker", "Night Stalker", "Spectre"],
+  "Monkey King": ["Timbersaw", "Viper", "Batrider", "Winter Wyvern", "Axe", "Venomancer", "Puck", "Earthshaker"],
+  "Morphling": ["Ancient Apparition", "Axe", "Necrophos", "Viper", "Doom", "Lion", "Shadow Shaman", "Winter Wyvern"],
+  "Naga Siren": ["Earthshaker", "Leshrac", "Puck", "Axe", "Sand King", "Sven", "Ember Spirit", "Timbersaw"],
+  "Phantom Assassin": ["Axe", "Winter Wyvern", "Viper", "Bloodseeker", "Necrophos", "Troll Warlord", "Bane", "Razor"],
+  "Phantom Lancer": ["Earthshaker", "Sven", "Axe", "Leshrac", "Timbersaw", "Underlord", "Sand King", "Winter Wyvern"],
+  "Razor": ["Lifestealer", "Phantom Lancer", "Naga Siren", "Sniper", "Winter Wyvern", "Viper", "Shadow Demon"],
+  "Riki": ["Bounty Hunter", "Slardar", "Zeus", "Bloodseeker", "Bristleback", "Axe", "Earthshaker"],
+  "Shadow Fiend": ["Templar Assassin", "Viper", "Clockwerk", "Storm Spirit", "Puck", "Nyx Assassin", "Spectre", "Sniper"],
+  "Slark": ["Bloodseeker", "Axe", "Legion Commander", "Ancient Apparition", "Doom", "Faceless Void", "Bane", "Night Stalker"],
+  "Sniper": ["Clockwerk", "Spirit Breaker", "Storm Spirit", "Spectre", "Phantom Assassin", "Slark", "Templar Assassin", "Night Stalker"],
+  "Spectre": ["Ancient Apparition", "Viper", "Axe", "Legion Commander", "Necrophos", "Terrorblade", "Ursa", "Outworld Destroyer"],
+  "Templar Assassin": ["Viper", "Batrider", "Venomancer", "Razor", "Broodmother", "Axe", "Bristleback", "Winter Wyvern"],
+  "Terrorblade": ["Axe", "Winter Wyvern", "Necrophos", "Timbersaw", "Earthshaker", "Leshrac", "Pugna", "Underlord"],
+  "Troll Warlord": ["Axe", "Winter Wyvern", "Shadow Demon", "Necrophos", "Phantom Assassin", "Razor", "Viper", "Pugna"],
+  "Ursa": ["Viper", "Razor", "Shadow Demon", "Winter Wyvern", "Ancient Apparition", "Venomancer", "Pugna", "Drow Ranger"],
+  "Vengeful Spirit": ["Silencer", "Doom", "Puck", "Storm Spirit", "Clockwerk", "Rubick", "Bounty Hunter"],
+  "Viper": ["Anti-Mage", "Phantom Assassin", "Sniper", "Drow Ranger", "Spectre", "Storm Spirit", "Templar Assassin", "Nyx Assassin"],
+  "Weaver": ["Bloodseeker", "Bounty Hunter", "Slardar", "Zeus", "Spectre", "Axe", "Faceless Void", "Ancient Apparition"],
+  "Ancient Apparition": ["Storm Spirit", "Anti-Mage", "Phantom Assassin", "Spectre", "Clockwerk", "Spirit Breaker", "Nyx Assassin"],
+  "Chen": ["Axe", "Earthshaker", "Enigma", "Leshrac", "Sand King", "Winter Wyvern", "Batrider"],
+  "Crystal Maiden": ["Clockwerk", "Storm Spirit", "Anti-Mage", "Pudge", "Spirit Breaker", "Nyx Assassin", "Silencer"],
+  "Dark Seer": ["Oracle", "Rubick", "Silencer", "Lifestealer", "Juggernaut", "Anti-Mage", "Phantom Lancer"],
+  "Dark Willow": ["Storm Spirit", "Anti-Mage", "Spectre", "Clockwerk", "Night Stalker", "Slark", "Puck"],
+  "Disruptor": ["Anti-Mage", "Storm Spirit", "Puck", "Spectre", "Nyx Assassin", "Clockwerk", "Lifestealer"],
+  "Enchantress": ["Ancient Apparition", "Axe", "Phantom Assassin", "Sniper", "Lina", "Lion", "Nyx Assassin", "Primal Beast"],
+  "Grimstroke": ["Anti-Mage", "Storm Spirit", "Puck", "Spectre", "Nyx Assassin", "Lifestealer", "Juggernaut"],
+  "Invoker": ["Anti-Mage", "Nyx Assassin", "Storm Spirit", "Puck", "Silencer", "Doom", "Spectre"],
+  "Jakiro": ["Anti-Mage", "Storm Spirit", "Clockwerk", "Nyx Assassin", "Puck", "Lifestealer", "Spectre"],
+  "Keeper of the Light": ["Anti-Mage", "Storm Spirit", "Clockwerk", "Night Stalker", "Nyx Assassin", "Spectre", "Spirit Breaker"],
+  "Leshrac": ["Anti-Mage", "Nyx Assassin", "Viper", "Doom", "Outworld Destroyer", "Silencer", "Lifestealer"],
+  "Lich": ["Anti-Mage", "Storm Spirit", "Clockwerk", "Nyx Assassin", "Spectre", "Puck", "Lifestealer"],
+  "Lina": ["Anti-Mage", "Storm Spirit", "Nyx Assassin", "Spectre", "Clockwerk", "Puck", "Phantom Assassin"],
+  "Lion": ["Anti-Mage", "Storm Spirit", "Puck", "Nyx Assassin", "Spectre", "Lifestealer", "Clockwerk"],
+  "Muerta": ["Anti-Mage", "Nyx Assassin", "Storm Spirit", "Puck", "Spectre", "Sniper", "Clockwerk"],
+  "Necrophos": ["Ancient Apparition", "Anti-Mage", "Nyx Assassin", "Silencer", "Doom", "Pugna", "Lifestealer"],
+  "Oracle": ["Anti-Mage", "Silencer", "Doom", "Nyx Assassin", "Storm Spirit", "Clockwerk", "Disruptor"],
+  "Outworld Destroyer": ["Anti-Mage", "Nyx Assassin", "Silencer", "Lifestealer", "Pugna", "Phantom Assassin", "Storm Spirit"],
+  "Puck": ["Doom", "Silencer", "Night Stalker", "Bloodseeker", "Skywrath Mage", "Nyx Assassin", "Disruptor"],
+  "Pugna": ["Anti-Mage", "Nyx Assassin", "Clockwerk", "Storm Spirit", "Spectre", "Lifestealer", "Sniper"],
+  "Queen of Pain": ["Anti-Mage", "Nyx Assassin", "Storm Spirit", "Puck", "Silencer", "Doom", "Bloodseeker"],
+  "Ringmaster": ["Storm Spirit", "Anti-Mage", "Clockwerk", "Nyx Assassin", "Spectre", "Spirit Breaker", "Puck"],
+  "Rubick": ["Anti-Mage", "Silencer", "Doom", "Night Stalker", "Nyx Assassin", "Storm Spirit", "Clockwerk"],
+  "Shadow Demon": ["Anti-Mage", "Storm Spirit", "Clockwerk", "Nyx Assassin", "Spectre", "Silencer", "Puck"],
+  "Shadow Shaman": ["Anti-Mage", "Storm Spirit", "Clockwerk", "Nyx Assassin", "Puck", "Spectre", "Lifestealer"],
+  "Silencer": ["Anti-Mage", "Storm Spirit", "Spectre", "Clockwerk", "Nyx Assassin", "Puck", "Lifestealer"],
+  "Skywrath Mage": ["Anti-Mage", "Nyx Assassin", "Storm Spirit", "Puck", "Spectre", "Clockwerk", "Lifestealer"],
+  "Storm Spirit": ["Anti-Mage", "Bloodseeker", "Doom", "Silencer", "Night Stalker", "Puck", "Nyx Assassin"],
+  "Tinker": ["Anti-Mage", "Spectre", "Clockwerk", "Storm Spirit", "Nyx Assassin", "Spirit Breaker", "Zeus"],
+  "Warlock": ["Anti-Mage", "Silencer", "Doom", "Nyx Assassin", "Clockwerk", "Storm Spirit", "Rubick"],
+  "Winter Wyvern": ["Anti-Mage", "Storm Spirit", "Clockwerk", "Nyx Assassin", "Spectre", "Silencer", "Puck"],
+  "Witch Doctor": ["Anti-Mage", "Clockwerk", "Storm Spirit", "Nyx Assassin", "Silencer", "Puck", "Spirit Breaker"],
+  "Zeus": ["Anti-Mage", "Nyx Assassin", "Storm Spirit", "Spectre", "Clockwerk", "Puck", "Phantom Assassin"],
+  "Abaddon": ["Ancient Apparition", "Doom", "Axe", "Necrophos", "Legion Commander", "Shadow Demon", "Oracle"],
+  "Arc Warden": ["Spectre", "Phantom Assassin", "Storm Spirit", "Anti-Mage", "Clockwerk", "Spirit Breaker", "Earthshaker"],
+  "Bane": ["Abaddon", "Oracle", "Juggernaut", "Lifestealer", "Anti-Mage", "Silencer", "Rubick"],
+  "Batrider": ["Viper", "Oracle", "Abaddon", "Legion Commander", "Slark", "Puck", "Weaver"],
+  "Beastmaster": ["Lifestealer", "Juggernaut", "Phantom Lancer", "Naga Siren", "Winter Wyvern", "Oracle", "Enchantress"],
+  "Brewmaster": ["Silencer", "Doom", "Shadow Demon", "Oracle", "Winter Wyvern", "Ursa", "Lifestealer"],
+  "Dazzle": ["Axe", "Ancient Apparition", "Doom", "Silencer", "Nyx Assassin", "Clockwerk", "Legion Commander"],
+  "Death Prophet": ["Ancient Apparition", "Silencer", "Doom", "Nyx Assassin", "Viper", "Sniper", "Outworld Destroyer"],
+  "Enigma": ["Silencer", "Rubick", "Vengeful Spirit", "Shadow Demon", "Winter Wyvern", "Clockwerk", "Puck"],
+  "Io": ["Ancient Apparition", "Doom", "Axe", "Legion Commander", "Disruptor", "Clockwerk", "Necrophos"],
+  "Magnus": ["Silencer", "Rubick", "Vengeful Spirit", "Shadow Demon", "Winter Wyvern", "Puck", "Clockwerk"],
+  "Marci": ["Viper", "Puck", "Winter Wyvern", "Shadow Demon", "Oracle", "Venomancer", "Axe"],
+  "Nature's Prophet": ["Storm Spirit", "Spectre", "Clockwerk", "Spirit Breaker", "Zeus", "Axe", "Timbersaw"],
+  "Nyx Assassin": ["Slardar", "Bloodseeker", "Zeus", "Bounty Hunter", "Bristleback", "Axe", "Spirit Breaker"],
+  "Pangolier": ["Bloodseeker", "Shadow Demon", "Viper", "Puck", "Disruptor", "Doom", "Legion Commander"],
+  "Sand King": ["Zeus", "Bounty Hunter", "Slardar", "Bloodseeker", "Timbersaw", "Oracle", "Viper"],
+  "Snapfire": ["Anti-Mage", "Storm Spirit", "Clockwerk", "Nyx Assassin", "Spectre", "Puck", "Spirit Breaker"],
+  "Techies": ["Storm Spirit", "Spectre", "Clockwerk", "Nyx Assassin", "Zeus", "Tinker", "Nature's Prophet"],
+  "Venomancer": ["Juggernaut", "Lifestealer", "Abaddon", "Legion Commander", "Oracle", "Enchantress", "Phantom Assassin"],
+  "Visage": ["Winter Wyvern", "Earthshaker", "Sven", "Leshrac", "Axe", "Timbersaw", "Medusa"],
+  "Void Spirit": ["Bloodseeker", "Doom", "Silencer", "Night Stalker", "Nyx Assassin", "Puck", "Disruptor"],
+  "Windranger": ["Phantom Assassin", "Zeus", "Sniper", "Bloodseeker", "Spectre", "Clockwerk", "Legion Commander", "Centaur Warrunner", "Shadow Demon"]
+};
+
+// ===== Обновлённые правила =====
+RULES = [
+  ["aoe", "summons", "{C} зачищает уроном по площади существ и иллюзии, на которых держится {E}."],
+  ["pct", "summons", "Урон {C} от процента здоровья быстро убивает слабых призванных существ {E}."],
+  ["pct", "bulky", "Урон {C} от процента здоровья отлично работает против героев с большим запасом здоровья, как {E}."],
+  ["stun", "squishy", "{E} хрупкий, а у {C} есть жёсткий контроль, после которого выжить трудно."],
+  ["burst", "squishy", "{C} быстро убивает хрупкого {E} взрывным уроном."],
+  ["stun", "mobile", "Контроль {C} ловит {E}: убежать будет трудно."],
+  ["silence", "spell", "Сайленс {C} отключает заклинания, без которых {E} почти бесполезен."],
+  ["physimm", "phys", "{C} может стать неуязвимым к физическим атакам (или защитить так союзника), а {E} живёт обычными атаками."],
+  ["tank", "phys", "{C} очень живучий: физический урон {E} почти не проходит."],
+  ["manaburn", "manadep", "{C} сжигает ману, а {E} без маны слабеет."],
+  ["magres", "magic", "У {C} есть защита от магии, которая режет урон заклинаний {E}."],
+  ["detect", "invis", "{C} раскрывает невидимость, на которой строится {E}."]
+];
+
+// ===== Обновлённые теги героев =====
+HERO_TAGS["Abaddon"] = "tank|bulky";
+HERO_TAGS["Alchemist"] = "stun tank|phys bulky";
+HERO_TAGS["Axe"] = "aoe tank|bulky";
+HERO_TAGS["Bristleback"] = "aoe tank|bulky";
+HERO_TAGS["Brewmaster"] = "stun tank|bulky";
+HERO_TAGS["Centaur Warrunner"] = "stun tank aoe|bulky";
+HERO_TAGS["Clockwerk"] = "stun tank|bulky";
+HERO_TAGS["Dark Seer"] = "stun aoe tank|";
+HERO_TAGS["Dawnbreaker"] = "tank|bulky";
+HERO_TAGS["Death Prophet"] = "silence pct|";
+HERO_TAGS["Dragon Knight"] = "stun tank aoe|bulky";
+HERO_TAGS["Elder Titan"] = "pct stun|bulky";
+HERO_TAGS["Ember Spirit"] = "stun aoe|spell mobile";
+HERO_TAGS["Huskar"] = "pct|phys bulky";
+HERO_TAGS["Io"] = "|squishy bulky";
+HERO_TAGS["Juggernaut"] = "aoe magres|phys bulky";
+HERO_TAGS["Lifestealer"] = "magres|phys bulky";
+HERO_TAGS["Mars"] = "stun tank|bulky";
+HERO_TAGS["Morphling"] = "|bulky";
+HERO_TAGS["Omniknight"] = "physimm tank|bulky";
+HERO_TAGS["Phantom Assassin"] = "|phys bulky";
+HERO_TAGS["Primal Beast"] = "stun|bulky";
+HERO_TAGS["Slardar"] = "stun detect|bulky";
+HERO_TAGS["Spectre"] = "|phys bulky";
+HERO_TAGS["Sven"] = "stun aoe|phys bulky";
+HERO_TAGS["Tidehunter"] = "stun aoe tank|bulky";
+HERO_TAGS["Tiny"] = "stun burst|bulky";
+HERO_TAGS["Troll Warlord"] = "|phys bulky";
+HERO_TAGS["Tusk"] = "stun|bulky";
+HERO_TAGS["Underlord"] = "stun tank aoe|bulky";
+HERO_TAGS["Undying"] = "tank|bulky";
+HERO_TAGS["Wraith King"] = "stun tank|bulky";
+
+// ===== 4 слота врагов и без "Первого пика" =====
+enemies.length = 4;
+document.getElementById("enemies").style.gridTemplateColumns = "repeat(4, 1fr)";
+ORDERS = ORDERS.filter(function (o) { return o.id !== "first"; });
+if (order === "first") order = "mid";
+drawChips();
+drawSlots();
