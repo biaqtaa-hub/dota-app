@@ -32,69 +32,203 @@
       background-clip: text;
       color: transparent;
     }
-    .sub {
-      text-align: center;
+    .sub { text-align: center; color: #9ca3af; font-size: 14px; margin-bottom: 20px; }
+    .label {
+      font-family: 'Unbounded', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
       color: #9ca3af;
-      font-size: 14px;
-      margin-bottom: 16px;
+      margin: 18px 0 8px;
+      text-transform: uppercase;
     }
-    #search {
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .chip.active {
+      background: linear-gradient(90deg, #a855f7, #ec4899);
+      border-color: transparent;
+      box-shadow: 0 0 14px rgba(168, 85, 247, 0.6);
+    }
+    .row { display: grid; gap: 8px; }
+    #allies { grid-template-columns: repeat(4, 1fr); }
+    #enemies { grid-template-columns: repeat(5, 1fr); }
+    .slot {
+      aspect-ratio: 1 / 1.15;
+      border-radius: 12px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .slot img { width: 100%; height: 100%; object-fit: cover; }
+    .slot.ally.filled { border: 2px solid #22d3ee; box-shadow: 0 0 12px rgba(34, 211, 238, 0.5); }
+    .slot.enemy.filled { border: 2px solid #f43f5e; box-shadow: 0 0 12px rgba(244, 63, 94, 0.5); }
+    .hint { font-size: 12px; color: #6b7280; margin-top: 6px; }
+    #go {
       width: 100%;
-      padding: 14px 16px;
+      margin-top: 22px;
+      padding: 16px;
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(90deg, #a855f7, #ec4899, #22d3ee);
+      box-shadow: 0 0 22px rgba(236, 72, 153, 0.5);
+      cursor: pointer;
+    }
+    #go:active { transform: scale(0.97); }
+    .res {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .res img { width: 64px; border-radius: 8px; }
+    .rinfo { flex: 1; }
+    .rname { font-weight: 500; font-size: 15px; }
+    .rwhy { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+    .score {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      color: #22d3ee;
+    }
+    .loading { text-align: center; color: #9ca3af; padding: 24px; }
+    .foot { text-align: center; margin-top: 50px; }
+    .foot a { font-size: 11px; color: #fff; opacity: 0.3; text-decoration: none; }
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      align-items: flex-end;
+      z-index: 10;
+    }
+    .sheet {
+      width: 100%;
+      max-height: 82vh;
+      overflow-y: auto;
+      background: #12121c;
+      border-radius: 20px 20px 0 0;
+      padding: 14px;
+    }
+    .sheethead { display: flex; gap: 8px; margin-bottom: 12px; position: sticky; top: 0; background: #12121c; padding-bottom: 6px; }
+    #psearch {
+      flex: 1;
+      padding: 12px 14px;
       font-size: 16px;
       font-family: 'Rubik', sans-serif;
       color: #fff;
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 14px;
-      outline: none;
-      margin-bottom: 16px;
-      transition: 0.2s;
-    }
-    #search:focus {
-      border-color: #c084fc;
-      box-shadow: 0 0 18px rgba(192, 132, 252, 0.5);
-    }
-    #heroes {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    .hero {
-      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.05);
-      border: 2px solid transparent;
-      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
-      cursor: pointer;
+      outline: none;
     }
+    #psearch:focus { border-color: #c084fc; box-shadow: 0 0 14px rgba(192, 132, 252, 0.5); }
+    #pclose {
+      width: 46px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 18px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .hero { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; background: rgba(255, 255, 255, 0.05); }
     .hero:active { transform: scale(0.94); }
     .hero img { width: 100%; display: block; }
     .hero .name {
-      position: absolute;
-      left: 0; right: 0; bottom: 0;
-      padding: 14px 4px 5px;
-      font-size: 11px;
-      font-weight: 500;
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 12px 3px 4px;
+      font-size: 10px;
       text-align: center;
       background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
     }
-    .hero.selected {
-      border-color: #f472b6;
-      box-shadow: 0 0 16px rgba(244, 114, 182, 0.7);
-      transform: scale(1.03);
-    }
-    .loading { grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 30px; }
   </style>
 </head>
 <body>
   <div class="title">DOTA PICK</div>
   <div class="sub">найди идеального героя в пике</div>
-  <input id="search" placeholder="Найти героя...">
-  <div id="heroes"><div class="loading">Загружаю героев...</div></div>
+
+  <div class="label">Твоя роль</div>
+  <div class="chips" id="roles"></div>
+
+  <div class="label">Порядок пика</div>
+  <div class="chips" id="orders"></div>
+
+  <div class="label">Твоя команда</div>
+  <div class="row" id="allies"></div>
+
+  <div class="label">Враги</div>
+  <div class="row" id="enemies"></div>
+  <div class="hint">Нажми на пустой слот, чтобы выбрать героя. Нажми на героя в слоте, чтобы убрать.</div>
+
+  <button id="go">ПОДОБРАТЬ</button>
+  <div id="results"></div>
+
+  <div class="foot"><a id="dc" href="#">discord</a></div>
+
+  <div class="modal" id="modal">
+    <div class="sheet">
+      <div class="sheethead">
+        <input id="psearch" placeholder="Найти героя...">
+        <button id="pclose">✕</button>
+      </div>
+      <div class="grid" id="pgrid"></div>
+    </div>
+  </div>
 
   <script>
+    var DISCORD_URL = "https://discord.gg/5ZzSYr33tF";
+
+    var ROLES = [
+      { id: 1, t: "Керри" }, { id: 2, t: "Мид" }, { id: 3, t: "Оффлейн" },
+      { id: 4, t: "Саппорт 4" }, { id: 5, t: "Саппорт 5" }
+    ];
+    var ORDERS = [
+      { id: "first", t: "Первый пик" }, { id: "mid", t: "Середина" }, { id: "last", t: "Последний пик" }
+    ];
+    var ROLE_MAP = {
+      1: ["Carry"],
+      2: ["Carry", "Nuker", "Escape"],
+      3: ["Durable", "Initiator"],
+      4: ["Support"],
+      5: ["Support"]
+    };
+
+    var role = 2;
+    var order = "last";
+    var allies = [null, null, null, null];
+    var enemies = [null, null, null, null, null];
+    var heroes = [];
+    var byId = {};
+    var picking = null;
+
+    function $(id) { return document.getElementById(id); }
+
+    function imgUrl(h) {
+      return "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" +
+        h.name.replace("npc_dota_hero_", "") + ".png";
+    }
+
     try {
       Telegram.WebApp.ready();
       Telegram.WebApp.expand();
@@ -102,46 +236,173 @@
       Telegram.WebApp.setBackgroundColor("#0a0a12");
     } catch (e) {}
 
-    var allHeroes = [];
-
-    function show(list) {
-      var box = document.getElementById("heroes");
+    function makeChips(boxId, items, current, onPick) {
+      var box = $(boxId);
       box.innerHTML = "";
-      list.forEach(function (h) {
-        var short = h.name.replace("npc_dota_hero_", "");
-        var div = document.createElement("div");
-        div.className = "hero";
-        div.innerHTML =
-          '<img src="https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/' +
-          short + '.png" onerror="this.style.display=\'none\'">' +
-          '<div class="name">' + h.localized_name + '</div>';
-        div.addEventListener("click", function () {
-          div.classList.toggle("selected");
-          try { Telegram.WebApp.HapticFeedback.impactOccurred("light"); } catch (e) {}
-        });
-        box.appendChild(div);
+      items.forEach(function (it) {
+        var d = document.createElement("div");
+        d.className = "chip" + (it.id === current ? " active" : "");
+        d.textContent = it.t;
+        d.onclick = function () { onPick(it.id); };
+        box.appendChild(d);
       });
     }
 
-    fetch("https://api.opendota.com/api/heroes")
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        allHeroes = data.sort(function (a, b) {
-          return a.localized_name.localeCompare(b.localized_name);
+    function drawChips() {
+      makeChips("roles", ROLES, role, function (id) { role = id; drawChips(); });
+      makeChips("orders", ORDERS, order, function (id) { order = id; drawChips(); });
+    }
+
+    function drawTeam(boxId, arr, cls) {
+      var box = $(boxId);
+      box.innerHTML = "";
+      arr.forEach(function (id, i) {
+        var d = document.createElement("div");
+        d.className = "slot " + cls + (id ? " filled" : "");
+        if (id) {
+          d.innerHTML = '<img src="' + imgUrl(byId[id]) + '">';
+        } else {
+          d.textContent = "+";
+        }
+        d.onclick = function () {
+          if (arr[i]) { arr[i] = null; drawSlots(); }
+          else { openPicker(arr, i); }
+        };
+        box.appendChild(d);
+      });
+    }
+
+    function drawSlots() {
+      drawTeam("allies", allies, "ally");
+      drawTeam("enemies", enemies, "enemy");
+    }
+
+    function openPicker(arr, i) {
+      if (!heroes.length) return;
+      picking = { arr: arr, i: i };
+      $("psearch").value = "";
+      $("modal").style.display = "flex";
+      drawPicker("");
+    }
+
+    function closePicker() { $("modal").style.display = "none"; }
+
+    function drawPicker(q) {
+      var taken = allies.concat(enemies);
+      var grid = $("pgrid");
+      grid.innerHTML = "";
+      heroes.forEach(function (h) {
+        if (taken.indexOf(h.id) !== -1) return;
+        if (h.localized_name.toLowerCase().indexOf(q) === -1) return;
+        var d = document.createElement("div");
+        d.className = "hero";
+        d.innerHTML = '<img src="' + imgUrl(h) + '" onerror="this.style.display=\'none\'">' +
+          '<div class="name">' + h.localized_name + '</div>';
+        d.onclick = function () {
+          picking.arr[picking.i] = h.id;
+          closePicker();
+          drawSlots();
+        };
+        grid.appendChild(d);
+      });
+    }
+
+    $("psearch").addEventListener("input", function (e) { drawPicker(e.target.value.toLowerCase()); });
+    $("pclose").onclick = closePicker;
+    $("modal").onclick = function (e) { if (e.target === $("modal")) closePicker(); };
+
+    $("dc").onclick = function (e) {
+      e.preventDefault();
+      try { Telegram.WebApp.openLink(DISCORD_URL); }
+      catch (err) { window.open(DISCORD_URL, "_blank"); }
+    };
+
+    async function recommend() {
+      var box = $("results");
+      if (!heroes.length) { box.innerHTML = '<div class="loading">Герои ещё грузятся...</div>'; return; }
+      box.innerHTML = '<div class="loading">Считаю...</div>';
+
+      var enemyIds = enemies.filter(Boolean);
+      var taken = allies.concat(enemies).filter(Boolean);
+      var roleList = ROLE_MAP[role];
+      var data = {};
+
+      try {
+        await Promise.all(enemyIds.map(function (id) {
+          return fetch("https://api.opendota.com/api/heroes/" + id + "/matchups")
+            .then(function (r) { return r.json(); })
+            .then(function (arr) {
+              if (!Array.isArray(arr)) throw new Error("bad");
+              var m = {};
+              arr.forEach(function (x) { m[x.hero_id] = { g: x.games_played, w: x.wins }; });
+              data[id] = m;
+            });
+        }));
+      } catch (e) {
+        box.innerHTML = '<div class="loading">Не получилось загрузить данные, попробуй ещё раз</div>';
+        return;
+      }
+
+      var list = [];
+      heroes.forEach(function (h) {
+        if (taken.indexOf(h.id) !== -1) return;
+        var okRole = h.roles.some(function (r) { return roleList.indexOf(r) !== -1; });
+        if (!okRole) return;
+
+        var parts = [];
+        var sum = 0;
+        enemyIds.forEach(function (eid) {
+          var m = data[eid][h.id];
+          var wr = m ? (m.g - m.w + 50) / (m.g + 100) : 0.5;
+          sum += wr;
+          parts.push({ id: eid, wr: wr });
         });
-        show(allHeroes);
-      })
-      .catch(function () {
-        document.getElementById("heroes").innerHTML =
-          '<div class="loading">Не удалось загрузить героев</div>';
+
+        var counter = enemyIds.length ? sum / enemyIds.length : h.overall;
+        var w = !enemyIds.length ? 0 : (order === "last" ? 0.8 : 0.6);
+        var score = w * counter + (1 - w) * h.overall;
+        list.push({ h: h, score: score, parts: parts });
       });
 
-    document.getElementById("search").addEventListener("input", function (e) {
-      var q = e.target.value.toLowerCase();
-      show(allHeroes.filter(function (h) {
-        return h.localized_name.toLowerCase().includes(q);
-      }));
-    });
+      list.sort(function (a, b) { return b.score - a.score; });
+
+      var html = "";
+      list.slice(0, 8).forEach(function (x, idx) {
+        var why = x.parts
+          .filter(function (p) { return p.wr >= 0.52; })
+          .map(function (p) { return "бьёт " + byId[p.id].localized_name + " (" + Math.round(p.wr * 100) + "%)"; });
+        html += '<div class="res"><img src="' + imgUrl(x.h) + '">' +
+          '<div class="rinfo"><div class="rname">' + (idx + 1) + '. ' + x.h.localized_name + '</div>' +
+          '<div class="rwhy">' + (why.length ? why.join(", ") : "сильный по общей статистике") + '</div></div>' +
+          '<div class="score">' + Math.round(x.score * 100) + '%</div></div>';
+      });
+      box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+      box.scrollIntoView({ behavior: "smooth" });
+    }
+
+    $("go").onclick = recommend;
+
+    fetch("https://api.opendota.com/api/heroStats")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        heroes = data.map(function (h) {
+          var pick = 0, win = 0;
+          for (var i = 1; i <= 8; i++) {
+            pick += h[i + "_pick"] || 0;
+            win += h[i + "_win"] || 0;
+          }
+          h.overall = pick ? win / pick : 0.5;
+          return h;
+        }).sort(function (a, b) { return a.localized_name.localeCompare(b.localized_name); });
+        heroes.forEach(function (h) { byId[h.id] = h; });
+        drawSlots();
+      })
+      .catch(function () {
+        $("results").innerHTML = '<div class="loading">Не удалось загрузить героев</div>';
+      });
+
+    drawChips();
+    drawSlots();
   </script>
 </body>
 </html>
