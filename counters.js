@@ -191,3 +191,258 @@ function findNote(hero, enemy) {
   }
   return auto;
 }
+// ===== ТОЧНЫЕ ОПИСАНИЯ СКИЛЛОВ =====
+// Что конкретно делает герой (по умениям) и почему слаб враг
+var HERO_KIT = {
+  "Abaddon": "tank=Aphotic Shield и Borrowed Time: щит снимает эффекты, а ульт лечит вместо смерти",
+  "Alchemist": "stun=Unstable Concoction: стан, который растёт с временем варки;tank=Chemical Rage: быстрее бьёт и сильно регенерирует",
+  "Anti-Mage": "manaburn=Mana Break: каждая атака сжигает ману;magres=Counterspell: отражает заклинание и режет магический урон",
+  "Axe": "aoe=Counter Helix: вращение бьёт всех рядом и быстро убивает мелких существ;tank=Berserker's Call: враги бьют только его, а броня растёт",
+  "Bane": "stun=Nightmare и Fiend's Grip: долгий сон и удержание на месте",
+  "Batrider": "stun=Flaming Lasso: привязывает цель и тащит за собой",
+  "Beastmaster": "stun=Primal Roar: стан и толчок в нужную сторону",
+  "Bloodseeker": "silence=Blood Rite: зона, после которой цель не может колдовать",
+  "Bounty Hunter": "detect=Track: показывает цель, даже если она невидима",
+  "Brewmaster": "stun=Thunder Clap и Primal Split: замедление и три стихии с контролем;tank=Drunken Brawler: уклонение и критические удары",
+  "Bristleback": "aoe=Quill Spray: шипы бьют по площади;tank=Bristleback: гасит урон, когда враг бьёт по спине или бокам",
+  "Centaur Warrunner": "stun=Hoof Stomp: стан по площади;tank=Stampede и большой запас здоровья;aoe=Return: бьёт в ответ каждого, кто его атакует",
+  "Chaos Knight": "stun=Chaos Bolt и Reality Rift: стан и притягивание;tank=Chaos Strike: лечится и бьёт критом",
+  "Clockwerk": "stun=Hookshot и Power Cogs: крюк и клетка из шестерёнок;tank=крепкое тело и высокая броня",
+  "Crystal Maiden": "aoe=Freezing Field: метель по большой площади",
+  "Dark Seer": "stun=Vacuum: стягивает врагов в одну точку;aoe=Ion Shell: щит бьёт всех рядом и убивает мелких существ;tank=Surge и Ion Shell: скорость и защита",
+  "Dark Willow": "stun=Bramble Maze и Cursed Crown: корни и стан",
+  "Dawnbreaker": "tank=Luminosity и Solar Guardian: лечит себя и союзников",
+  "Death Prophet": "silence=Silence: зона, где нельзя колдовать;pct=Spirit Siphon: вытягивает процент здоровья цели",
+  "Disruptor": "silence=Static Storm: большая зона, где нельзя колдовать",
+  "Doom": "silence=Doom: запрещает заклинания и предметы, да ещё и жжёт цель",
+  "Dragon Knight": "stun=Dragon Tail: стан;tank=Dragon Blood: броня и регенерация;aoe=Elder Dragon Form: удары и огонь по площади",
+  "Drow Ranger": "silence=Gust: сайленс и отбрасывание",
+  "Earth Spirit": "silence=Geomagnetic Grip: притягивает и не даёт колдовать;stun=Boulder Smash и Rolling Boulder: удар и оглушение",
+  "Earthshaker": "stun=Fissure: стена и стан;aoe=Echo Slam: урон по всем врагам рядом, больше врагов — больше урона",
+  "Elder Titan": "pct=Earth Splitter: отнимает процент здоровья по линии;stun=Echo Stomp: сон по площади",
+  "Ember Spirit": "stun=Searing Chains: корни;aoe=Sleight of Fist: бьёт каждого врага вокруг",
+  "Enigma": "stun=Black Hole: затягивает и держит врагов;aoe=Black Hole: урон по всем внутри",
+  "Faceless Void": "stun=Chronosphere: зона, где время для врагов остановлено",
+  "Grimstroke": "silence=Phantom's Embrace: призрак закрывает цель от заклинаний",
+  "Gyrocopter": "aoe=Call Down: ракеты по большой площади",
+  "Hoodwink": "burst=Sharpshooter: огромный урон издалека",
+  "Huskar": "pct=Life Break: отнимает процент здоровья цели",
+  "Invoker": "burst=Sun Strike и Tornado: удар на всю карту и подброс;stun=Cold Snap и Deafening Blast: оглушение и разоружение",
+  "Jakiro": "stun=Ice Path: стан по линии;aoe=Macropyre: огненная полоса",
+  "Juggernaut": "aoe=Blade Fury: кружит и бьёт всех рядом;magres=Blade Fury: пока кружит, не боится заклинаний",
+  "Kunkka": "stun=Torrent и Ghostship: два стана;aoe=Tidebringer: удар по дуге",
+  "Legion Commander": "stun=Duel: дуэль, из которой нельзя уйти",
+  "Leshrac": "stun=Split Earth: стан;aoe=Pulse Nova: урон по площади каждую секунду",
+  "Lich": "aoe=Chain Frost: ледяная цепь, отскакивающая между целями",
+  "Lifestealer": "magres=Rage: на время неуязвим к магии",
+  "Lina": "burst=Light Strike Array и Laguna Blade: быстрый огромный урон;stun=Light Strike Array: стан по области",
+  "Lion": "stun=Hex и Earth Spike: превращение в лягушку и стан;burst=Finger of Death: большой урон",
+  "Luna": "aoe=Eclipse: лучи по врагам вокруг",
+  "Magnus": "stun=Reverse Polarity: стягивает и оглушает;aoe=Reverse Polarity: удар по всем рядом",
+  "Marci": "stun=Dispose: бросок со станом",
+  "Mars": "stun=Spear of Mars: прибивает цель к стене;tank=Bulwark: гасит удары спереди и сбоку",
+  "Mirana": "stun=Sacred Arrow: стрела с долгим станом",
+  "Monkey King": "stun=Boundless Strike: стан по линии",
+  "Muerta": "silence=The Calling: призраки закрывают врагов от заклинаний",
+  "Naga Siren": "stun=Song of the Siren и Ensnare: сон по площади и сеть",
+  "Necrophos": "pct=Heartstopper Aura: враги рядом теряют процент здоровья;physimm=Ghost Shroud: становится неуязвимым для физических атак",
+  "Night Stalker": "silence=Crippling Fear: зона молчания, особенно ночью",
+  "Nyx Assassin": "manaburn=Mana Burn: сжигает ману и наносит урон;stun=Impale: подбрасывает и оглушает",
+  "Ogre Magi": "stun=Fireblast: оглушение",
+  "Omniknight": "physimm=Guardian Angel: союзники неуязвимы к физическим атакам;tank=Heavenly Grace и Repel: сильное лечение и снятие эффектов",
+  "Outworld Destroyer": "manaburn=Astral Imprisonment: убирает цель из боя и забирает ману",
+  "Pangolier": "stun=Rolling Thunder: прокатывается по врагам и сбивает с ног",
+  "Phoenix": "stun=Supernova: яйцо, которое оглушает врагов вокруг",
+  "Primal Beast": "stun=Onslaught и Pulverize: оглушение и долгое удержание",
+  "Puck": "silence=Waning Rift: зона молчания;stun=Dream Coil: цепи, которые оглушают при побеге",
+  "Pudge": "stun=Dismember: держит цель на месте и убивает",
+  "Pugna": "physimm=Decrepify: неуязвим для физических атак",
+  "Queen of Pain": "burst=Sonic Wave и Scream of Pain: быстрый магический урон",
+  "Rubick": "stun=Telekinesis: подбрасывает врага",
+  "Sand King": "stun=Burrowstrike и Epicenter: оглушение и пульсы по площади;aoe=Epicenter: урон по всем рядом",
+  "Shadow Demon": "stun=Disruption: убирает цель из боя",
+  "Shadow Fiend": "burst=Requiem of Souls: души разлетаются по всем вокруг",
+  "Shadow Shaman": "stun=Hex и Shackles: превращение и удержание",
+  "Silencer": "silence=Global Silence: молчание на всю карту",
+  "Skywrath Mage": "silence=Ancient Seal: сайленс и уязвимость к магии;burst=Mystic Flare: огромный магический урон",
+  "Slardar": "stun=Slithereen Crush: оглушение по площади;detect=Corrosive Haze: снижает броню и раскрывает невидимых",
+  "Snapfire": "aoe=Lil' Shredder и Mortimer Kisses: урон по площади;burst=Mortimer Kisses: огненные залпы",
+  "Spirit Breaker": "stun=Charge of Darkness и Nether Strike: оглушает издалека",
+  "Storm Spirit": "stun=Electric Vortex: подтягивает цель и не даёт убежать",
+  "Sven": "stun=Storm Hammer: бросает молот со станом;aoe=Great Cleave: удар по дуге убивает иллюзии",
+  "Techies": "aoe=Remote Mines и Proximity Mines: взрывы по площади;burst=Remote Mines: огромный урон",
+  "Tidehunter": "stun=Ravage: большой стан по площади;aoe=Anchor Smash и Ravage: урон по площади;tank=Kraken Shell: защита от урона и снятие эффектов",
+  "Timbersaw": "aoe=Whirling Death и Chakram: пила и диск бьют по площади",
+  "Tinker": "aoe=March of the Machines: ряд роботов по площади",
+  "Tiny": "stun=Avalanche и Toss: оглушение и бросок;burst=Toss: большой урон",
+  "Treant Protector": "stun=Overgrowth: корни по площади",
+  "Tusk": "stun=Walrus Kick: пинок и оглушение",
+  "Underlord": "stun=Pit of Malice: корни;tank=Atrophy Aura и Dark Rift: сильная живучесть;aoe=Firestorm: огненная зона",
+  "Undying": "tank=Flesh Golem и Decay: много здоровья и кража силы",
+  "Vengeful Spirit": "stun=Magic Missile и Nether Swap: стан и обмен местами",
+  "Venomancer": "aoe=Poison Nova: яд по всем рядом",
+  "Visage": "stun=Stone Form: оглушает при падении",
+  "Void Spirit": "stun=Aether Remnant: подтягивает цель и не даёт убежать",
+  "Warlock": "stun=Fatal Bonds и Chaotic Offering: связь и огромный голем;aoe=Chaotic Offering: голем бьёт по площади",
+  "Windranger": "stun=Shackleshot: оглушает, прибивая к дереву",
+  "Winter Wyvern": "stun=Winter's Curse: заставляет врагов бить друг друга",
+  "Witch Doctor": "stun=Paralyzing Cask: отскакивающий стан;burst=Death Ward и Maledict: большой урон за пару секунд",
+  "Wraith King": "stun=Wraithfire Blast: оглушение;tank=Reincarnation: оживает после смерти",
+  "Zeus": "burst=Lightning Bolt и Thundergod's Wrath: мгновенный урон по всем врагам"
+};
+
+var HERO_WEAK = {
+  "Abaddon": "bulky=Borrowed Time и много здоровья",
+  "Alchemist": "phys=бьёт обычными атаками, особенно в Chemical Rage;bulky=в Chemical Rage сильно регенерирует",
+  "Ancient Apparition": "squishy=мало здоровья, а Ice Blast требует держаться на расстоянии",
+  "Anti-Mage": "phys=весь урон идёт от обычных атак;mobile=Blink: убегает, если не поймать контролем",
+  "Arc Warden": "squishy=мало здоровья и брони без Magnetic Field",
+  "Axe": "bulky=много здоровья и брони, чтобы выдержать драку",
+  "Bane": "squishy=мало здоровья, а Fiend's Grip требует стоять вплотную",
+  "Batrider": "squishy=мало здоровья;mobile=Firefly и Flamebreak: прыгает в драку и обратно",
+  "Beastmaster": "summons=опирается на ястреба, кабана и Wild Axes, которых легко убить",
+  "Bloodseeker": "phys=бьёт обычными атаками и лечится от Bloodrage",
+  "Bounty Hunter": "squishy=мало здоровья;invis=Shadow Walk: подкрадывается и убегает невидимым",
+  "Broodmother": "summons=вся сила в паучках, которые падают от урона по площади;phys=паучки и сама Бруда бьют только физикой",
+  "Chaos Knight": "summons=Phantasm создаёт иллюзии, которые умирают от урона по площади;phys=бьёт обычными атаками с критом",
+  "Chen": "squishy=мало здоровья и брони;summons=вся сила в подконтрольных существах",
+  "Clinkz": "squishy=хрупкий лучник;invis=Wind Walk: подкрадывается невидимым;phys=бьёт обычными атаками с Searing Arrows",
+  "Crystal Maiden": "squishy=очень мало здоровья;manadep=Crystal Nova и Freezing Field быстро съедают ману",
+  "Dark Willow": "squishy=мало здоровья;spell=вся сила в Bramble Maze и Cursed Crown",
+  "Dazzle": "squishy=мало здоровья, держится на Shallow Grave",
+  "Disruptor": "squishy=мало здоровья, а Static Storm требует стоять близко",
+  "Drow Ranger": "squishy=мало здоровья;phys=бьёт обычными атаками издалека",
+  "Ember Spirit": "spell=без Sleight of Fist и Searing Chains слаб;mobile=Fire Remnant: перемещается рывками",
+  "Enchantress": "squishy=мало здоровья",
+  "Enigma": "spell=вся сила в Black Hole и Midnight Pulse",
+  "Faceless Void": "phys=бьёт обычными атаками с Time Lock",
+  "Grimstroke": "squishy=мало здоровья и брони",
+  "Gyrocopter": "squishy=мало здоровья;phys=Rocket Barrage и обычные атаки",
+  "Hoodwink": "squishy=мало здоровья",
+  "Huskar": "phys=бьёт обычными атаками с Berserker's Blood;bulky=лечится и держит много урона",
+  "Invoker": "squishy=мало здоровья;spell=вся сила в комбинациях заклинаний;manadep=без маны не может колдовать",
+  "Io": "squishy=мало здоровья без Tether;bulky=много лечения и щитов",
+  "Jakiro": "squishy=мало здоровья",
+  "Juggernaut": "phys=бьёт обычными атаками и Omnislash;bulky=много здоровья и Healing Ward",
+  "Keeper of the Light": "squishy=мало здоровья;manadep=сила держится на мане;spell=нужны Illuminate и Will-O-Wisp",
+  "Kez": "phys=бьёт обычными атаками",
+  "Leshrac": "squishy=мало здоровья;magic=урон идёт от магии Pulse Nova и Lightning Storm",
+  "Lich": "squishy=мало здоровья",
+  "Lifestealer": "phys=бьёт обычными атаками с вампиризмом;bulky=лечится вампиризмом и имеет много здоровья",
+  "Lina": "squishy=мало здоровья;magic=весь урон идёт от магии",
+  "Lion": "squishy=мало здоровья и брони;magic=урон идёт от магии Finger of Death",
+  "Lone Druid": "summons=Spirit Bear: главная сила, на которую уходят предметы",
+  "Luna": "squishy=мало здоровья;phys=Moon Glaives и обычные атаки",
+  "Lycan": "summons=волки: ядро силы;phys=Shapeshift: бьёт обычными атаками",
+  "Marci": "phys=бьёт обычными атаками с Unleash",
+  "Mars": "bulky=много здоровья и брони",
+  "Medusa": "phys=бьёт обычными атаками;manadep=Mana Shield: здоровье держится на мане",
+  "Meepo": "summons=клоны: ядро силы, умирают от урона по площади;squishy=каждый клон хрупкий",
+  "Mirana": "squishy=мало здоровья;invis=Moonlight Shadow: скрывает всю команду",
+  "Monkey King": "phys=бьёт обычными атаками с Jingu Mastery",
+  "Morphling": "bulky=может раздувать здоровье через Morph",
+  "Muerta": "squishy=мало здоровья",
+  "Naga Siren": "summons=иллюзии Mirror Image: основа силы;phys=бьёт обычными атаками",
+  "Nature's Prophet": "summons=деревья и Nature's Call: опора на помощников",
+  "Night Stalker": "phys=бьёт обычными атаками ночью",
+  "Nyx Assassin": "squishy=мало здоровья;invis=Vendetta: невидимый удар",
+  "Omniknight": "bulky=Heavenly Grace и Repel держат здоровье",
+  "Oracle": "squishy=мало здоровья",
+  "Outworld Destroyer": "squishy=мало здоровья;manadep=Arcane Orb и Astral Imprisonment жрут ману;magic=урон идёт от магии",
+  "Pangolier": "phys=бьёт обычными атаками с Swashbuckle",
+  "Phantom Assassin": "phys=бьёт обычными атаками с критом;bulky=Blur и вампиризм делают её живучей",
+  "Phantom Lancer": "summons=иллюзии Doppelganger и Juxtapose: основа силы;phys=бьёт обычными атаками",
+  "Phoenix": "squishy=мало здоровья",
+  "Primal Beast": "bulky=много здоровья",
+  "Puck": "squishy=мало здоровья;spell=Phase Shift и Illusory Orb нужны для побега;mobile=Illusory Orb: скачет по карте",
+  "Pugna": "squishy=мало здоровья",
+  "Queen of Pain": "squishy=мало здоровья;spell=без Blink и Shadow Strike слаба;mobile=Blink: прыгает в драку и обратно;magic=урон идёт от магии",
+  "Riki": "squishy=мало здоровья;invis=Smoke Screen и Cloak and Dagger: невидимость;phys=бьёт обычными атаками с Backstab",
+  "Ringmaster": "squishy=мало здоровья",
+  "Rubick": "squishy=мало здоровья;spell=вся сила в украденных заклинаниях",
+  "Shadow Demon": "squishy=мало здоровья;spell=Disruption и Shadow Poison: основа",
+  "Shadow Fiend": "squishy=мало здоровья без Requiem",
+  "Shadow Shaman": "squishy=мало здоровья;summons=Mass Serpent Ward: змеиные статуи",
+  "Silencer": "squishy=мало здоровья",
+  "Skywrath Mage": "squishy=мало здоровья;magic=урон идёт от магии Mystic Flare",
+  "Slardar": "bulky=много здоровья и броня",
+  "Slark": "phys=бьёт обычными атаками;mobile=Pounce и Shadow Dance: убегает;invis=Shadow Dance: невидимость в бою",
+  "Snapfire": "squishy=мало здоровья",
+  "Sniper": "squishy=мало здоровья и брони;phys=бьёт обычными атаками издалека",
+  "Spectre": "phys=Dispersion и обычные атаки;bulky=регенерация и большой запас здоровья",
+  "Storm Spirit": "squishy=мало здоровья;spell=Ball Lightning: основа;mobile=Ball Lightning: рывки;manadep=Ball Lightning жрёт ману",
+  "Sven": "phys=бьёт обычными атаками с God's Strength;bulky=много здоровья и брони",
+  "Techies": "squishy=очень мало здоровья",
+  "Templar Assassin": "squishy=мало здоровья;phys=Psi Blades и обычные атаки",
+  "Terrorblade": "summons=Conjure Image и Metamorphosis;squishy=мало здоровья;phys=бьёт обычными атаками",
+  "Tidehunter": "bulky=много здоровья и броня",
+  "Tinker": "squishy=мало здоровья;spell=вся сила в Laser, Rockets и Matrix;manadep=быстро тратит ману;mobile=Keen Teleport: телепорты",
+  "Tiny": "bulky=много здоровья",
+  "Troll Warlord": "phys=бьёт обычными атаками;bulky=Battle Trance и вампиризм",
+  "Tusk": "bulky=много здоровья",
+  "Underlord": "bulky=много здоровья и броня",
+  "Undying": "bulky=Flesh Golem и Decay дают много здоровья",
+  "Vengeful Spirit": "squishy=мало здоровья",
+  "Venomancer": "squishy=мало здоровья;summons=Plague Ward: ядовитые стражи",
+  "Visage": "summons=Summon Familiars: фамильяры",
+  "Void Spirit": "squishy=мало здоровья;spell=Astral Step и Aether Remnant: основа;mobile=Astral Step: рывки",
+  "Warlock": "squishy=мало здоровья",
+  "Weaver": "squishy=мало здоровья;invis=Shukuchi: невидимость;mobile=Shukuchi и Time Lapse;phys=Geminate Attack: обычные атаки",
+  "Windranger": "squishy=мало здоровья;mobile=Windrun: быстро убегает",
+  "Winter Wyvern": "squishy=мало здоровья",
+  "Witch Doctor": "squishy=мало здоровья",
+  "Wraith King": "bulky=Reincarnation и много здоровья",
+  "Zeus": "squishy=мало здоровья;magic=урон идёт от магии, которую режет магическая защита",
+  "Brewmaster": "bulky=много здоровья",
+  "Centaur Warrunner": "bulky=много здоровья и Return",
+  "Clockwerk": "bulky=много здоровья и броня",
+  "Dawnbreaker": "bulky=Luminosity лечит",
+  "Dragon Knight": "bulky=Dragon Blood и Dragon Form",
+  "Elder Titan": "bulky=много здоровья",
+  "Bristleback": "bulky=Bristleback гасит урон"
+};
+
+function pairValue(str, key) {
+  if (!str) return null;
+  var parts = str.split(";");
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    var k = p.indexOf("=");
+    if (k > 0 && p.slice(0, k).trim() === key) return p.slice(k + 1).trim();
+  }
+  return null;
+}
+
+// Новая версия: пишет конкретные причины со скиллами
+function autoNote(hero, enemy) {
+  var c = tagsOf(hero.localized_name);
+  var e = tagsOf(enemy.localized_name);
+  var texts = [];
+  var bonus = 0;
+
+  var list = SOURCE_COUNTERS[enemy.localized_name];
+  if (list && list.indexOf(hero.localized_name) !== -1) {
+    texts.push(hero.localized_name + " входит в подборку главных контр-пиков на " +
+      enemy.localized_name + " (esports.gg, октябрь 2026).");
+    bonus += 0.05;
+  }
+
+  RULES.forEach(function (r) {
+    if (c.has.indexOf(r[0]) !== -1 && e.weak.indexOf(r[1]) !== -1) {
+      var kit = pairValue(HERO_KIT[hero.localized_name], r[0]);
+      var weak = pairValue(HERO_WEAK[enemy.localized_name], r[1]);
+      if (kit && weak) {
+        texts.push(hero.localized_name + ", " + kit + ". Почему против " +
+          enemy.localized_name + ": " + weak + ".");
+      } else {
+        texts.push(
+          r[2].replace(/\{C\}/g, hero.localized_name).replace(/\{E\}/g, enemy.localized_name)
+        );
+      }
+      bonus += 0.03;
+    }
+  });
+
+  if (!texts.length) return null;
+  return { bonus: Math.min(0.12, bonus), why: texts.join(" ") };
+}
