@@ -2,60 +2,123 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <title>Dota Pick</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Rubik:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
-      font-family: sans-serif;
       margin: 0;
-      padding: 12px;
-      background: var(--tg-theme-bg-color, #ffffff);
-      color: var(--tg-theme-text-color, #000000);
+      min-height: 100vh;
+      font-family: 'Rubik', sans-serif;
+      color: #fff;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(168, 85, 247, 0.35), transparent 45%),
+        radial-gradient(circle at 90% 20%, rgba(236, 72, 153, 0.25), transparent 40%),
+        #0a0a12;
+      background-attachment: fixed;
+      padding: 16px 12px 40px;
     }
-    h1 { font-size: 20px; text-align: center; }
+    .title {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 800;
+      font-size: 26px;
+      text-align: center;
+      margin: 6px 0 4px;
+      background: linear-gradient(90deg, #c084fc, #f472b6, #22d3ee);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sub {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
     #search {
       width: 100%;
-      box-sizing: border-box;
-      padding: 10px;
+      padding: 14px 16px;
       font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #888;
-      margin-bottom: 12px;
+      font-family: 'Rubik', sans-serif;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      outline: none;
+      margin-bottom: 16px;
+      transition: 0.2s;
+    }
+    #search:focus {
+      border-color: #c084fc;
+      box-shadow: 0 0 18px rgba(192, 132, 252, 0.5);
     }
     #heroes {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 10px;
     }
-    .hero { text-align: center; font-size: 12px; }
-    .hero img { width: 100%; border-radius: 6px; }
+    .hero {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid transparent;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+      cursor: pointer;
+    }
+    .hero:active { transform: scale(0.94); }
+    .hero img { width: 100%; display: block; }
+    .hero .name {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 14px 4px 5px;
+      font-size: 11px;
+      font-weight: 500;
+      text-align: center;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+    }
+    .hero.selected {
+      border-color: #f472b6;
+      box-shadow: 0 0 16px rgba(244, 114, 182, 0.7);
+      transform: scale(1.03);
+    }
+    .loading { grid-column: 1 / -1; text-align: center; color: #9ca3af; padding: 30px; }
   </style>
 </head>
 <body>
-  <h1>Выбери героев</h1>
-  <input id="search" placeholder="Поиск героя...">
-  <div id="heroes">Загружаю героев...</div>
+  <div class="title">DOTA PICK</div>
+  <div class="sub">найди идеального героя в пике</div>
+  <input id="search" placeholder="Найти героя...">
+  <div id="heroes"><div class="loading">Загружаю героев...</div></div>
 
   <script>
-    if (window.Telegram && Telegram.WebApp) {
+    try {
       Telegram.WebApp.ready();
       Telegram.WebApp.expand();
-    }
+      Telegram.WebApp.setHeaderColor("#0a0a12");
+      Telegram.WebApp.setBackgroundColor("#0a0a12");
+    } catch (e) {}
 
-    let allHeroes = [];
+    var allHeroes = [];
 
     function show(list) {
-      const box = document.getElementById("heroes");
+      var box = document.getElementById("heroes");
       box.innerHTML = "";
       list.forEach(function (h) {
-        const short = h.name.replace("npc_dota_hero_", "");
-        const div = document.createElement("div");
+        var short = h.name.replace("npc_dota_hero_", "");
+        var div = document.createElement("div");
         div.className = "hero";
         div.innerHTML =
           '<img src="https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/' +
-          short + '.png" onerror="this.style.display=\'none\'"><div>' +
-          h.localized_name + "</div>";
+          short + '.png" onerror="this.style.display=\'none\'">' +
+          '<div class="name">' + h.localized_name + '</div>';
+        div.addEventListener("click", function () {
+          div.classList.toggle("selected");
+          try { Telegram.WebApp.HapticFeedback.impactOccurred("light"); } catch (e) {}
+        });
         box.appendChild(div);
       });
     }
@@ -69,11 +132,12 @@
         show(allHeroes);
       })
       .catch(function () {
-        document.getElementById("heroes").textContent = "Не удалось загрузить героев";
+        document.getElementById("heroes").innerHTML =
+          '<div class="loading">Не удалось загрузить героев</div>';
       });
 
     document.getElementById("search").addEventListener("input", function (e) {
-      const q = e.target.value.toLowerCase();
+      var q = e.target.value.toLowerCase();
       show(allHeroes.filter(function (h) {
         return h.localized_name.toLowerCase().includes(q);
       }));
