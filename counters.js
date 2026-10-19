@@ -446,3 +446,155 @@ function autoNote(hero, enemy) {
   if (!texts.length) return null;
   return { bonus: Math.min(0.12, bonus), why: texts.join(" ") };
 }
+// ===== НАДЁЖНАЯ КНОПКА "ПОДОБРАТЬ" =====
+var MATCHUP_CACHE = {};
+
+function fetchMatchups(id) {
+  if (MATCHUP_CACHE[id]) return Promise.resolve(MATCHUP_CACHE[id]);
+  var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+  var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
+  return fetch("https://api.opendota.com/api/heroes/" + id + "/matchups", ctrl ? { signal: ctrl.signal } : {})
+    .then(function (r) { return r.json(); })
+    .then(function (arr) {
+      if (timer) clearTimeout(timer);
+      if (!Array.isArray(arr)) return null;
+      var m = {};
+      arr.forEach(function (x) { m[x.hero_id] = { g: x.games_played, w: x.wins }; });
+      MATCHUP_CACHE[id] = m;
+      return m;
+    })
+    .catch(function () {
+      if (timer) clearTimeout(timer);
+      return null;
+    });
+}
+
+async function recommend() {
+  var box = $("results");
+  try {
+    if (!heroes.length) {
+      box.innerHTML = '<div class="loading">Герои ещё грузятся, подожди пару секунд и нажми ещё раз</div>';
+      return;
+    }
+    box.innerHTML = '<div class="loading">Считаю...</div>';
+
+    var enemyIds = enemies.filter(Boolean);
+    var taken = allies.concat(enemies).filter(Boolean);
+    var roleList = ROLE_MAP[role];
+
+    var results = await Promise.all(enemyIds.map(fetchMatchups));
+    var data = {};
+    var noStats = false;
+    enemyIds.forEach(function (id, i) {
+      data[id] = results[i];
+      if (!results[i]) noStats = true;
+    });
+
+    var list = [];
+    heroes.forEach(function (h) {
+      if (taken.indexOf(h.id) !== -1) return;
+      var okRole = h.roles.some(function (r) { return roleList.indexOf(r) !== -1; });
+      if (!okRole) return;
+
+      var parts = [];
+      var sum = 0;
+      enemyIds.forEach(function (eid) {
+        var m = data[eid] ? data[eid][h.id] : null;
+        var wr = m ? (m.g - m.w + 50) / (m.g + 100) : 0.5;
+        var note = findNote(h, byId[eid]);
+        var bonus = note && note.bonus ? note.bonus : 0;
+        sum += wr + bonus;
+        parts.push({ id: eid, wr: wr, g: m ? m.g : 0, note: note ? note.why : null });
+      });
+
+      var counter = enemyIds.length ? sum / enemyIds.length : h.overall;
+      var w = !enemyIds.length ? 0 : (order === "last" ? 0.8 : 0.6);
+      var score = w * counter + (1 - w) * h.overall;
+      list.push({ h: h, score: score, parts: parts });
+    });
+
+    list.sort(function (a, b) { return b.score - a.score; });
+
+    var html = "";
+    if (noStats) {
+      html += '<div class="loading">Статистика матчей сейчас недоступна, подсказки посчитаны по подборке контр-пиков и механикам скиллов.</div>';
+    }
+
+    list.slice(0, 8).forEach(function (x, idx) {
+      var overallPct = Math.round(x.h.overall * 100);
+      var shortList = [];
+      var details = "";
+
+      x.parts.forEach(function (p) {
+        if (p.note) {
+          shortList.push("контрит " + byId[p.id].localized_name);
+        } else if (p.g >= 200 && p.wr - x.h.overall >= 0.02) {
+          shortList.push("бьёт " + byId[p.id].localized_name + " (" + Math.round(p.wr * 100) + "%)");
+        }
+      });
+
+      if (x.parts.length) {
+        details += '<div class="sec"><b>Почему он контрит</b>';
+        x.parts.forEach(function (p) {
+          var en = byId[p.id].localized_name;
+          if (p.note) {
+            details += '<div class="note"><b>Против ' + en + ':</b> ' + p.note + "</div>";
+          } else {
+            details += "<br>• Против " + en + ": особого контра нет";
+          }
+          if (p.g >= 200) {
+            details += '<div class="hint">Статистика: выигрывает ' + Math.round(p.wr * 100) +
+              "% игр (в среднем " + overallPct + "%), игр: " + p.g.toLocaleString("ru-RU") + "</div>";
+          } else if (p.g > 0) {
+            details += '<div class="hint">Статистика: игр слишком мало (' + p.g + "), цифрам верить нельзя</div>";
+          }
+        });
+        details += "</div>";
+      }
+
+      var myRoles = x.h.roles.filter(function (r) { return roleList.indexOf(r) !== -1; })
+        .map(function (r) { return ROLE_RU[r] || r; });
+      details += '<div class="sec"><b>Почему стоит взять</b><br>' +
+        "На твоей роли он: " + (myRoles.length ? myRoles.join(", ") : "подходит по данным") + ".<br>" +
+        "Герой: " + (ATTR_RU[x.h.primary_attr] || "") + ", " + (ATTACK_RU[x.h.attack_type] || "") +
+        ". Общий процент побед: " + overallPct + "%.<br>";
+      if (!x.parts.length) {
+        details += "Враги не выбраны, поэтому подсказка идёт по общей силе героя.";
+      } else if (order === "last") {
+        details += "Ты пикаешь последним, поэтому контр-пик важнее всего.";
+      } else {
+        details += "Ты пикаешь не последним, поэтому учитываем и контр-пик, и общую силу героя.";
+      }
+      details += "</div>";
+
+      html += '<div class="res"><div class="top"><img src="' + imgUrl(x.h) + '">' +
+        '<div class="rinfo"><div class="rname">' + (idx + 1) + ". " + x.h.localized_name + "</div>" +
+        '<div class="rwhy">' + (shortList.length ? shortList.join(", ") : "сильный по общей статистике") + "</div></div>" +
+        '<div class="score">' + Math.round(x.score * 100) + "%</div></div>" +
+        '<button class="btn-more">Подробнее ▾</button>' +
+        '<div class="more">' + details + "</div></div>";
+    });
+
+    box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+
+    var btns = box.querySelectorAll(".btn-more");
+    Array.prototype.forEach.call(btns, function (b) {
+      b.onclick = function () {
+        var m = b.parentNode.querySelector(".more");
+        var open = m.style.display === "block";
+        m.style.display = open ? "none" : "block";
+        b.textContent = open ? "Подробнее ▾" : "Скрыть ▴";
+      };
+    });
+    box.scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    box.innerHTML = '<div class="loading">Что-то пошло не так: ' + (err && err.message ? err.message : err) + "</div>";
+  }
+}
+
+// Привязываем новую кнопку и уточняем подпись про врагов
+$("go").onclick = recommend;
+Array.prototype.forEach.call(document.querySelectorAll(".label"), function (el) {
+  if (el.textContent.trim() === "Враги") el.textContent = "Враги (сколько видишь)";
+  if (el.textContent.trim() === "Твоя команда") el.textContent = "Твоя команда (сколько видишь)";
+});
