@@ -26,8 +26,21 @@
       font-weight: 800;
       font-size: 26px;
       text-align: center;
-      margin: 6px 0 4px;
+      margin: 6px 0 2px;
       background: linear-gradient(90deg, #c084fc, #f472b6, #22d3ee);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .brand {
+      font-family: 'Unbounded', sans-serif;
+      font-weight: 800;
+      font-size: 13px;
+      letter-spacing: 7px;
+      text-align: center;
+      margin: 0 0 8px;
+      padding-left: 7px;
+      background: linear-gradient(90deg, #22d3ee, #f472b6, #c084fc);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -92,16 +105,14 @@
     }
     #go:active { transform: scale(0.97); }
     .res {
-      display: flex;
-      align-items: center;
-      gap: 12px;
       padding: 10px;
       margin-top: 10px;
       border-radius: 14px;
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .res img { width: 64px; border-radius: 8px; }
+    .top { display: flex; align-items: center; gap: 12px; }
+    .top img { width: 64px; border-radius: 8px; }
     .rinfo { flex: 1; }
     .rname { font-weight: 500; font-size: 15px; }
     .rwhy { font-size: 12px; color: #9ca3af; margin-top: 3px; }
@@ -110,6 +121,33 @@
       font-weight: 800;
       font-size: 14px;
       color: #22d3ee;
+    }
+    .btn-more {
+      margin-top: 10px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-family: 'Rubik', sans-serif;
+      color: #d8b4fe;
+      background: none;
+      border: 1px solid rgba(192, 132, 252, 0.45);
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .more {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 13px;
+      line-height: 1.5;
+      color: #d1d5db;
+    }
+    .sec { margin-bottom: 12px; }
+    .sec b { color: #f9a8d4; }
+    .note {
+      border-left: 3px solid #f472b6;
+      padding-left: 10px;
+      margin: 6px 0;
     }
     .loading { text-align: center; color: #9ca3af; padding: 24px; }
     .foot { text-align: center; margin-top: 50px; }
@@ -166,6 +204,7 @@
 </head>
 <body>
   <div class="title">DOTA PICK</div>
+  <div class="brand">LOWCULTURE</div>
   <div class="sub">найди идеального героя в пике</div>
 
   <div class="label">Твоя роль</div>
@@ -197,7 +236,19 @@
   </div>
 
   <script>
-    var DISCORD_URL = "https://discord.gg/5ZzSYr33tF";
+    var DISCORD_URL = "https://discord.gg/QnAGbqWXA2";
+
+    // ===== РАЗБОРЫ ОТ АВТОРА (необязательно) =====
+    // Сюда можно дописывать свои разборы для любых пар героев.
+    // hero = кого берём, vs = против кого, bonus = плюс к оценке (0 = не влияет на место), why = почему
+    var NOTES = [
+      {
+        hero: "Necrophos",
+        vs: "Broodmother",
+        bonus: 0,
+        why: "Первый скилл и пассивка сильно выжигают паучков и лечат тебя. Второй скилл делает тебя неуязвимым для физических атак, и паучки с Брудой не могут тебя бить."
+      }
+    ];
 
     var ROLES = [
       { id: 1, t: "Керри" }, { id: 2, t: "Мид" }, { id: 3, t: "Оффлейн" },
@@ -213,6 +264,19 @@
       4: ["Support"],
       5: ["Support"]
     };
+    var ROLE_RU = {
+      Carry: "сильный в лейте (керри)",
+      Support: "помогает команде (саппорт)",
+      Nuker: "большой взрывной урон",
+      Disabler: "контроль (станы, сайленсы)",
+      Jungler: "может фармить лес",
+      Durable: "живучий",
+      Escape: "умеет убегать",
+      Pusher: "быстро сносит башни",
+      Initiator: "хорошо начинает драки"
+    };
+    var ATTR_RU = { str: "сила", agi: "ловкость", int: "интеллект", all: "универсал" };
+    var ATTACK_RU = { Melee: "ближний бой", Ranged: "дальний бой" };
 
     var role = 2;
     var order = "last";
@@ -227,6 +291,15 @@
     function imgUrl(h) {
       return "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" +
         h.name.replace("npc_dota_hero_", "") + ".png";
+    }
+
+    function findNote(hero, enemy) {
+      for (var i = 0; i < NOTES.length; i++) {
+        if (NOTES[i].hero === hero.localized_name && NOTES[i].vs === enemy.localized_name) {
+          return NOTES[i];
+        }
+      }
+      return null;
     }
 
     try {
@@ -354,8 +427,10 @@
         enemyIds.forEach(function (eid) {
           var m = data[eid][h.id];
           var wr = m ? (m.g - m.w + 50) / (m.g + 100) : 0.5;
-          sum += wr;
-          parts.push({ id: eid, wr: wr });
+          var note = findNote(h, byId[eid]);
+          var bonus = note && note.bonus ? note.bonus : 0;
+          sum += wr + bonus;
+          parts.push({ id: eid, wr: wr, g: m ? m.g : 0, note: note ? note.why : null });
         });
 
         var counter = enemyIds.length ? sum / enemyIds.length : h.overall;
@@ -368,15 +443,67 @@
 
       var html = "";
       list.slice(0, 8).forEach(function (x, idx) {
-        var why = x.parts
-          .filter(function (p) { return p.wr >= 0.52; })
-          .map(function (p) { return "бьёт " + byId[p.id].localized_name + " (" + Math.round(p.wr * 100) + "%)"; });
-        html += '<div class="res"><img src="' + imgUrl(x.h) + '">' +
-          '<div class="rinfo"><div class="rname">' + (idx + 1) + '. ' + x.h.localized_name + '</div>' +
-          '<div class="rwhy">' + (why.length ? why.join(", ") : "сильный по общей статистике") + '</div></div>' +
-          '<div class="score">' + Math.round(x.score * 100) + '%</div></div>';
+        var overallPct = Math.round(x.h.overall * 100);
+        var shortList = [];
+        var details = "";
+
+        x.parts.forEach(function (p) {
+          if (p.wr - x.h.overall >= 0.02) {
+            shortList.push("бьёт " + byId[p.id].localized_name + " (" + Math.round(p.wr * 100) + "%)");
+          }
+        });
+
+        if (x.parts.length) {
+          details += '<div class="sec"><b>Почему он контрит</b>';
+          x.parts.forEach(function (p) {
+            var en = byId[p.id].localized_name;
+            var edge = p.wr - x.h.overall;
+            var verdict;
+            if (p.g < 200) verdict = "мало игр, данные неточные";
+            else if (edge >= 0.02) verdict = "сильный контр";
+            else if (edge <= -0.02) verdict = "тут хуже, чем обычно";
+            else verdict = "примерно как обычно";
+            details += "<br>• Против " + en + ": выигрывает " + Math.round(p.wr * 100) +
+              "% игр (в среднем " + overallPct + "%), " + verdict +
+              (p.g ? ". Игр в основе: " + p.g.toLocaleString("ru-RU") : "");
+            if (p.note) details += '<div class="note"><b>Разбор от автора:</b> ' + p.note + "</div>";
+          });
+          details += "</div>";
+        }
+
+        var myRoles = x.h.roles.filter(function (r) { return roleList.indexOf(r) !== -1; })
+          .map(function (r) { return ROLE_RU[r] || r; });
+        details += '<div class="sec"><b>Почему стоит взять</b><br>' +
+          "На твоей роли он: " + (myRoles.length ? myRoles.join(", ") : "подходит по данным") + ".<br>" +
+          "Герой: " + (ATTR_RU[x.h.primary_attr] || "") + ", " + (ATTACK_RU[x.h.attack_type] || "") +
+          ". Общий процент побед: " + overallPct + "%.<br>";
+        if (!x.parts.length) {
+          details += "Враги не выбраны, поэтому подсказка идёт по общей силе героя.";
+        } else if (order === "last") {
+          details += "Ты пикаешь последним, поэтому контр-пик важнее всего.";
+        } else {
+          details += "Ты пикаешь не последним, поэтому учитываем и контр-пик, и общую силу героя.";
+        }
+        details += "</div>";
+
+        html += '<div class="res"><div class="top"><img src="' + imgUrl(x.h) + '">' +
+          '<div class="rinfo"><div class="rname">' + (idx + 1) + ". " + x.h.localized_name + "</div>" +
+          '<div class="rwhy">' + (shortList.length ? shortList.join(", ") : "сильный по общей статистике") + "</div></div>" +
+          '<div class="score">' + Math.round(x.score * 100) + "%</div></div>" +
+          '<button class="btn-more">Подробнее ▾</button>' +
+          '<div class="more">' + details + "</div></div>";
       });
       box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+
+      var btns = box.querySelectorAll(".btn-more");
+      btns.forEach(function (b) {
+        b.onclick = function () {
+          var m = b.parentNode.querySelector(".more");
+          var open = m.style.display === "block";
+          m.style.display = open ? "none" : "block";
+          b.textContent = open ? "Подробнее ▾" : "Скрыть ▴";
+        };
+      });
       box.scrollIntoView({ behavior: "smooth" });
     }
 
