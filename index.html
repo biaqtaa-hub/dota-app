@@ -531,6 +531,30 @@
     drawChips();
     drawSlots();
   </script>
-  <script src="counters.js"></script>
+  <script>
+  window.onerror = function (msg, src, line) {
+    var r = document.getElementById("results");
+    if (r) r.innerHTML = '<div class="loading">Ошибка: ' + msg + " (файл " + String(src || "").split("/").pop() + ", строка " + line + ")</div>";
+  };
+  window.addEventListener("unhandledrejection", function (e) {
+    var r = document.getElementById("results");
+    var m = e.reason && e.reason.message ? e.reason.message : e.reason;
+    if (r) r.innerHTML = '<div class="loading">Ошибка: ' + m + "</div>";
+  });
+</script>
+<script src="counters.js?v=5"></script>
+<script>
+  enemies.length = 4;
+  document.getElementById("enemies").style.gridTemplateColumns = "repeat(4, 1fr)";
+  Array.prototype.forEach.call(document.querySelectorAll(".label"), function (el) {
+    if (el.textContent.trim() === "Враги") el.textContent = "Враги (сколько видишь)";
+  });
+  drawSlots();
+  document.getElementById("go").onclick = recommend;
+  document.querySelector(".foot").insertAdjacentHTML("beforeend",
+    '<div style="font-size:10px;opacity:.35;margin-top:8px">v5 ' +
+    (typeof HERO_KIT !== "undefined" ? "· описания ok" : "· описаний нет") +
+    (typeof fetchMatchups !== "undefined" ? " · кнопка ok" : " · старая кнопка") + "</div>");
+</script>
 </body>
 </html>
