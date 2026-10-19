@@ -493,7 +493,7 @@ async function recommend() {
     var list = [];
     heroes.forEach(function (h) {
       if (taken.indexOf(h.id) !== -1) return;
-      var okRole = h.roles.some(function (r) { return roleList.indexOf(r) !== -1; });
+            var okRole = canPlay(h);
       if (!okRole) return;
 
       var parts = [];
@@ -787,3 +787,49 @@ ORDERS = ORDERS.filter(function (o) { return o.id !== "first"; });
 if (order === "first") order = "mid";
 drawChips();
 drawSlots();
+
+// ===== НА КАКИХ ПОЗИЦИЯХ ИГРАЕТСЯ ГЕРОЙ (1-5) =====
+var HERO_POS = {
+  "Abaddon": "345", "Alchemist": "12", "Ancient Apparition": "45", "Anti-Mage": "1",
+  "Arc Warden": "12", "Axe": "3", "Bane": "45", "Batrider": "23", "Beastmaster": "3",
+  "Bloodseeker": "13", "Bounty Hunter": "4", "Brewmaster": "3", "Bristleback": "3",
+  "Broodmother": "23", "Centaur Warrunner": "3", "Chaos Knight": "13", "Chen": "45",
+  "Clinkz": "124", "Clockwerk": "34", "Crystal Maiden": "5", "Dark Seer": "3",
+  "Dark Willow": "45", "Dawnbreaker": "34", "Dazzle": "45", "Death Prophet": "23",
+  "Disruptor": "45", "Doom": "3", "Dragon Knight": "123", "Drow Ranger": "1",
+  "Earth Spirit": "4", "Earthshaker": "4", "Elder Titan": "4", "Ember Spirit": "2",
+  "Enchantress": "45", "Enigma": "34", "Faceless Void": "1", "Grimstroke": "45",
+  "Gyrocopter": "1", "Hoodwink": "4", "Huskar": "12", "Invoker": "2", "Io": "5",
+  "Jakiro": "45", "Juggernaut": "1", "Keeper of the Light": "245", "Kez": "12",
+  "Kunkka": "23", "Legion Commander": "3", "Leshrac": "2", "Lich": "5",
+  "Lifestealer": "1", "Lina": "12", "Lion": "45", "Lone Druid": "12", "Luna": "1",
+  "Lycan": "13", "Magnus": "34", "Marci": "34", "Mars": "3", "Medusa": "1",
+  "Meepo": "2", "Mirana": "24", "Monkey King": "12", "Morphling": "1", "Muerta": "12",
+  "Naga Siren": "15", "Nature's Prophet": "234", "Necrophos": "123", "Night Stalker": "3",
+  "Nyx Assassin": "4", "Ogre Magi": "45", "Omniknight": "35", "Oracle": "45",
+  "Outworld Destroyer": "2", "Pangolier": "23", "Phantom Assassin": "1",
+  "Phantom Lancer": "1", "Phoenix": "34", "Primal Beast": "3", "Puck": "2",
+  "Pudge": "234", "Pugna": "24", "Queen of Pain": "2", "Razor": "13", "Riki": "14",
+  "Ringmaster": "45", "Rubick": "4", "Sand King": "34", "Shadow Demon": "45",
+  "Shadow Fiend": "2", "Shadow Shaman": "45", "Silencer": "45", "Skywrath Mage": "45",
+  "Slardar": "3", "Slark": "1", "Snapfire": "45", "Sniper": "12", "Spectre": "1",
+  "Spirit Breaker": "34", "Storm Spirit": "2", "Sven": "1", "Techies": "45",
+  "Templar Assassin": "12", "Terrorblade": "1", "Tidehunter": "3", "Timbersaw": "23",
+  "Tinker": "2", "Tiny": "24", "Treant Protector": "45", "Troll Warlord": "1",
+  "Tusk": "4", "Underlord": "3", "Undying": "45", "Ursa": "1", "Vengeful Spirit": "45",
+  "Venomancer": "345", "Viper": "23", "Visage": "23", "Void Spirit": "2",
+  "Warlock": "5", "Weaver": "14", "Windranger": "234", "Winter Wyvern": "45",
+  "Witch Doctor": "5", "Wraith King": "13", "Zeus": "24"
+};
+
+function canPlay(h) {
+  var pos = HERO_POS[h.localized_name];
+  if (pos) return pos.indexOf(String(role)) !== -1;
+  var roleList = ROLE_MAP[role];
+  return h.roles.some(function (r) { return roleList.indexOf(r) !== -1; });
+}
+
+// Усиливаем твой разбор: Некрофос против Бруды
+NOTES.forEach(function (n) {
+  if (n.hero === "Necrophos" && n.vs === "Broodmother") n.bonus = 0.1;
+});
