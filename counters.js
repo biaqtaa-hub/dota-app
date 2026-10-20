@@ -833,3 +833,208 @@ function canPlay(h) {
 NOTES.forEach(function (n) {
   if (n.hero === "Necrophos" && n.vs === "Broodmother") n.bonus = 0.1;
 });
+
+// ===== СИНЕРГИИ С КОМАНДОЙ =====
+// Проверенные связки из гайдов: [герой 1, герой 2, объяснение]
+var SYN_PAIRS = [
+  ["Juggernaut", "Crystal Maiden", "Crystal Maiden держит цель Frostbite и морозит Freezing Field, а Juggernaut рубит её Blade Fury: классическая связка, особенно на линии."],
+  ["Drow Ranger", "Vengeful Spirit", "Vengeance Aura усиливает урон союзников, а Wave of Terror снижает броню врагов: Drow Ranger бьёт издалека гораздо сильнее."],
+  ["Ursa", "Shadow Shaman", "Hex и Shackles держат цель на месте, а Ursa успевает набрать Fury Swipes и убить её."],
+  ["Faceless Void", "Invoker", "Chronosphere останавливает врагов, а Invoker успевает накрыть их заклинаниями."],
+  ["Skywrath Mage", "Legion Commander", "Duel удерживает цель, а Skywrath Mage успевает добить её Ancient Seal и Mystic Flare."],
+  ["Bane", "Mirana", "Nightmare и Fiend's Grip держат цель, а Mirana бьёт её стрелой и Starstorm."],
+  ["Io", "Tiny", "Io лечит и ускоряет Tiny через Tether и Overcharge, а Tiny бросает врагов Toss."],
+  ["Magnus", "Phantom Assassin", "Empower даёт Phantom Assassin урон и удары по площади, поэтому она быстро фармит и сильнее в драке."]
+];
+
+// Правила по механикам: [что даёт один герой, что нужно второму, где искать (has или weak), объяснение]
+var SYN_RULES = [
+  ["stun", "burst", "has", "Контроль держит цель на месте, а быстрый урон успевает её добить."],
+  ["stun", "aoe", "has", "Контроль собирает врагов в одном месте, а урон по площади бьёт сразу по всем."],
+  ["stun", "phys", "weak", "Контроль не даёт цели уйти, а герой спокойно бьёт её обычными атаками."],
+  ["tank", "phys", "weak", "Живучий герой принимает удар на себя, а тот, кто бьёт обычными атаками, работает из-за его спины."]
+];
+
+function synergyWith(hero, ally) {
+  var hn = hero.localized_name;
+  var an = ally.localized_name;
+  var texts = [];
+  var bonus = 0;
+
+  SYN_PAIRS.forEach(function (p) {
+    if ((p[0] === hn && p[1] === an) || (p[0] === an && p[1] === hn)) {
+      texts.push(p[2]);
+      bonus += 0.05;
+    }
+  });
+
+  var c = tagsOf(hn);
+  var a = tagsOf(an);
+  SYN_RULES.forEach(function (r) {
+    [[hn, c, an, a], [an, a, hn, c]].forEach(function (d) {
+      var gName = d[0], g = d[1], tName = d[2], t = d[3];
+      var okG = g.has.indexOf(r[0]) !== -1;
+      var okT = (r[2] === "weak" ? t.weak : t.has).indexOf(r[1]) !== -1;
+      if (okG && okT) {
+        var kg = pairValue(HERO_KIT[gName], r[0]);
+        var kt = r[2] === "weak" ? null : pairValue(HERO_KIT[tName], r[1]);
+        var s = "";
+        if (kg) s += gName + ", " + kg + ". ";
+        if (kt) s += tName + ", " + kt + ". ";
+        s += r[3];
+        texts.push(s);
+        bonus += 0.02;
+      }
+    });
+  });
+
+  if (!texts.length) return null;
+  return { bonus: Math.min(0.08, bonus), why: texts.join(" ") };
+}
+
+// ===== Кнопка "Подобрать" с синергиями =====
+async function recommend() {
+  var box = $("results");
+  try {
+    if (!heroes.length) {
+      box.innerHTML = '<div class="loading">Герои ещё грузятся, подожди пару секунд и нажми ещё раз</div>';
+      return;
+    }
+    box.innerHTML = '<div class="loading">Считаю...</div>';
+
+    var enemyIds = enemies.filter(Boolean);
+    var allyIds = allies.filter(Boolean);
+    var taken = allies.concat(enemies).filter(Boolean);
+    var roleList = ROLE_MAP[role];
+
+    var results = await Promise.all(enemyIds.map(fetchMatchups));
+    var data = {};
+    var noStats = false;
+    enemyIds.forEach(function (id, i) {
+      data[id] = results[i];
+      if (!results[i]) noStats = true;
+    });
+
+    var list = [];
+    heroes.forEach(function (h) {
+      if (taken.indexOf(h.id) !== -1) return;
+      if (!canPlay(h)) return;
+
+      var parts = [];
+      var sum = 0;
+      enemyIds.forEach(function (eid) {
+        var m = data[eid] ? data[eid][h.id] : null;
+        var wr = m ? (m.g - m.w + 50) / (m.g + 100) : 0.5;
+        var note = findNote(h, byId[eid]);
+        var bonus = note && note.bonus ? note.bonus : 0;
+        sum += wr + bonus;
+        parts.push({ id: eid, wr: wr, g: m ? m.g : 0, note: note ? note.why : null });
+      });
+
+      var syn = [];
+      var synSum = 0;
+      allyIds.forEach(function (aid) {
+        var s = synergyWith(h, byId[aid]);
+        if (s) {
+          synSum += s.bonus;
+          syn.push({ id: aid, why: s.why });
+        }
+      });
+
+      var counter = enemyIds.length ? sum / enemyIds.length : h.overall;
+      var w = !enemyIds.length ? 0 : (order === "last" ? 0.8 : 0.6);
+      var score = w * counter + (1 - w) * h.overall + Math.min(0.06, synSum);
+      list.push({ h: h, score: score, parts: parts, syn: syn });
+    });
+
+    list.sort(function (a, b) { return b.score - a.score; });
+
+    var html = "";
+    if (noStats) {
+      html += '<div class="loading">Статистика матчей сейчас недоступна, подсказки посчитаны по подборке контр-пиков и механикам скиллов.</div>';
+    }
+
+    list.slice(0, 8).forEach(function (x, idx) {
+      var overallPct = Math.round(x.h.overall * 100);
+      var shortList = [];
+      var details = "";
+
+      x.parts.forEach(function (p) {
+        if (p.note) {
+          shortList.push("контрит " + byId[p.id].localized_name);
+        } else if (p.g >= 200 && p.wr - x.h.overall >= 0.02) {
+          shortList.push("бьёт " + byId[p.id].localized_name + " (" + Math.round(p.wr * 100) + "%)");
+        }
+      });
+      x.syn.forEach(function (s) {
+        shortList.push("сочетается с " + byId[s.id].localized_name);
+      });
+
+      if (x.parts.length) {
+        details += '<div class="sec"><b>Почему он контрит</b>';
+        x.parts.forEach(function (p) {
+          var en = byId[p.id].localized_name;
+          if (p.note) {
+            details += '<div class="note"><b>Против ' + en + ':</b> ' + p.note + "</div>";
+          } else {
+            details += "<br>• Против " + en + ": особого контра нет";
+          }
+          if (p.g >= 200) {
+            details += '<div class="hint">Статистика: выигрывает ' + Math.round(p.wr * 100) +
+              "% игр (в среднем " + overallPct + "%), игр: " + p.g.toLocaleString("ru-RU") + "</div>";
+          } else if (p.g > 0) {
+            details += '<div class="hint">Статистика: игр слишком мало (' + p.g + "), цифрам верить нельзя</div>";
+          }
+        });
+        details += "</div>";
+      }
+
+      if (x.syn.length) {
+        details += '<div class="sec"><b>Как он сочетается с твоей командой</b>';
+        x.syn.forEach(function (s) {
+          details += '<div class="note"><b>С ' + byId[s.id].localized_name + ':</b> ' + s.why + "</div>";
+        });
+        details += "</div>";
+      }
+
+      var myRoles = x.h.roles.filter(function (r) { return roleList.indexOf(r) !== -1; })
+        .map(function (r) { return ROLE_RU[r] || r; });
+      details += '<div class="sec"><b>Почему стоит взять</b><br>' +
+        "На твоей роли он: " + (myRoles.length ? myRoles.join(", ") : "подходит по данным") + ".<br>" +
+        "Герой: " + (ATTR_RU[x.h.primary_attr] || "") + ", " + (ATTACK_RU[x.h.attack_type] || "") +
+        ". Общий процент побед: " + overallPct + "%.<br>";
+      if (!x.parts.length) {
+        details += "Враги не выбраны, поэтому подсказка идёт по общей силе героя.";
+      } else if (order === "last") {
+        details += "Ты пикаешь последним, поэтому контр-пик важнее всего.";
+      } else {
+        details += "Ты пикаешь не последним, поэтому учитываем и контр-пик, и общую силу героя.";
+      }
+      details += "</div>";
+
+      html += '<div class="res"><div class="top"><img src="' + imgUrl(x.h) + '">' +
+        '<div class="rinfo"><div class="rname">' + (idx + 1) + ". " + x.h.localized_name + "</div>" +
+        '<div class="rwhy">' + (shortList.length ? shortList.join(", ") : "сильный по общей статистике") + "</div></div>" +
+        '<div class="score">' + Math.round(x.score * 100) + "%</div></div>" +
+        '<button class="btn-more">Подробнее ▾</button>' +
+        '<div class="more">' + details + "</div></div>";
+    });
+
+    box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+
+    var btns = box.querySelectorAll(".btn-more");
+    Array.prototype.forEach.call(btns, function (b) {
+      b.onclick = function () {
+        var m = b.parentNode.querySelector(".more");
+        var open = m.style.display === "block";
+        m.style.display = open ? "none" : "block";
+        b.textContent = open ? "Подробнее ▾" : "Скрыть ▴";
+      };
+    });
+    box.scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    box.innerHTML = '<div class="loading">Что-то пошло не так: ' + (err && err.message ? err.message : err) + "</div>";
+  }
+}
+
+$("go").onclick = recommend;
