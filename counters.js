@@ -1038,3 +1038,173 @@ async function recommend() {
 }
 
 $("go").onclick = recommend;
+
+// ===== ШАНС НА ПОБЕДУ ПОД ИКОНКОЙ ГЕРОЯ =====
+var chanceStyle = document.createElement("style");
+chanceStyle.textContent =
+  ".pic{width:84px;text-align:center}" +
+  ".pic img{width:84px;border-radius:8px;display:block}" +
+  ".chance{margin-top:6px;font-family:'Unbounded',sans-serif;font-weight:800;font-size:15px;line-height:1.1}" +
+  ".chance span{display:block;font-family:'Rubik',sans-serif;font-weight:400;font-size:9px;opacity:.7;margin-top:3px}";
+document.head.appendChild(chanceStyle);
+
+function decorate() {
+  Array.prototype.forEach.call(document.querySelectorAll("#results .res"), function (res) {
+    if (res.querySelector(".pic")) return;
+    var img = res.querySelector(".top img");
+    var sc = res.querySelector(".score");
+    if (!img || !sc) return;
+
+    var val = parseInt(sc.textContent, 10) || 50;
+    val = Math.max(40, Math.min(68, val));
+    var color = val >= 58 ? "#4ade80" : (val >= 52 ? "#22d3ee" : "#f59e0b");
+
+    var pic = document.createElement("div");
+    pic.className = "pic";
+    img.parentNode.insertBefore(pic, img);
+    pic.appendChild(img);
+
+    var ch = document.createElement("div");
+    ch.className = "chance";
+    ch.style.color = color;
+    ch.innerHTML = val + "%<span>шанс на победу</span>";
+    pic.appendChild(ch);
+
+    sc.parentNode.removeChild(sc);
+
+    var more = res.querySelector(".more");
+    if (more) {
+      more.insertAdjacentHTML("beforeend",
+        '<div class="hint">Шанс на победу — это оценка бота. Её считают из статистики побед против врагов, подборки контр-пиков, механик скиллов и синергий с твоей командой. Это подсказка, а не гарантия.</div>');
+    }
+  });
+}
+
+var recommendBase = recommend;
+recommend = async function () {
+  await recommendBase();
+  decorate();
+};
+$("go").onclick = recommend;
+
+// ===== ВКЛАДКИ: ПОДБОР / ВИНРЕЙТЫ =====
+var tabStyle = document.createElement("style");
+tabStyle.textContent =
+  ".tabs{display:flex;gap:6px;padding:5px;margin:0 0 6px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px}" +
+  ".tab{flex:1;padding:12px;border:none;border-radius:12px;background:none;color:#9ca3af;font-family:'Unbounded',sans-serif;font-weight:600;font-size:13px;cursor:pointer}" +
+  ".tab.active{color:#fff;background:linear-gradient(90deg,#a855f7,#ec4899);box-shadow:0 0 14px rgba(168,85,247,.5)}" +
+  "#rsearch{width:100%;margin-top:16px;padding:12px 14px;font-size:16px;font-family:'Rubik',sans-serif;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;outline:none}" +
+  "#rsearch:focus{border-color:#c084fc;box-shadow:0 0 14px rgba(192,132,252,.5)}" +
+  ".rrow{display:flex;align-items:center;gap:10px;padding:8px 10px;margin-top:8px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}" +
+  ".rnum{width:22px;font-size:12px;color:#6b7280;text-align:right}" +
+  ".rrow img{width:58px;border-radius:6px}" +
+  ".rmid{flex:1;min-width:0}" +
+  ".rbar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin:6px 0 4px;overflow:hidden}" +
+  ".rbar i{display:block;height:100%;background:linear-gradient(90deg,#a855f7,#ec4899,#22d3ee)}" +
+  ".rsub{font-size:11px;color:#9ca3af}" +
+  ".rwr{font-family:'Unbounded',sans-serif;font-weight:800;font-size:15px;text-align:right}" +
+  ".rwr span{display:block;font-family:'Rubik',sans-serif;font-weight:400;font-size:9px;color:#9ca3af;margin-top:3px}";
+document.head.appendChild(tabStyle);
+
+var RANKS = [
+  { id: 1, t: "Рекрут" }, { id: 2, t: "Страж" }, { id: 3, t: "Рыцарь" }, { id: 4, t: "Герой" },
+  { id: 5, t: "Легенда" }, { id: 6, t: "Властелин" }, { id: 7, t: "Божество" }, { id: 8, t: "Титан" }
+];
+var rateRank = 0;
+var rateSort = "pick";
+
+var tabs = document.createElement("div");
+tabs.className = "tabs";
+tabs.innerHTML = '<button class="tab active" data-v="pick">Подбор</button><button class="tab" data-v="rate">Винрейты</button>';
+var subEl = document.querySelector(".sub");
+var footEl = document.querySelector(".foot");
+subEl.parentNode.insertBefore(tabs, subEl.nextSibling);
+
+var pickView = document.createElement("div");
+var rateView = document.createElement("div");
+rateView.style.display = "none";
+var node = tabs.nextSibling;
+while (node && node !== footEl) {
+  var nextNode = node.nextSibling;
+  pickView.appendChild(node);
+  node = nextNode;
+}
+footEl.parentNode.insertBefore(pickView, footEl);
+footEl.parentNode.insertBefore(rateView, footEl);
+
+rateView.innerHTML =
+  '<div class="label">Ранг</div><div class="chips" id="rranks"></div>' +
+  '<div class="label">Сортировка</div><div class="chips" id="rsort"></div>' +
+  '<input id="rsearch" placeholder="Найти героя...">' +
+  '<div id="rlist"></div>' +
+  '<div class="hint" style="margin-top:12px">Данные OpenDota по недавним публичным матчам, обновляются сами. При сортировке по винрейту скрыты редкие герои (меньше 1% игр).</div>';
+
+function rankStats(h) {
+  if (rateRank) return { p: h[rateRank + "_pick"] || 0, w: h[rateRank + "_win"] || 0 };
+  var p = 0, w = 0;
+  for (var i = 1; i <= 8; i++) { p += h[i + "_pick"] || 0; w += h[i + "_win"] || 0; }
+  return { p: p, w: w };
+}
+
+function drawRates() {
+  var box = $("rlist");
+  if (!heroes.length) { box.innerHTML = '<div class="loading">Загружаю статистику...</div>'; return; }
+  var q = ($("rsearch").value || "").toLowerCase();
+  var rows = heroes.map(function (h) {
+    var s = rankStats(h);
+    return { h: h, p: s.p, wr: s.p ? s.w / s.p : 0 };
+  });
+  var total = rows.reduce(function (a, r) { return a + r.p; }, 0) || 1;
+  rows.forEach(function (r) { r.pr = r.p / total * 10; });
+  var maxPr = Math.max.apply(null, rows.map(function (r) { return r.pr; })) || 1;
+  rows = rows.filter(function (r) {
+    if (!r.p) return false;
+    if (rateSort === "wr" && r.pr < 0.01) return false;
+    return r.h.localized_name.toLowerCase().indexOf(q) !== -1;
+  });
+  rows.sort(rateSort === "wr"
+    ? function (a, b) { return b.wr - a.wr; }
+    : function (a, b) { return b.p - a.p; });
+
+  var html = "";
+  rows.forEach(function (r, i) {
+    var col = r.wr >= 0.52 ? "#4ade80" : (r.wr >= 0.48 ? "#e5e7eb" : "#f87171");
+    html += '<div class="rrow"><div class="rnum">' + (i + 1) + '</div>' +
+      '<img src="' + imgUrl(r.h) + '" onerror="this.style.visibility=\'hidden\'">' +
+      '<div class="rmid"><div class="rname">' + r.h.localized_name + '</div>' +
+      '<div class="rbar"><i style="width:' + Math.round(r.pr / maxPr * 100) + '%"></i></div>' +
+      '<div class="rsub">берут в ' + (r.pr * 100).toFixed(1) + '% игр, пиков: ' + r.p.toLocaleString("ru-RU") + '</div></div>' +
+      '<div class="rwr" style="color:' + col + '">' + (r.wr * 100).toFixed(1) + '%<span>винрейт</span></div></div>';
+  });
+  box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+}
+
+function drawRateChips() {
+  makeChips("rranks", [{ id: 0, t: "Все ранги" }].concat(RANKS), rateRank, function (id) {
+    rateRank = id; drawRateChips(); drawRates();
+  });
+  makeChips("rsort", [{ id: "pick", t: "Популярные" }, { id: "wr", t: "Самый высокий винрейт" }], rateSort, function (id) {
+    rateSort = id; drawRateChips(); drawRates();
+  });
+}
+drawRateChips();
+$("rsearch").addEventListener("input", drawRates);
+
+Array.prototype.forEach.call(tabs.querySelectorAll(".tab"), function (b) {
+  b.onclick = function () {
+    Array.prototype.forEach.call(tabs.querySelectorAll(".tab"), function (x) { x.classList.remove("active"); });
+    b.classList.add("active");
+    var isRate = b.getAttribute("data-v") === "rate";
+    pickView.style.display = isRate ? "none" : "";
+    rateView.style.display = isRate ? "" : "none";
+    if (isRate) drawRates();
+    try { Telegram.WebApp.HapticFeedback.selectionChanged(); } catch (e) {}
+  };
+});
+
+var waitHeroes = setInterval(function () {
+  if (heroes.length) {
+    clearInterval(waitHeroes);
+    if (rateView.style.display !== "none") drawRates();
+  }
+}, 500);
