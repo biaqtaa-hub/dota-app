@@ -1208,3 +1208,100 @@ var waitHeroes = setInterval(function () {
     if (rateView.style.display !== "none") drawRates();
   }
 }, 500);
+
+// ===== ВЫБОР ЛИНИИ ВО ВКЛАДКЕ ВИНРЕЙТЫ, БЕЗ ТИТАНА =====
+RANKS = RANKS.filter(function (r) { return r.id !== 8; });
+if (rateRank === 8) rateRank = 0;
+
+var LANES = [
+  { id: 0, t: "Все линии" }, { id: 1, t: "Керри (1)" }, { id: 2, t: "Мид (2)" },
+  { id: 3, t: "Оффлейн (3)" }, { id: 4, t: "Саппорт 4" }, { id: 5, t: "Саппорт 5" }
+];
+var rateLane = 0;
+
+var laneStyle = document.createElement("style");
+laneStyle.textContent =
+  ".lanesel{position:relative}" +
+  ".lanesel select{width:100%;appearance:none;-webkit-appearance:none;padding:12px 40px 12px 14px;font-size:15px;font-family:'Rubik',sans-serif;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:12px;outline:none;cursor:pointer}" +
+  ".lanesel select:focus{border-color:#c084fc;box-shadow:0 0 14px rgba(192,132,252,.5)}" +
+  ".lanesel::after{content:'▾';position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#c084fc;pointer-events:none;font-size:16px}" +
+  ".lanesel option{background:#12121c;color:#fff}";
+document.head.appendChild(laneStyle);
+
+var sortLabel = $("rsort").previousElementSibling;
+var laneLabel = document.createElement("div");
+laneLabel.className = "label";
+laneLabel.textContent = "Линия";
+var laneBox = document.createElement("div");
+laneBox.className = "lanesel";
+var laneSelect = document.createElement("select");
+LANES.forEach(function (l) {
+  var o = document.createElement("option");
+  o.value = l.id;
+  o.textContent = l.t;
+  laneSelect.appendChild(o);
+});
+laneBox.appendChild(laneSelect);
+rateView.insertBefore(laneLabel, sortLabel);
+rateView.insertBefore(laneBox, sortLabel);
+
+laneSelect.addEventListener("change", function () {
+  rateLane = parseInt(laneSelect.value, 10) || 0;
+  drawRates();
+});
+
+var rateHints = rateView.querySelectorAll(".hint");
+if (rateHints.length) {
+  rateHints[rateHints.length - 1].textContent =
+    "Данные OpenDota по недавним публичным матчам, обновляются сами. Фильтр по линии показывает героев, которые на ней играются, а винрейт у героя общий на выбранном ранге. При сортировке по винрейту скрыты редкие герои (меньше 1% игр).";
+}
+
+function playsPos(h, pos) {
+  var p = HERO_POS[h.localized_name];
+  if (p) return p.indexOf(String(pos)) !== -1;
+  var list = ROLE_MAP[pos];
+  return h.roles.some(function (r) { return list.indexOf(r) !== -1; });
+}
+
+var oldDrawRates = drawRates;
+drawRates = function () {
+  var box = $("rlist");
+  if (!heroes.length) { box.innerHTML = '<div class="loading">Загружаю статистику...</div>'; return; }
+  var q = ($("rsearch").value || "").toLowerCase();
+  var rows = heroes.map(function (h) {
+    var s = rankStats(h);
+    return { h: h, p: s.p, wr: s.p ? s.w / s.p : 0 };
+  });
+  var total = rows.reduce(function (a, r) { return a + r.p; }, 0);
+  if (!total) { box.innerHTML = '<div class="loading">На этом ранге пока нет данных</div>'; return; }
+  rows.forEach(function (r) { r.pr = r.p / total * 10; });
+  rows = rows.filter(function (r) {
+    if (!r.p) return false;
+    if (rateLane && !playsPos(r.h, rateLane)) return false;
+    if (rateSort === "wr" && r.pr < 0.01) return false;
+    return r.h.localized_name.toLowerCase().indexOf(q) !== -1;
+  });
+  var maxPr = Math.max.apply(null, rows.map(function (r) { return r.pr; }).concat([0.0001]));
+  rows.sort(rateSort === "wr"
+    ? function (a, b) { return b.wr - a.wr; }
+    : function (a, b) { return b.p - a.p; });
+
+  var html = "";
+  rows.forEach(function (r, i) {
+    var col = r.wr >= 0.52 ? "#4ade80" : (r.wr >= 0.48 ? "#e5e7eb" : "#f87171");
+    var pos = HERO_POS[r.h.localized_name];
+    html += '<div class="rrow"><div class="rnum">' + (i + 1) + '</div>' +
+      '<img src="' + imgUrl(r.h) + '" onerror="this.style.visibility=\'hidden\'">' +
+      '<div class="rmid"><div class="rname">' + r.h.localized_name + '</div>' +
+      '<div class="rbar"><i style="width:' + Math.round(r.pr / maxPr * 100) + '%"></i></div>' +
+      '<div class="rsub">берут в ' + (r.pr * 100).toFixed(1) + '% игр' +
+      (pos ? ', позиции: ' + pos.split("").join(", ") : '') + '</div></div>' +
+      '<div class="rwr" style="color:' + col + '">' + (r.wr * 100).toFixed(1) + '%<span>винрейт</span></div></div>';
+  });
+  box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+};
+
+$("rsearch").removeEventListener("input", oldDrawRates);
+$("rsearch").addEventListener("input", function () { drawRates(); });
+drawRateChips();
+drawRates();
