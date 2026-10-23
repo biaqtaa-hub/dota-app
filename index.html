@@ -22,206 +22,166 @@
       padding: 16px 12px 40px;
     }
     .title {
-      font-family: 'Unbounded', sans-serif;
-      font-weight: 800;
-      font-size: 26px;
-      text-align: center;
-      margin: 6px 0 2px;
+      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px; text-align: center; margin: 6px 0 2px;
       background: linear-gradient(90deg, #c084fc, #f472b6, #22d3ee);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
     .brand {
-      font-family: 'Unbounded', sans-serif;
-      font-weight: 800;
-      font-size: 13px;
-      letter-spacing: 7px;
-      text-align: center;
-      margin: 0 0 8px;
-      padding-left: 7px;
+      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 7px; text-align: center;
+      margin: 0 0 8px; padding-left: 7px;
       background: linear-gradient(90deg, #22d3ee, #f472b6, #c084fc);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
     .sub { text-align: center; color: #9ca3af; font-size: 14px; margin-bottom: 20px; }
+    .tabs { display: flex; gap: 6px; padding: 5px; margin: 0 0 6px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; }
+    .tab { flex: 1; padding: 12px; border: none; border-radius: 12px; background: none; color: #9ca3af; font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; }
+    .tab.active { color: #fff; background: linear-gradient(90deg, #a855f7, #ec4899); box-shadow: 0 0 14px rgba(168,85,247,.5); }
     .label {
-      font-family: 'Unbounded', sans-serif;
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: #9ca3af;
-      margin: 18px 0 8px;
-      text-transform: uppercase;
+      font-family: 'Unbounded', sans-serif; font-size: 11px; letter-spacing: 1px; color: #9ca3af;
+      margin: 18px 0 8px; text-transform: uppercase;
     }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .chip {
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-size: 14px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      cursor: pointer;
-      transition: 0.15s;
+      padding: 10px 14px; border-radius: 999px; font-size: 14px;
+      background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer; transition: 0.15s;
     }
-    .chip.active {
-      background: linear-gradient(90deg, #a855f7, #ec4899);
-      border-color: transparent;
-      box-shadow: 0 0 14px rgba(168, 85, 247, 0.6);
-    }
-    .row { display: grid; gap: 8px; }
-    #allies { grid-template-columns: repeat(4, 1fr); }
-    #enemies { grid-template-columns: repeat(5, 1fr); }
+    .chip.active { background: linear-gradient(90deg, #a855f7, #ec4899); border-color: transparent; box-shadow: 0 0 14px rgba(168, 85, 247, 0.6); }
+    .row { display: grid; gap: 8px; grid-template-columns: repeat(4, 1fr); }
     .slot {
-      aspect-ratio: 1 / 1.15;
-      border-radius: 12px;
+      position: relative; aspect-ratio: 1 / 1.15; border-radius: 12px;
       border: 2px dashed rgba(255, 255, 255, 0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: rgba(255, 255, 255, 0.4);
-      background: rgba(255, 255, 255, 0.04);
-      overflow: hidden;
-      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.04);
+      overflow: hidden; cursor: pointer;
     }
     .slot img { width: 100%; height: 100%; object-fit: cover; }
     .slot.ally.filled { border: 2px solid #22d3ee; box-shadow: 0 0 12px rgba(34, 211, 238, 0.5); }
     .slot.enemy.filled { border: 2px solid #f43f5e; box-shadow: 0 0 12px rgba(244, 63, 94, 0.5); }
+    .pos {
+      position: absolute; left: 4px; bottom: 4px; min-width: 26px; padding: 3px 6px; border-radius: 999px;
+      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 11px; line-height: 1.2; text-align: center;
+      background: rgba(0, 0, 0, 0.75);
+    }
+    .ally .pos { color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.7); }
+    .enemy .pos { color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.7); }
+    .enemy .pos.guess { opacity: 0.75; border-style: dashed; }
     .hint { font-size: 12px; color: #6b7280; margin-top: 6px; }
     #go {
-      width: 100%;
-      margin-top: 22px;
-      padding: 16px;
-      font-family: 'Unbounded', sans-serif;
-      font-weight: 800;
-      font-size: 16px;
-      color: #fff;
-      border: none;
-      border-radius: 14px;
+      width: 100%; margin-top: 22px; padding: 16px;
+      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 16px; color: #fff;
+      border: none; border-radius: 14px;
       background: linear-gradient(90deg, #a855f7, #ec4899, #22d3ee);
-      box-shadow: 0 0 22px rgba(236, 72, 153, 0.5);
-      cursor: pointer;
+      box-shadow: 0 0 22px rgba(236, 72, 153, 0.5); cursor: pointer;
     }
     #go:active { transform: scale(0.97); }
-    .res {
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+    .res { padding: 10px; margin-top: 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); }
     .top { display: flex; align-items: center; gap: 12px; }
-    .top img { width: 64px; border-radius: 8px; }
-    .rinfo { flex: 1; }
+    .pic { width: 84px; text-align: center; flex: none; }
+    .pic img { width: 84px; border-radius: 8px; display: block; }
+    .chance { margin-top: 6px; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.1; }
+    .chance span { display: block; font-family: 'Rubik', sans-serif; font-weight: 400; font-size: 9px; opacity: .7; margin-top: 3px; }
+    .rinfo { flex: 1; min-width: 0; }
     .rname { font-weight: 500; font-size: 15px; }
-    .rwhy { font-size: 12px; color: #9ca3af; margin-top: 3px; }
-    .score {
-      font-family: 'Unbounded', sans-serif;
-      font-weight: 800;
-      font-size: 14px;
-      color: #22d3ee;
-    }
+    .rwhy { font-size: 12px; color: #9ca3af; margin-top: 4px; line-height: 1.45; }
+    .tag { display: inline-block; margin: 4px 4px 0 0; padding: 3px 8px; border-radius: 999px; font-size: 11px; }
+    .tag.good { color: #4ade80; background: rgba(74, 222, 128, 0.12); border: 1px solid rgba(74, 222, 128, 0.35); }
+    .tag.lane { color: #22d3ee; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.35); }
+    .tag.bad { color: #fda4af; background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.35); }
     .btn-more {
-      margin-top: 10px;
-      padding: 7px 14px;
-      font-size: 12px;
-      font-family: 'Rubik', sans-serif;
-      color: #d8b4fe;
-      background: none;
-      border: 1px solid rgba(192, 132, 252, 0.45);
-      border-radius: 999px;
-      cursor: pointer;
+      margin-top: 10px; padding: 7px 14px; font-size: 12px; font-family: 'Rubik', sans-serif; color: #d8b4fe;
+      background: none; border: 1px solid rgba(192, 132, 252, 0.45); border-radius: 999px; cursor: pointer;
     }
-    .more {
-      display: none;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      font-size: 13px;
-      line-height: 1.5;
-      color: #d1d5db;
-    }
+    .more { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1); font-size: 13px; line-height: 1.5; color: #d1d5db; }
     .sec { margin-bottom: 12px; }
-    .sec b { color: #f9a8d4; }
-    .note {
-      border-left: 3px solid #f472b6;
-      padding-left: 10px;
-      margin: 6px 0;
-    }
+    .sec > b { color: #f9a8d4; }
+    .sec.lane > b { color: #22d3ee; }
+    .sec.warn > b { color: #fb7185; }
+    .note { border-left: 3px solid #f472b6; padding-left: 10px; margin: 6px 0; }
+    .sec.lane .note { border-color: #22d3ee; }
+    .sec.warn .note { border-color: #fb7185; }
+    .small { font-size: 11px; color: #9ca3af; }
     .loading { text-align: center; color: #9ca3af; padding: 24px; }
     .foot { text-align: center; margin-top: 50px; }
     .foot a { font-size: 11px; color: #fff; opacity: 0.3; text-decoration: none; }
-    .modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      align-items: flex-end;
-      z-index: 10;
-    }
-    .sheet {
-      width: 100%;
-      max-height: 82vh;
-      overflow-y: auto;
-      background: #12121c;
-      border-radius: 20px 20px 0 0;
-      padding: 14px;
-    }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); align-items: flex-end; z-index: 10; }
+    .sheet { width: 100%; max-height: 82vh; overflow-y: auto; background: #12121c; border-radius: 20px 20px 0 0; padding: 14px; }
     .sheethead { display: flex; gap: 8px; margin-bottom: 12px; position: sticky; top: 0; background: #12121c; padding-bottom: 6px; }
-    #psearch {
-      flex: 1;
-      padding: 12px 14px;
-      font-size: 16px;
-      font-family: 'Rubik', sans-serif;
-      color: #fff;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      outline: none;
+    #psearch, #rsearch {
+      flex: 1; width: 100%; padding: 12px 14px; font-size: 16px; font-family: 'Rubik', sans-serif; color: #fff;
+      background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; outline: none;
     }
-    #psearch:focus { border-color: #c084fc; box-shadow: 0 0 14px rgba(192, 132, 252, 0.5); }
-    #pclose {
-      width: 46px;
-      border: none;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      font-size: 18px;
-    }
+    #rsearch { margin-top: 16px; }
+    #psearch:focus, #rsearch:focus { border-color: #c084fc; box-shadow: 0 0 14px rgba(192, 132, 252, 0.5); }
+    .xbtn { width: 46px; border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 18px; }
     .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .hero { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; background: rgba(255, 255, 255, 0.05); }
     .hero:active { transform: scale(0.94); }
     .hero img { width: 100%; display: block; }
-    .hero .name {
-      position: absolute; left: 0; right: 0; bottom: 0;
-      padding: 12px 3px 4px;
-      font-size: 10px;
-      text-align: center;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+    .hero .name { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 3px 4px; font-size: 10px; text-align: center; background: linear-gradient(transparent, rgba(0, 0, 0, 0.9)); }
+    .shead { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+    .shead img { width: 72px; border-radius: 8px; }
+    .shead .nm { font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 16px; flex: 1; }
+    .sbtns { display: flex; gap: 8px; margin-top: 18px; }
+    .sbtn { flex: 1; padding: 13px; border-radius: 12px; font-family: 'Rubik', sans-serif; font-size: 14px; color: #fff; cursor: pointer; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); }
+    .sbtn.del { color: #fda4af; border-color: rgba(244,63,94,.5); }
+    .lanesel { position: relative; }
+    .lanesel select {
+      width: 100%; appearance: none; -webkit-appearance: none; padding: 12px 40px 12px 14px; font-size: 15px; font-family: 'Rubik', sans-serif;
+      color: #fff; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.15); border-radius: 12px; outline: none; cursor: pointer;
     }
+    .lanesel::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #c084fc; pointer-events: none; font-size: 16px; }
+    .lanesel option { background: #12121c; color: #fff; }
+    .rrow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin-top: 8px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
+    .rnum { width: 22px; font-size: 12px; color: #6b7280; text-align: right; }
+    .rrow img { width: 58px; border-radius: 6px; }
+    .rmid { flex: 1; min-width: 0; }
+    .rbar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.08); margin: 6px 0 4px; overflow: hidden; }
+    .rbar i { display: block; height: 100%; background: linear-gradient(90deg, #a855f7, #ec4899, #22d3ee); }
+    .rsub { font-size: 11px; color: #9ca3af; }
+    .rwr { font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 15px; text-align: right; }
+    .rwr span { display: block; font-family: 'Rubik', sans-serif; font-weight: 400; font-size: 9px; color: #9ca3af; margin-top: 3px; }
   </style>
 </head>
 <body>
   <div class="title">DOTA PICK</div>
   <div class="brand">LOWCULTURE</div>
-  <div class="sub">найди идеального героя в пике</div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-v="pick">Подбор</button>
+    <button class="tab" data-v="rate">Винрейты</button>
+  </div>
 
-  <div class="label">Твоя роль</div>
-  <div class="chips" id="roles"></div>
+  <div id="pickView">
+    <div class="sub">найди идеального героя в пике</div>
 
-  <div class="label">Порядок пика</div>
-  <div class="chips" id="orders"></div>
+    <div class="label">Твоя роль</div>
+    <div class="chips" id="roles"></div>
 
-  <div class="label">Твоя команда</div>
-  <div class="row" id="allies"></div>
+    <div class="label">Порядок пика</div>
+    <div class="chips" id="orders"></div>
 
-  <div class="label">Враги</div>
-  <div class="row" id="enemies"></div>
-  <div class="hint">Нажми на пустой слот, чтобы выбрать героя. Нажми на героя в слоте, чтобы убрать.</div>
+    <div class="label">Твоя команда (сколько видишь)</div>
+    <div class="row" id="allies"></div>
 
-  <button id="go">ПОДОБРАТЬ</button>
-  <div id="results"></div>
+    <div class="label">Враги (сколько видишь)</div>
+    <div class="row" id="enemies"></div>
+    <div class="hint">Нажми на пустой слот, чтобы выбрать героя. Нажми на героя, чтобы поменять ему позицию или убрать. Позиции врагов — примерные, ≈ значит «бот угадал».</div>
+
+    <button id="go">ПОДОБРАТЬ</button>
+    <div id="results"></div>
+  </div>
+
+  <div id="rateView" style="display:none">
+    <div class="label">Ранг</div>
+    <div class="chips" id="rranks"></div>
+    <div class="label">Линия</div>
+    <div class="lanesel"><select id="rlane"></select></div>
+    <div class="label">Сортировка</div>
+    <div class="chips" id="rsort"></div>
+    <input id="rsearch" placeholder="Найти героя...">
+    <div id="rlist"></div>
+    <div class="hint" style="margin-top:12px">Данные OpenDota по недавним публичным матчам, обновляются сами. Фильтр по линии показывает героев, которые на ней играются, а винрейт у героя общий на выбранном ранге. При сортировке по винрейту скрыты редкие герои (меньше 1% игр).</div>
+  </div>
 
   <div class="foot"><a id="dc" href="#">discord</a></div>
 
@@ -229,78 +189,54 @@
     <div class="sheet">
       <div class="sheethead">
         <input id="psearch" placeholder="Найти героя...">
-        <button id="pclose">✕</button>
+        <button class="xbtn" id="pclose">✕</button>
       </div>
       <div class="grid" id="pgrid"></div>
     </div>
   </div>
 
+  <div class="modal" id="smodal">
+    <div class="sheet" id="ssheet"></div>
+  </div>
+
+  <script src="data.js?v=8"></script>
   <script>
     var DISCORD_URL = "https://discord.gg/QnAGbqWXA2";
-
-    // ===== РАЗБОРЫ ОТ АВТОРА (необязательно) =====
-    // Сюда можно дописывать свои разборы для любых пар героев.
-    // hero = кого берём, vs = против кого, bonus = плюс к оценке (0 = не влияет на место), why = почему
-    var NOTES = [
-      {
-        hero: "Necrophos",
-        vs: "Broodmother",
-        bonus: 0,
-        why: "Первый скилл и пассивка сильно выжигают паучков и лечат тебя. Второй скилл делает тебя неуязвимым для физических атак, и паучки с Брудой не могут тебя бить."
-      }
-    ];
 
     var ROLES = [
       { id: 1, t: "Керри" }, { id: 2, t: "Мид" }, { id: 3, t: "Оффлейн" },
       { id: 4, t: "Саппорт 4" }, { id: 5, t: "Саппорт 5" }
     ];
-    var ORDERS = [
-      { id: "first", t: "Первый пик" }, { id: "mid", t: "Середина" }, { id: "last", t: "Последний пик" }
-    ];
-    var ROLE_MAP = {
-      1: ["Carry"],
-      2: ["Carry", "Nuker", "Escape"],
-      3: ["Durable", "Initiator"],
-      4: ["Support"],
-      5: ["Support"]
-    };
+    var POS_NAME = { 1: "керри", 2: "мид", 3: "оффлейн", 4: "саппорт 4", 5: "саппорт 5" };
+    var ORDERS = [{ id: "mid", t: "Середина" }, { id: "last", t: "Последний пик" }];
+    var ROLE_MAP = { 1: ["Carry"], 2: ["Carry", "Nuker", "Escape"], 3: ["Durable", "Initiator"], 4: ["Support"], 5: ["Support"] };
     var ROLE_RU = {
-      Carry: "сильный в лейте (керри)",
-      Support: "помогает команде (саппорт)",
-      Nuker: "большой взрывной урон",
-      Disabler: "контроль (станы, сайленсы)",
-      Jungler: "может фармить лес",
-      Durable: "живучий",
-      Escape: "умеет убегать",
-      Pusher: "быстро сносит башни",
-      Initiator: "хорошо начинает драки"
+      Carry: "сильный в лейте (керри)", Support: "помогает команде (саппорт)", Nuker: "большой взрывной урон",
+      Disabler: "контроль (станы, сайленсы)", Jungler: "может фармить лес", Durable: "живучий",
+      Escape: "умеет убегать", Pusher: "быстро сносит башни", Initiator: "хорошо начинает драки"
     };
     var ATTR_RU = { str: "сила", agi: "ловкость", int: "интеллект", all: "универсал" };
     var ATTACK_RU = { Melee: "ближний бой", Ranged: "дальний бой" };
+    // с кем ты стоишь на линии и против кого
+    var LANE_MATE = { 1: 5, 5: 1, 3: 4, 4: 3, 2: null };
+    var LANE_VS = { 1: [3, 4], 5: [3, 4], 3: [1, 5], 4: [1, 5], 2: [2] };
 
     var role = 2;
     var order = "last";
+    // слот: null или { id: героя, pos: 1-5 или 0 (не знаю), guess: true если позицию угадал бот }
     var allies = [null, null, null, null];
-    var enemies = [null, null, null, null, null];
+    var enemies = [null, null, null, null];
     var heroes = [];
     var byId = {};
+    var byName = {};
     var picking = null;
 
     function $(id) { return document.getElementById(id); }
-
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
     function imgUrl(h) {
-      return "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" +
-        h.name.replace("npc_dota_hero_", "") + ".png";
+      return "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" + h.name.replace("npc_dota_hero_", "") + ".png";
     }
-
-    function findNote(hero, enemy) {
-      for (var i = 0; i < NOTES.length; i++) {
-        if (NOTES[i].hero === hero.localized_name && NOTES[i].vs === enemy.localized_name) {
-          return NOTES[i];
-        }
-      }
-      return null;
-    }
+    function haptic(kind) { try { Telegram.WebApp.HapticFeedback.impactOccurred(kind || "light"); } catch (e) {} }
 
     try {
       Telegram.WebApp.ready();
@@ -309,6 +245,111 @@
       Telegram.WebApp.setBackgroundColor("#0a0a12");
     } catch (e) {}
 
+    // ---------- данные о героях ----------
+    function tagsOf(name) {
+      var s = HERO_TAGS[name];
+      if (!s) return { has: [], weak: [] };
+      var p = s.split("|");
+      return { has: p[0].split(" ").filter(Boolean), weak: (p[1] || "").split(" ").filter(Boolean) };
+    }
+    function pairValue(str, key) {
+      if (!str) return null;
+      var parts = str.split(";");
+      for (var i = 0; i < parts.length; i++) {
+        var k = parts[i].indexOf("=");
+        if (k > 0 && parts[i].slice(0, k).trim() === key) return parts[i].slice(k + 1).trim();
+      }
+      return null;
+    }
+    function positionsOf(h) {
+      var p = HERO_POS[h.localized_name];
+      if (p) return p.split("").map(Number);
+      var out = [];
+      for (var pos = 1; pos <= 5; pos++) {
+        if (h.roles.some(function (r) { return ROLE_MAP[pos].indexOf(r) !== -1; })) out.push(pos);
+      }
+      return out;
+    }
+    function canPlay(h, pos) { return positionsOf(h).indexOf(pos) !== -1; }
+    function inSource(hero, enemy) {
+      var list = SOURCE_COUNTERS[enemy.localized_name];
+      return !!(list && list.indexOf(hero.localized_name) !== -1);
+    }
+
+    // почему hero контрит enemy (по подборке и механикам скиллов)
+    function counterReasons(hero, enemy) {
+      var hn = hero.localized_name, en = enemy.localized_name;
+      var c = tagsOf(hn), e = tagsOf(en);
+      var texts = [], rules = 0, generic = 0;
+      var byWeak = {}, order_ = [];
+      NOTES.forEach(function (n) { if (n.hero === hn && n.vs === en) texts.push(n.why); });
+      RULES.forEach(function (r) {
+        if (c.has.indexOf(r[0]) !== -1 && e.weak.indexOf(r[1]) !== -1) {
+          var kit = pairValue(HERO_KIT[hn], r[0]);
+          var weak = pairValue(HERO_WEAK[en], r[1]);
+          if (kit && weak) {
+            // одну и ту же слабость врага объясняем один раз, перечисляя все подходящие скиллы
+            if (!byWeak[weak]) { byWeak[weak] = []; order_.push(weak); }
+            if (byWeak[weak].indexOf(kit) === -1) byWeak[weak].push(kit);
+          } else {
+            texts.push(r[2].replace(/\{C\}/g, hn).replace(/\{E\}/g, en));
+          }
+          // «хрупкий против стана/урона» есть почти у всех — это слабый довод
+          if (r[1] === "squishy") generic++; else rules++;
+        }
+      });
+      order_.forEach(function (w) { texts.push(hn + " — " + byWeak[w].join("; ") + ". Почему против " + en + ": " + w + "."); });
+      return { source: inSource(hero, enemy), rules: rules, generic: generic, texts: texts,
+               note: NOTES.some(function (n) { return n.hero === hn && n.vs === en; }) };
+    }
+
+    function synergyWith(hero, ally) {
+      var hn = hero.localized_name, an = ally.localized_name;
+      var texts = [], bonus = 0;
+      SYN_PAIRS.forEach(function (p) {
+        if ((p[0] === hn && p[1] === an) || (p[0] === an && p[1] === hn)) { texts.push(p[2]); bonus += 0.02; }
+      });
+      var c = tagsOf(hn), a = tagsOf(an);
+      SYN_RULES.forEach(function (r) {
+        [[hn, c, an, a], [an, a, hn, c]].forEach(function (d) {
+          var okG = d[1].has.indexOf(r[0]) !== -1;
+          var okT = (r[2] === "weak" ? d[3].weak : d[3].has).indexOf(r[1]) !== -1;
+          if (okG && okT) {
+            var kg = pairValue(HERO_KIT[d[0]], r[0]);
+            texts.push((kg ? d[0] + ", " + kg + ". " : "") + r[3]);
+            bonus += 0.005;
+          }
+        });
+      });
+      return texts.length ? { bonus: Math.min(0.02, bonus), why: texts.join(" ") } : null;
+    }
+
+    // связка на одной линии: core = керри/оффлейнер, sup = саппорт
+    function laneCombo(hero, heroPos, mate, matePos) {
+      var core = heroPos === 1 || heroPos === 3 ? hero : mate;
+      var sup = core === hero ? mate : hero;
+      var cn = core.localized_name, sn = sup.localized_name;
+      var ct = tagsOf(cn), st = tagsOf(sn);
+      var texts = [], score = 0;
+      LANE_PAIRS.forEach(function (p) {
+        if ((p[0] === cn && p[1] === sn) || (p[0] === sn && p[1] === cn)) { texts.push(p[2]); score += 3; }
+      });
+      if (st.has.indexOf("stun") !== -1 && (core.attack_type === "Melee" || ct.weak.indexOf("phys") !== -1)) {
+        var k = pairValue(HERO_KIT[sn], "stun");
+        texts.push((k ? sn + " — " + k + ". " : "") + "Пока враг в стане, " + cn + " спокойно бьёт его на линии.");
+        score += 1;
+      }
+      if (HEALERS.indexOf(sn) !== -1) { texts.push(sn + " лечит и спасает " + cn + " — на линии ему проще стоять и фармить."); score += 1; }
+      if (core.attack_type === "Ranged" && sup.attack_type === "Ranged") { texts.push("Оба бьют издалека и могут давить врагов с безопасной дистанции."); score += 1; }
+      if (st.has.indexOf("burst") !== -1 && (ct.has.indexOf("stun") !== -1 || ct.has.indexOf("burst") !== -1)) {
+        texts.push("У обоих много урона и контроля — вдвоём убивают врага, который подошёл слишком близко."); score += 1;
+      }
+      if (!texts.length) return null;
+      var level = score >= 3 ? "отличная" : (score >= 2 ? "хорошая" : "нормальная");
+      return { score: score, level: level, why: texts.join(" ") };
+    }
+
+    // ---------- интерфейс подбора ----------
     function makeChips(boxId, items, current, onPick) {
       var box = $(boxId);
       box.innerHTML = "";
@@ -316,241 +357,366 @@
         var d = document.createElement("div");
         d.className = "chip" + (it.id === current ? " active" : "");
         d.textContent = it.t;
-        d.onclick = function () { onPick(it.id); };
+        d.onclick = function () { onPick(it.id); haptic(); };
         box.appendChild(d);
       });
     }
-
     function drawChips() {
       makeChips("roles", ROLES, role, function (id) { role = id; drawChips(); });
       makeChips("orders", ORDERS, order, function (id) { order = id; drawChips(); });
     }
 
+    function guessPos(h, team, isAlly) {
+      var used = team.filter(Boolean).map(function (s) { return s.pos; });
+      if (isAlly) used.push(role);
+      var p = positionsOf(h).filter(function (x) { return used.indexOf(x) === -1; });
+      return p.length ? p[0] : (positionsOf(h)[0] || 0);
+    }
+
     function drawTeam(boxId, arr, cls) {
       var box = $(boxId);
       box.innerHTML = "";
-      arr.forEach(function (id, i) {
+      arr.forEach(function (s, i) {
         var d = document.createElement("div");
-        d.className = "slot " + cls + (id ? " filled" : "");
-        if (id) {
-          d.innerHTML = '<img src="' + imgUrl(byId[id]) + '">';
+        d.className = "slot " + cls + (s ? " filled" : "");
+        if (s) {
+          var badge = s.pos ? (s.guess ? "≈" : "") + s.pos : "?";
+          d.innerHTML = '<img src="' + imgUrl(byId[s.id]) + '"><div class="pos' + (s.guess ? " guess" : "") + '">' + badge + "</div>";
+          d.onclick = function () { openSlot(arr, i, cls === "ally"); };
         } else {
           d.textContent = "+";
+          d.onclick = function () { openPicker(arr, i, cls === "ally"); };
         }
-        d.onclick = function () {
-          if (arr[i]) { arr[i] = null; drawSlots(); }
-          else { openPicker(arr, i); }
-        };
         box.appendChild(d);
       });
     }
+    function drawSlots() { drawTeam("allies", allies, "ally"); drawTeam("enemies", enemies, "enemy"); }
 
-    function drawSlots() {
-      drawTeam("allies", allies, "ally");
-      drawTeam("enemies", enemies, "enemy");
-    }
+    function taken() { return allies.concat(enemies).filter(Boolean).map(function (s) { return s.id; }); }
 
-    function openPicker(arr, i) {
+    function openPicker(arr, i, isAlly) {
       if (!heroes.length) return;
-      picking = { arr: arr, i: i };
+      picking = { arr: arr, i: i, ally: isAlly };
       $("psearch").value = "";
       $("modal").style.display = "flex";
       drawPicker("");
     }
-
     function closePicker() { $("modal").style.display = "none"; }
-
     function drawPicker(q) {
-      var taken = allies.concat(enemies);
+      var tk = taken();
       var grid = $("pgrid");
       grid.innerHTML = "";
       heroes.forEach(function (h) {
-        if (taken.indexOf(h.id) !== -1) return;
+        if (tk.indexOf(h.id) !== -1) return;
         if (h.localized_name.toLowerCase().indexOf(q) === -1) return;
         var d = document.createElement("div");
         d.className = "hero";
-        d.innerHTML = '<img src="' + imgUrl(h) + '" onerror="this.style.display=\'none\'">' +
-          '<div class="name">' + h.localized_name + '</div>';
+        d.innerHTML = '<img src="' + imgUrl(h) + '" onerror="this.style.visibility=\'hidden\'"><div class="name">' + esc(h.localized_name) + "</div>";
         d.onclick = function () {
-          picking.arr[picking.i] = h.id;
+          var old = picking.arr[picking.i];
+          picking.arr[picking.i] = null;
+          var pos = guessPos(h, picking.arr, picking.ally);
+          picking.arr[picking.i] = { id: h.id, pos: pos, guess: !picking.ally };
+          if (old && old.pos && !old.guess) { picking.arr[picking.i].pos = old.pos; picking.arr[picking.i].guess = false; }
           closePicker();
           drawSlots();
+          haptic();
         };
         grid.appendChild(d);
       });
     }
 
+    function openSlot(arr, i, isAlly) {
+      var s = arr[i];
+      var h = byId[s.id];
+      var sh = $("ssheet");
+      var opts = [1, 2, 3, 4, 5].map(function (p) { return { id: p, t: p + " · " + POS_NAME[p] }; });
+      if (!isAlly) opts.push({ id: 0, t: "не знаю" });
+      sh.innerHTML =
+        '<div class="shead"><img src="' + imgUrl(h) + '"><div class="nm">' + esc(h.localized_name) + '</div><button class="xbtn" id="sclose">✕</button></div>' +
+        '<div class="label">' + (isAlly ? "На какой позиции играет" : "На какой позиции, как думаешь") + "</div>" +
+        '<div class="chips" id="spos"></div>' +
+        (isAlly ? "" : '<div class="hint">Точно знать не обязательно — бот просто внимательнее посмотрит, кто будет против тебя на линии.</div>') +
+        '<div class="sbtns"><button class="sbtn" id="schange">Сменить героя</button><button class="sbtn del" id="sdel">Убрать</button></div>';
+      var cur = s.guess ? -1 : s.pos;
+      makeChips("spos", opts, cur, function (p) {
+        s.pos = p; s.guess = false;
+        drawSlots(); closeSlot();
+      });
+      $("sclose").onclick = closeSlot;
+      $("sdel").onclick = function () { arr[i] = null; drawSlots(); closeSlot(); };
+      $("schange").onclick = function () { closeSlot(); openPicker(arr, i, isAlly); };
+      $("smodal").style.display = "flex";
+    }
+    function closeSlot() { $("smodal").style.display = "none"; }
+
     $("psearch").addEventListener("input", function (e) { drawPicker(e.target.value.toLowerCase()); });
     $("pclose").onclick = closePicker;
     $("modal").onclick = function (e) { if (e.target === $("modal")) closePicker(); };
-
+    $("smodal").onclick = function (e) { if (e.target === $("smodal")) closeSlot(); };
     $("dc").onclick = function (e) {
       e.preventDefault();
-      try { Telegram.WebApp.openLink(DISCORD_URL); }
-      catch (err) { window.open(DISCORD_URL, "_blank"); }
+      try { Telegram.WebApp.openLink(DISCORD_URL); } catch (err) { window.open(DISCORD_URL, "_blank"); }
     };
+
+    // ---------- статистика матчей ----------
+    var MATCHUP_CACHE = {};
+    function fetchMatchups(id) {
+      if (MATCHUP_CACHE[id]) return Promise.resolve(MATCHUP_CACHE[id]);
+      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+      var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
+      return fetch("https://api.opendota.com/api/heroes/" + id + "/matchups", ctrl ? { signal: ctrl.signal } : {})
+        .then(function (r) { return r.json(); })
+        .then(function (arr) {
+          if (timer) clearTimeout(timer);
+          if (!Array.isArray(arr)) return null;
+          var m = {};
+          arr.forEach(function (x) { m[x.hero_id] = { g: x.games_played, w: x.wins }; });
+          MATCHUP_CACHE[id] = m;
+          return m;
+        })
+        .catch(function () { if (timer) clearTimeout(timer); return null; });
+    }
+
+    // ---------- подбор ----------
+    function evaluate(h, ctx) {
+      var res = { h: h, vs: [], countered: [], hits: 0, counterScore: 0, syn: [], synBonus: 0, lane: null, laneVs: [] };
+      ctx.enemies.forEach(function (es) {
+        var e = byId[es.id];
+        var onLane = !!(es.pos && ctx.laneVs.indexOf(es.pos) !== -1);
+        var w = onLane ? (es.guess ? 1.3 : 1.6) : 1;
+        var m = ctx.stats[es.id] ? ctx.stats[es.id][h.id] : null;
+        var wr = m && m.g ? (m.g - m.w + 50) / (m.g + 100) : null;
+        var statEdge = (m && m.g >= 200) ? wr - h.overall : 0;
+        var r = counterReasons(h, e);
+        var bad = !!(SOURCE_COUNTERS[h.localized_name] && SOURCE_COUNTERS[h.localized_name].indexOf(e.localized_name) !== -1);
+        // если враг сам контрит этого героя — контр-пиком на него он не считается
+        var isCounter = !bad && (r.source || r.note || r.rules > 0 || statEdge >= 0.02 || (r.generic > 0 && statEdge > 0.005));
+        var s = Math.max(-0.05, Math.min(0.05, statEdge)) + (r.source ? 0.035 : 0) + Math.min(0.03, r.rules * 0.015) +
+                Math.min(0.01, r.generic * 0.005) + (r.note ? 0.03 : 0) - (bad ? 0.05 : 0);
+        res.counterScore += s * w;
+        if (isCounter) res.hits++;
+        if (bad) res.countered.push(e);
+        var item = { e: e, es: es, onLane: onLane, wr: wr, g: m ? m.g : 0, edge: statEdge, r: r, isCounter: isCounter, bad: bad };
+        res.vs.push(item);
+        if (onLane) res.laneVs.push(item);
+      });
+      ctx.allies.forEach(function (as) {
+        var a = byId[as.id];
+        if (ctx.mate && as === ctx.mate) {
+          res.lane = laneCombo(h, role, a, as.pos);
+          if (res.lane) res.lane.mate = a;
+        }
+        var s = synergyWith(h, a);
+        if (s) { res.syn.push({ a: a, why: s.why }); res.synBonus += s.bonus; }
+      });
+      var laneBonus = res.lane ? Math.min(0.04, res.lane.score * 0.012) : 0;
+      var cw = order === "last" ? 1 : 0.7;
+      res.score = h.overall + cw * res.counterScore + Math.min(0.03, res.synBonus) + laneBonus;
+      res.chance = Math.max(40, Math.min(68, Math.round((h.overall + cw * res.counterScore * 0.6 + Math.min(0.03, res.synBonus) + laneBonus * 0.7) * 100)));
+      return res;
+    }
+
+    function cardHtml(x, idx, ctx) {
+      var h = x.h;
+      var tags = "";
+      var good = x.vs.filter(function (v) { return v.isCounter; }).map(function (v) { return v.e.localized_name; });
+      if (good.length) tags += '<span class="tag good">контрит ' + esc(good.join(", ")) + "</span>";
+      if (x.lane) tags += '<span class="tag lane">' + x.lane.level + " связка на лайн с " + esc(x.lane.mate.localized_name) + "</span>";
+      if (x.countered.length) tags += '<span class="tag bad">⚠ его контрит ' + esc(x.countered.map(function (e) { return e.localized_name; }).join(", ")) + "</span>";
+      if (!tags) tags = ctx.enemies.length ? "явных контр-пиков нет, сильный по общей статистике" : "враги не выбраны — подбор по общей силе героя";
+
+      var d = "";
+      if (x.vs.length) {
+        d += '<div class="sec"><b>Почему он контрит</b>';
+        x.vs.forEach(function (v) {
+          var en = esc(v.e.localized_name) + (v.onLane ? " (твоя линия)" : "");
+          if (v.bad) {
+            d += "<div>• Против " + en + ": здесь он сам в минусе — см. «Осторожно» ниже</div>";
+          } else if (v.r.texts.length && v.isCounter) {
+            d += '<div class="note"><b>Против ' + en + ":</b> " + esc(v.r.texts.join(" ")) +
+              (v.r.source ? ' <span class="small">· есть в подборке контр-пиков (esports.gg)</span>' : "") + "</div>";
+          } else if (v.r.source) {
+            d += '<div class="note"><b>Против ' + en + ":</b> есть в подборке главных контр-пиков на " + esc(v.e.localized_name) + " (esports.gg).</div>";
+          } else if (v.isCounter) {
+            d += '<div class="note"><b>Против ' + en + ":</b> по статистике матчей выигрывает заметно чаще обычного.</div>";
+          } else {
+            d += "<div>• Против " + en + ": особого контра нет</div>";
+          }
+          if (v.g >= 200) {
+            d += '<div class="small">Статистика: ' + Math.round(v.wr * 100) + "% побед (обычно " + Math.round(h.overall * 100) + "%), игр: " + v.g.toLocaleString("ru-RU") + "</div>";
+          }
+        });
+        d += "</div>";
+      }
+      if (x.countered.length) {
+        d += '<div class="sec warn"><b>Осторожно</b>';
+        x.countered.forEach(function (e) {
+          d += '<div class="note">' + esc(e.localized_name) + " — один из главных контр-пиков на " + esc(h.localized_name) + ". Против него играй аккуратнее.</div>";
+        });
+        d += "</div>";
+      }
+      if (ctx.mate || x.laneVs.length || role === 2) {
+        d += '<div class="sec lane"><b>Линия</b>';
+        if (x.lane) d += '<div class="note"><b>' + x.lane.level[0].toUpperCase() + x.lane.level.slice(1) + " связка с " + esc(x.lane.mate.localized_name) + ":</b> " + esc(x.lane.why) + "</div>";
+        else if (ctx.mate) d += "<div>С " + esc(byId[ctx.mate.id].localized_name) + " особой связки на линии нет, но и мешать друг другу не будете.</div>";
+        if (x.laneVs.length) {
+          var names = x.laneVs.map(function (v) { return esc(v.e.localized_name) + (v.es.guess ? " (примерно)" : ""); });
+          var beats = x.laneVs.filter(function (v) { return v.isCounter; }).length;
+          var loses = x.laneVs.filter(function (v) { return v.bad; }).length;
+          d += "<div>На линии против: " + names.join(", ") + ". " +
+            (loses ? "Будет тяжело — кто-то из них его контрит." : beats ? "Здесь у тебя преимущество." : "Линия примерно равная.") + "</div>";
+        } else if (ctx.enemies.length) {
+          d += '<div class="small">Кто будет против тебя на линии, бот не знает. Поставь врагам позиции — нажми на героя.</div>';
+        }
+        d += "</div>";
+      }
+      if (x.syn.length) {
+        d += '<div class="sec"><b>Как он сочетается с командой</b>';
+        x.syn.forEach(function (s) { d += '<div class="note"><b>С ' + esc(s.a.localized_name) + ":</b> " + esc(s.why) + "</div>"; });
+        d += "</div>";
+      }
+      var myRoles = h.roles.filter(function (r) { return ROLE_MAP[role].indexOf(r) !== -1; }).map(function (r) { return ROLE_RU[r] || r; });
+      d += '<div class="sec"><b>Почему стоит взять</b><br>' +
+        "На твоей роли он: " + (myRoles.length ? myRoles.join(", ") : "играется на этой позиции") + ".<br>" +
+        "Герой: " + (ATTR_RU[h.primary_attr] || "") + ", " + (ATTACK_RU[h.attack_type] || "") + ". Общий процент побед: " + Math.round(h.overall * 100) + "%.<br>" +
+        (!ctx.enemies.length ? "Враги не выбраны, поэтому подсказка идёт по общей силе героя."
+          : order === "last" ? "Ты пикаешь последним, поэтому контр-пик важнее всего."
+          : "Ты пикаешь не последним, поэтому учитываем и контр-пик, и общую силу героя.") + "</div>";
+      d += '<div class="small">Шанс на победу — это оценка бота: статистика против врагов, подборка контр-пиков, механики скиллов, линия и синергии. Подсказка, а не гарантия.</div>';
+
+      var col = x.chance >= 58 ? "#4ade80" : (x.chance >= 52 ? "#22d3ee" : "#f59e0b");
+      return '<div class="res"><div class="top">' +
+        '<div class="pic"><img src="' + imgUrl(h) + '"><div class="chance" style="color:' + col + '">' + x.chance + "%<span>шанс на победу</span></div></div>" +
+        '<div class="rinfo"><div class="rname">' + (idx + 1) + ". " + esc(h.localized_name) + "</div>" +
+        '<div class="rwhy">' + tags + "</div>" +
+        '<button class="btn-more">Подробнее ▾</button></div></div>' +
+        '<div class="more">' + d + "</div></div>";
+    }
 
     async function recommend() {
       var box = $("results");
-      if (!heroes.length) { box.innerHTML = '<div class="loading">Герои ещё грузятся...</div>'; return; }
-      box.innerHTML = '<div class="loading">Считаю...</div>';
-
-      var enemyIds = enemies.filter(Boolean);
-      var taken = allies.concat(enemies).filter(Boolean);
-      var roleList = ROLE_MAP[role];
-      var data = {};
-
       try {
-        await Promise.all(enemyIds.map(function (id) {
-          return fetch("https://api.opendota.com/api/heroes/" + id + "/matchups")
-            .then(function (r) { return r.json(); })
-            .then(function (arr) {
-              if (!Array.isArray(arr)) throw new Error("bad");
-              var m = {};
-              arr.forEach(function (x) { m[x.hero_id] = { g: x.games_played, w: x.wins }; });
-              data[id] = m;
-            });
-        }));
-      } catch (e) {
-        box.innerHTML = '<div class="loading">Не получилось загрузить данные, попробуй ещё раз</div>';
-        return;
-      }
+        if (!heroes.length) { box.innerHTML = '<div class="loading">Герои ещё грузятся, подожди пару секунд и нажми ещё раз</div>'; return; }
+        box.innerHTML = '<div class="loading">Считаю...</div>';
+        var ens = enemies.filter(Boolean), als = allies.filter(Boolean);
+        var mate = LANE_MATE[role] ? als.filter(function (a) { return a.pos === LANE_MATE[role]; })[0] || null : null;
+        var results = await Promise.all(ens.map(function (s) { return fetchMatchups(s.id); }));
+        var stats = {}, noStats = false;
+        ens.forEach(function (s, i) { stats[s.id] = results[i]; if (!results[i]) noStats = true; });
+        var ctx = { enemies: ens, allies: als, mate: mate, stats: stats, laneVs: LANE_VS[role] };
 
-      var list = [];
-      heroes.forEach(function (h) {
-        if (taken.indexOf(h.id) !== -1) return;
-        var okRole = h.roles.some(function (r) { return roleList.indexOf(r) !== -1; });
-        if (!okRole) return;
-
-        var parts = [];
-        var sum = 0;
-        enemyIds.forEach(function (eid) {
-          var m = data[eid][h.id];
-          var wr = m ? (m.g - m.w + 50) / (m.g + 100) : 0.5;
-          var note = findNote(h, byId[eid]);
-          var bonus = note && note.bonus ? note.bonus : 0;
-          sum += wr + bonus;
-          parts.push({ id: eid, wr: wr, g: m ? m.g : 0, note: note ? note.why : null });
-        });
-
-        var counter = enemyIds.length ? sum / enemyIds.length : h.overall;
-        var w = !enemyIds.length ? 0 : (order === "last" ? 0.8 : 0.6);
-        var score = w * counter + (1 - w) * h.overall;
-        list.push({ h: h, score: score, parts: parts });
-      });
-
-      list.sort(function (a, b) { return b.score - a.score; });
-
-      var html = "";
-      list.slice(0, 8).forEach(function (x, idx) {
-        var overallPct = Math.round(x.h.overall * 100);
-        var shortList = [];
-        var details = "";
-
-        x.parts.forEach(function (p) {
-          if (p.wr - x.h.overall >= 0.02) {
-            shortList.push("бьёт " + byId[p.id].localized_name + " (" + Math.round(p.wr * 100) + "%)");
+        var tk = taken();
+        var list = heroes.filter(function (h) { return tk.indexOf(h.id) === -1 && canPlay(h, role); })
+          .map(function (h) { return evaluate(h, ctx); });
+        // сначала те, кто реально контрит врагов; герои без контр-пиков — ниже
+        list.sort(function (a, b) {
+          if (ens.length) {
+            var ca = a.hits > 0 ? 1 : 0, cb = b.hits > 0 ? 1 : 0;
+            if (ca !== cb) return cb - ca;
           }
+          return b.score - a.score;
         });
 
-        if (x.parts.length) {
-          details += '<div class="sec"><b>Почему он контрит</b>';
-          x.parts.forEach(function (p) {
-            var en = byId[p.id].localized_name;
-            var edge = p.wr - x.h.overall;
-            var verdict;
-            if (p.g < 200) verdict = "мало игр, данные неточные";
-            else if (edge >= 0.02) verdict = "сильный контр";
-            else if (edge <= -0.02) verdict = "тут хуже, чем обычно";
-            else verdict = "примерно как обычно";
-            details += "<br>• Против " + en + ": выигрывает " + Math.round(p.wr * 100) +
-              "% игр (в среднем " + overallPct + "%), " + verdict +
-              (p.g ? ". Игр в основе: " + p.g.toLocaleString("ru-RU") : "");
-            if (p.note) details += '<div class="note"><b>Разбор от автора:</b> ' + p.note + "</div>";
-          });
-          details += "</div>";
-        }
-
-        var myRoles = x.h.roles.filter(function (r) { return roleList.indexOf(r) !== -1; })
-          .map(function (r) { return ROLE_RU[r] || r; });
-        details += '<div class="sec"><b>Почему стоит взять</b><br>' +
-          "На твоей роли он: " + (myRoles.length ? myRoles.join(", ") : "подходит по данным") + ".<br>" +
-          "Герой: " + (ATTR_RU[x.h.primary_attr] || "") + ", " + (ATTACK_RU[x.h.attack_type] || "") +
-          ". Общий процент побед: " + overallPct + "%.<br>";
-        if (!x.parts.length) {
-          details += "Враги не выбраны, поэтому подсказка идёт по общей силе героя.";
-        } else if (order === "last") {
-          details += "Ты пикаешь последним, поэтому контр-пик важнее всего.";
-        } else {
-          details += "Ты пикаешь не последним, поэтому учитываем и контр-пик, и общую силу героя.";
-        }
-        details += "</div>";
-
-        html += '<div class="res"><div class="top"><img src="' + imgUrl(x.h) + '">' +
-          '<div class="rinfo"><div class="rname">' + (idx + 1) + ". " + x.h.localized_name + "</div>" +
-          '<div class="rwhy">' + (shortList.length ? shortList.join(", ") : "сильный по общей статистике") + "</div></div>" +
-          '<div class="score">' + Math.round(x.score * 100) + "%</div></div>" +
-          '<button class="btn-more">Подробнее ▾</button>' +
-          '<div class="more">' + details + "</div></div>";
-      });
-      box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
-
-      var btns = box.querySelectorAll(".btn-more");
-      btns.forEach(function (b) {
-        b.onclick = function () {
-          var m = b.parentNode.querySelector(".more");
-          var open = m.style.display === "block";
-          m.style.display = open ? "none" : "block";
-          b.textContent = open ? "Подробнее ▾" : "Скрыть ▴";
-        };
-      });
-      box.scrollIntoView({ behavior: "smooth" });
+        var html = "";
+        if (noStats) html += '<div class="loading">Статистика матчей сейчас недоступна, подсказки посчитаны по подборке контр-пиков и механикам скиллов.</div>';
+        if (ens.length && list.length && list[0].hits === 0) html += '<div class="loading">Явных контр-пиков на этих врагов для твоей роли не нашлось — показываю самых сильных героев с учётом линии и команды.</div>';
+        list.slice(0, 8).forEach(function (x, i) { html += cardHtml(x, i, ctx); });
+        box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+        Array.prototype.forEach.call(box.querySelectorAll(".btn-more"), function (b) {
+          b.onclick = function () {
+            var m = b.closest(".res").querySelector(".more");
+            var open = m.style.display === "block";
+            m.style.display = open ? "none" : "block";
+            b.textContent = open ? "Подробнее ▾" : "Скрыть ▴";
+          };
+        });
+        haptic("medium");
+        box.scrollIntoView({ behavior: "smooth" });
+      } catch (err) {
+        box.innerHTML = '<div class="loading">Что-то пошло не так: ' + esc(err && err.message ? err.message : err) + "</div>";
+      }
     }
-
     $("go").onclick = recommend;
 
+    // ---------- вкладка винрейтов ----------
+    var RANKS = [{ id: 0, t: "Все ранги" }, { id: 1, t: "Рекрут" }, { id: 2, t: "Страж" }, { id: 3, t: "Рыцарь" },
+                 { id: 4, t: "Герой" }, { id: 5, t: "Легенда" }, { id: 6, t: "Властелин" }, { id: 7, t: "Божество" }];
+    var LANES = [{ id: 0, t: "Все линии" }, { id: 1, t: "Керри (1)" }, { id: 2, t: "Мид (2)" }, { id: 3, t: "Оффлейн (3)" }, { id: 4, t: "Саппорт 4" }, { id: 5, t: "Саппорт 5" }];
+    var rateRank = 0, rateLane = 0, rateSort = "pick";
+    LANES.forEach(function (l) { var o = document.createElement("option"); o.value = l.id; o.textContent = l.t; $("rlane").appendChild(o); });
+    $("rlane").addEventListener("change", function () { rateLane = parseInt(this.value, 10) || 0; drawRates(); });
+    $("rsearch").addEventListener("input", function () { drawRates(); });
+
+    function rankStats(h) {
+      if (rateRank) return { p: h[rateRank + "_pick"] || 0, w: h[rateRank + "_win"] || 0 };
+      var p = 0, w = 0;
+      for (var i = 1; i <= 8; i++) { p += h[i + "_pick"] || 0; w += h[i + "_win"] || 0; }
+      return { p: p, w: w };
+    }
+    function drawRateChips() {
+      makeChips("rranks", RANKS, rateRank, function (id) { rateRank = id; drawRateChips(); drawRates(); });
+      makeChips("rsort", [{ id: "pick", t: "Популярные" }, { id: "wr", t: "Самый высокий винрейт" }], rateSort, function (id) { rateSort = id; drawRateChips(); drawRates(); });
+    }
+    function drawRates() {
+      var box = $("rlist");
+      if (!heroes.length) { box.innerHTML = '<div class="loading">Загружаю статистику...</div>'; return; }
+      var q = ($("rsearch").value || "").toLowerCase();
+      var rows = heroes.map(function (h) { var s = rankStats(h); return { h: h, p: s.p, wr: s.p ? s.w / s.p : 0 }; });
+      var total = rows.reduce(function (a, r) { return a + r.p; }, 0);
+      if (!total) { box.innerHTML = '<div class="loading">На этом ранге пока нет данных</div>'; return; }
+      rows.forEach(function (r) { r.pr = r.p / total * 10; });
+      rows = rows.filter(function (r) {
+        if (!r.p) return false;
+        if (rateLane && !canPlay(r.h, rateLane)) return false;
+        if (rateSort === "wr" && r.pr < 0.01) return false;
+        return r.h.localized_name.toLowerCase().indexOf(q) !== -1;
+      });
+      var maxPr = Math.max.apply(null, rows.map(function (r) { return r.pr; }).concat([0.0001]));
+      rows.sort(rateSort === "wr" ? function (a, b) { return b.wr - a.wr; } : function (a, b) { return b.p - a.p; });
+      var html = "";
+      rows.forEach(function (r, i) {
+        var col = r.wr >= 0.52 ? "#4ade80" : (r.wr >= 0.48 ? "#e5e7eb" : "#f87171");
+        var pos = positionsOf(r.h);
+        html += '<div class="rrow"><div class="rnum">' + (i + 1) + '</div><img src="' + imgUrl(r.h) + '" onerror="this.style.visibility=\'hidden\'">' +
+          '<div class="rmid"><div class="rname">' + esc(r.h.localized_name) + '</div><div class="rbar"><i style="width:' + Math.round(r.pr / maxPr * 100) + '%"></i></div>' +
+          '<div class="rsub">берут в ' + (r.pr * 100).toFixed(1) + "% игр" + (pos.length ? ", позиции: " + pos.join(", ") : "") + "</div></div>" +
+          '<div class="rwr" style="color:' + col + '">' + (r.wr * 100).toFixed(1) + "%<span>винрейт</span></div></div>";
+      });
+      box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+    }
+
+    Array.prototype.forEach.call($("tabs").querySelectorAll(".tab"), function (b) {
+      b.onclick = function () {
+        Array.prototype.forEach.call($("tabs").querySelectorAll(".tab"), function (x) { x.classList.remove("active"); });
+        b.classList.add("active");
+        var isRate = b.getAttribute("data-v") === "rate";
+        $("pickView").style.display = isRate ? "none" : "";
+        $("rateView").style.display = isRate ? "" : "none";
+        if (isRate) drawRates();
+        try { Telegram.WebApp.HapticFeedback.selectionChanged(); } catch (e) {}
+      };
+    });
+
+    // ---------- старт ----------
     fetch("https://api.opendota.com/api/heroStats")
       .then(function (r) { return r.json(); })
       .then(function (data) {
         heroes = data.map(function (h) {
           var pick = 0, win = 0;
-          for (var i = 1; i <= 8; i++) {
-            pick += h[i + "_pick"] || 0;
-            win += h[i + "_win"] || 0;
-          }
+          for (var i = 1; i <= 8; i++) { pick += h[i + "_pick"] || 0; win += h[i + "_win"] || 0; }
           h.overall = pick ? win / pick : 0.5;
           return h;
         }).sort(function (a, b) { return a.localized_name.localeCompare(b.localized_name); });
-        heroes.forEach(function (h) { byId[h.id] = h; });
+        heroes.forEach(function (h) { byId[h.id] = h; byName[h.localized_name] = h; });
         drawSlots();
+        if ($("rateView").style.display !== "none") drawRates();
       })
-      .catch(function () {
-        $("results").innerHTML = '<div class="loading">Не удалось загрузить героев</div>';
-      });
+      .catch(function () { $("results").innerHTML = '<div class="loading">Не удалось загрузить героев, обнови страницу</div>'; });
 
     drawChips();
+    drawRateChips();
     drawSlots();
   </script>
-  <script>
-  window.onerror = function (msg, src, line) {
-    var r = document.getElementById("results");
-    if (r) r.innerHTML = '<div class="loading">Ошибка: ' + msg + " (файл " + String(src || "").split("/").pop() + ", строка " + line + ")</div>";
-  };
-  window.addEventListener("unhandledrejection", function (e) {
-    var r = document.getElementById("results");
-    var m = e.reason && e.reason.message ? e.reason.message : e.reason;
-    if (r) r.innerHTML = '<div class="loading">Ошибка: ' + m + "</div>";
-  });
-</script>
-<script src="counters.js?v=7"></script>
-<script>
-  enemies.length = 4;
-  document.getElementById("enemies").style.gridTemplateColumns = "repeat(4, 1fr)";
-  Array.prototype.forEach.call(document.querySelectorAll(".label"), function (el) {
-    if (el.textContent.trim() === "Враги") el.textContent = "Враги (сколько видишь)";
-  });
-  drawSlots();
-  document.getElementById("go").onclick = recommend;
-</script>
 </body>
 </html>
