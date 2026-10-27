@@ -672,43 +672,51 @@
       var left = FREE_USES - uses();
       $("freeleft").textContent = (left > 0 && !subRecently()) ? "Бесплатных подборов без подписки: " + left : "";
     }
+    // ответ: { known: удалось ли проверить через сервер, subscribed: подписан ли }
     async function checkSub() {
       var initData = "";
       try { initData = Telegram.WebApp.initData || ""; } catch (e) {}
-      // не в Telegram или сервер не настроен — не блокируем
-      if (!initData || WORKER_URL.indexOf("https://") !== 0) return true;
+      if (!initData) return { known: true, subscribed: true };   // открыто не в Telegram — не блокируем
+      if (WORKER_URL.indexOf("https://") !== 0) return { known: false, subscribed: false };
       try {
         var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-        var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 7000) : null;
+        var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 4000) : null;
         var r = await fetch(WORKER_URL, { method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ initData: initData }), signal: ctrl ? ctrl.signal : undefined });
         if (tm) clearTimeout(tm);
         var d = await r.json();
-        if (!d.ok) return true;          // ошибка сервера — не мешаем пользоваться
-        return d.subscribed === true;
-      } catch (e) { return true; }       // сервер недоступен — не мешаем пользоваться
+        if (!d.ok) return { known: false, subscribed: false };
+        return { known: true, subscribed: d.subscribed === true };
+      } catch (e) { return { known: false, subscribed: false }; }  // сервер недоступен (например, Cloudflare заблокирован)
     }
+    var pressedSub = false;
     function openGate() { $("gmsg").textContent = ""; $("gmodal").style.display = "flex"; }
     function closeGate() { $("gmodal").style.display = "none"; }
+    function passGate() {
+      store("dp_sub_ok", String(Date.now()));
+      closeGate(); haptic("medium");
+      go();
+    }
     $("gsub").onclick = function () {
+      pressedSub = true;
       try { Telegram.WebApp.openTelegramLink(CHANNEL_URL); } catch (e) { window.open(CHANNEL_URL, "_blank"); }
     };
     $("gdone").onclick = async function () {
       $("gmsg").style.color = "#9ca3af"; $("gmsg").textContent = "Проверяю...";
-      if (await checkSub()) {
-        store("dp_sub_ok", String(Date.now()));
-        closeGate(); haptic("medium");
-        go();
-      } else {
-        $("gmsg").style.color = "#fda4af";
-        $("gmsg").textContent = "Пока не вижу подписку. Подпишись и нажми ещё раз 🙏";
-      }
+      var r = await checkSub();
+      if (r.subscribed) return passGate();
+      if (!r.known && pressedSub) return passGate();   // проверить нельзя — верим тому, кто нажал «Подписаться»
+      $("gmsg").style.color = "#fda4af";
+      $("gmsg").textContent = r.known
+        ? "Пока не вижу подписку. Подпишись и нажми ещё раз 🙏"
+        : "Сначала нажми «Подписаться» и подпишись на канал 🙏";
     };
     $("gmodal").onclick = function (e) { if (e.target === $("gmodal")) closeGate(); };
     async function go() {
       if (uses() >= FREE_USES && !subRecently()) {
         $("results").innerHTML = '<div class="loading">Проверяю подписку...</div>';
-        if (!(await checkSub())) { $("results").innerHTML = ""; openGate(); return; }
+        var r = await checkSub();
+        if (!r.subscribed) { $("results").innerHTML = ""; openGate(); return; }
         store("dp_sub_ok", String(Date.now()));
       }
       store("dp_uses", String(uses() + 1));
