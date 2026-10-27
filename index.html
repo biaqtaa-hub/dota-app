@@ -678,16 +678,23 @@
       try { initData = Telegram.WebApp.initData || ""; } catch (e) {}
       if (!initData) return { known: true, subscribed: true };   // открыто не в Telegram — не блокируем
       if (WORKER_URL.indexOf("https://") !== 0) return { known: false, subscribed: false };
+      // сервер недавно не отвечал — не ждём его снова сутки
+      var down = parseInt(store("dp_srv_down") || "0", 10);
+      if (down && Date.now() - down < 86400000) return { known: false, subscribed: false };
       try {
         var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-        var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 4000) : null;
+        var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 2500) : null;
         var r = await fetch(WORKER_URL, { method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ initData: initData }), signal: ctrl ? ctrl.signal : undefined });
         if (tm) clearTimeout(tm);
         var d = await r.json();
-        if (!d.ok) return { known: false, subscribed: false };
+        if (!d.ok) { store("dp_srv_down", String(Date.now())); return { known: false, subscribed: false }; }
+        store("dp_srv_down", "0");
         return { known: true, subscribed: d.subscribed === true };
-      } catch (e) { return { known: false, subscribed: false }; }  // сервер недоступен (например, Cloudflare заблокирован)
+      } catch (e) {
+        store("dp_srv_down", String(Date.now()));                  // сервер недоступен (например, Cloudflare заблокирован)
+        return { known: false, subscribed: false };
+      }
     }
     var pressedSub = false;
     function openGate() { $("gmsg").textContent = ""; $("gmodal").style.display = "flex"; }
