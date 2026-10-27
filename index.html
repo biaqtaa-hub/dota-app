@@ -141,6 +141,16 @@
     .rsub { font-size: 11px; color: #9ca3af; }
     .rwr { font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 15px; text-align: right; }
     .rwr span { display: block; font-family: 'Rubik', sans-serif; font-weight: 400; font-size: 9px; color: #9ca3af; margin-top: 3px; }
+    .gate { text-align: center; padding: 10px 6px 18px; }
+    .gate h3 { font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 18px; margin: 6px 0 10px;
+      background: linear-gradient(90deg, #c084fc, #f472b6, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .gate p { color: #d1d5db; font-size: 14px; line-height: 1.5; margin: 0 0 16px; }
+    .gbtn { display: block; width: 100%; margin-top: 10px; padding: 15px; border-radius: 14px; border: none; cursor: pointer;
+      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 14px; color: #fff; }
+    .gbtn.main { background: linear-gradient(90deg, #a855f7, #ec4899, #22d3ee); box-shadow: 0 0 20px rgba(236, 72, 153, 0.45); }
+    .gbtn.sec { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.18); font-family: 'Rubik', sans-serif; font-weight: 500; }
+    #gmsg { min-height: 18px; margin-top: 10px; font-size: 13px; color: #fda4af; }
+    #freeleft { text-align: center; font-size: 12px; color: #6b7280; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -168,6 +178,7 @@
     <div class="hint">Нажми на пустой слот, чтобы выбрать героя. Нажми на героя, чтобы поменять ему позицию или убрать. Позиции врагов — примерные, ≈ значит «бот угадал».</div>
 
     <button id="go">ПОДОБРАТЬ</button>
+    <div id="freeleft"></div>
     <div id="results"></div>
   </div>
 
@@ -192,6 +203,18 @@
         <button class="xbtn" id="pclose">✕</button>
       </div>
       <div class="grid" id="pgrid"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="gmodal">
+    <div class="sheet">
+      <div class="gate">
+        <h3>Подпишись на канал</h3>
+        <p>Бот бесплатный 🎁 Чтобы пользоваться им дальше, подпишись на наш канал — там мета недели, разборы героев и обновления бота.</p>
+        <button class="gbtn main" id="gsub">ПОДПИСАТЬСЯ</button>
+        <button class="gbtn sec" id="gdone">Я подписался</button>
+        <div id="gmsg"></div>
+      </div>
     </div>
   </div>
 
@@ -637,7 +660,63 @@
         box.innerHTML = '<div class="loading">Что-то пошло не так: ' + esc(err && err.message ? err.message : err) + "</div>";
       }
     }
-    $("go").onclick = recommend;
+
+    // ---------- подписка на канал ----------
+    var CHANNEL_URL = "https://t.me/dotapick_lc";
+    var WORKER_URL = "https://dotapick-check.biaqtaa.workers.dev/";
+    var FREE_USES = 3;
+    function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+    function uses() { return parseInt(store("dp_uses") || "0", 10) || 0; }
+    function subRecently() { var t = parseInt(store("dp_sub_ok") || "0", 10); return t && Date.now() - t < 3 * 86400000; }
+    function drawFreeLeft() {
+      var left = FREE_USES - uses();
+      $("freeleft").textContent = (left > 0 && !subRecently()) ? "Бесплатных подборов без подписки: " + left : "";
+    }
+    async function checkSub() {
+      var initData = "";
+      try { initData = Telegram.WebApp.initData || ""; } catch (e) {}
+      // не в Telegram или сервер не настроен — не блокируем
+      if (!initData || WORKER_URL.indexOf("https://") !== 0) return true;
+      try {
+        var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+        var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 7000) : null;
+        var r = await fetch(WORKER_URL, { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ initData: initData }), signal: ctrl ? ctrl.signal : undefined });
+        if (tm) clearTimeout(tm);
+        var d = await r.json();
+        if (!d.ok) return true;          // ошибка сервера — не мешаем пользоваться
+        return d.subscribed === true;
+      } catch (e) { return true; }       // сервер недоступен — не мешаем пользоваться
+    }
+    function openGate() { $("gmsg").textContent = ""; $("gmodal").style.display = "flex"; }
+    function closeGate() { $("gmodal").style.display = "none"; }
+    $("gsub").onclick = function () {
+      try { Telegram.WebApp.openTelegramLink(CHANNEL_URL); } catch (e) { window.open(CHANNEL_URL, "_blank"); }
+    };
+    $("gdone").onclick = async function () {
+      $("gmsg").style.color = "#9ca3af"; $("gmsg").textContent = "Проверяю...";
+      if (await checkSub()) {
+        store("dp_sub_ok", String(Date.now()));
+        closeGate(); haptic("medium");
+        go();
+      } else {
+        $("gmsg").style.color = "#fda4af";
+        $("gmsg").textContent = "Пока не вижу подписку. Подпишись и нажми ещё раз 🙏";
+      }
+    };
+    $("gmodal").onclick = function (e) { if (e.target === $("gmodal")) closeGate(); };
+    async function go() {
+      if (uses() >= FREE_USES && !subRecently()) {
+        $("results").innerHTML = '<div class="loading">Проверяю подписку...</div>';
+        if (!(await checkSub())) { $("results").innerHTML = ""; openGate(); return; }
+        store("dp_sub_ok", String(Date.now()));
+      }
+      store("dp_uses", String(uses() + 1));
+      drawFreeLeft();
+      recommend();
+    }
+    $("go").onclick = go;
+    drawFreeLeft();
 
     // ---------- вкладка винрейтов ----------
     var RANKS = [{ id: 0, t: "Все ранги" }, { id: 1, t: "Рекрут" }, { id: 2, t: "Страж" }, { id: 3, t: "Рыцарь" },
@@ -718,7 +797,7 @@
     drawRateChips();
     drawSlots();
   </script>
-  <script data-goatcounter="https://dotapick.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script data-goatcounter="https://dotapick.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <script>
   document.getElementById("go").addEventListener("click", function () {
     if (window.goatcounter && window.goatcounter.count) {
