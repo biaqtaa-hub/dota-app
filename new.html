@@ -359,6 +359,10 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
 @keyframes blink { 0%, 100% { color: var(--muted); } 30%, 70% { color: #fff; transform: scale(1.04); } }
 #dragHint.blink { animation: blink .8s; }
 
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand img { height: 34px; width: auto; filter: drop-shadow(0 4px 10px rgba(80,80,255,.5)); }
+.brand span { display: flex; flex-direction: column; line-height: 1.1; }
+
 </style>
 </head>
 <body>
@@ -384,7 +388,7 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
 
 <main class="app" id="app">
   <header class="top">
-    <div class="logo">DOTA PICK<small>LowCulture</small></div>
+    <div class="logo brand"><img src="dp-logo.png" alt="DP" width="64" height="34"><span>DOTA PICK<small>LowCulture</small></span></div>
     <button class="pill glass" type="button" data-reset style="border:0;color:var(--ink);cursor:pointer;font:600 12px var(--font)">↺ Новый драфт</button>
   </header>
 
