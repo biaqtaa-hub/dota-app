@@ -19,6 +19,7 @@
   --rim: rgba(255, 255, 255, 0.34);
   --win: #74f0b0;          /* винрейт, «хорошо» */
   --enemy: #ff7a90;        /* рамка врага */
+  --ally: #6ed6ff;         /* рамка союзника */
   --font: "Onest", "SF Pro Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --logo: "Unbounded", "Onest", system-ui, sans-serif;
   --r-lg: 26px; --r-md: 18px; --r-sm: 14px;
@@ -116,9 +117,30 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
 .slot.full { box-shadow: inset 0 0 0 2px var(--enemy); }
 .slot.full .x { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 99px; display: grid; place-items: center; font: 700 12px/1 var(--font); color: #fff; background: rgba(5,6,26,.7); }
 
+/* ---------- враги / союзники ---------- */
+.side { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; border-radius: 999px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.sbtn { border: 0; cursor: pointer; height: 40px; border-radius: 999px; background: transparent; color: var(--muted); font: 700 14px var(--font);
+  display: flex; align-items: center; justify-content: center; gap: 6px; transition: background .3s, color .3s, transform .45s var(--spring); }
+.sbtn:active { transform: scale(.96); }
+.sbtn b { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; display: inline-grid; place-items: center; font-size: 12px; background: rgba(255,255,255,.12); color: var(--ink); }
+.sbtn i { font-style: normal; font-weight: 500; font-size: 12px; opacity: .6; margin-left: -4px; }
+.sbtn[aria-selected="true"] { color: #fff; background: linear-gradient(160deg, rgba(255,255,255,.24), rgba(255,255,255,.08)); box-shadow: inset 0 1px 0 rgba(255,255,255,.55); }
+.sbtn.enemy[aria-selected="true"] b { background: var(--enemy); color: #1a0710; }
+.sbtn.ally[aria-selected="true"] b { background: var(--ally); color: #031a24; }
+.slots.ally .slot.full { box-shadow: inset 0 0 0 2px var(--ally); }
+.tile.al .ph { box-shadow: inset 0 0 0 2px var(--ally); }
+.tile.al .ph::after { content: "союзник"; position: absolute; left: 4px; bottom: 4px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 99px; background: rgba(110,214,255,.92); color: #031a24; }
+.roles { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-inline: -2px; padding: 2px; }
+.roles::-webkit-scrollbar { display: none; }
+.roles button { flex: none; border: 0; cursor: pointer; height: 36px; padding: 0 14px; border-radius: 999px; font: 600 13px var(--font); color: var(--ink);
+  background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); transition: background .3s, transform .45s var(--spring); }
+.roles button:active { transform: scale(.94); }
+.roles button[aria-checked="true"] { background: rgba(255,255,255,.24); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.3); }
+.card .with { margin-top: 6px; font-size: 12.5px; line-height: 1.38; color: #cdeeff; padding: 6px 9px; border-radius: 10px; background: rgba(110,214,255,.1); box-shadow: inset 0 0 0 1px rgba(110,214,255,.22); }
+
 /* ---------- результаты ---------- */
 .list { display: flex; flex-direction: column; gap: 10px; }
-.card { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 14px; padding: 10px 14px 10px 10px; border-radius: var(--r-lg); align-items: center; transition: transform .45s var(--spring); }
+.card { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 14px; padding: 10px 14px 10px 10px; border-radius: var(--r-lg); align-items: start; transition: transform .45s var(--spring); }
 .card:active { transform: scale(.97); }
 .card .ph { width: 104px; height: 58px; border-radius: var(--r-md); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
 .card .meta { display: flex; align-items: center; gap: 8px; }
@@ -243,19 +265,26 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
 
   <section id="v-pick" class="view">
     <div style="display:flex;flex-direction:column;gap:14px">
-      <h1>Кто во врагах?</h1>
+      <h1 id="h1">Кто во врагах?</h1>
       <label class="search glass" for="q">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Начни писать: мип…" aria-label="Поиск героя">
         <button class="clear" id="clr" type="button" hidden>Стереть</button>
       </label>
+      <div class="side" role="tablist" aria-label="Кого добавляем">
+        <button type="button" class="sbtn enemy" data-side="enemy" aria-selected="true">Враги <b id="cE">0</b><i>/5</i></button>
+        <button type="button" class="sbtn ally" data-side="ally" aria-selected="false">Союзники <b id="cA">0</b><i>/4</i></button>
+      </div>
       <div class="slots glass" id="slots"></div>
       <div class="grid glass" id="grid"></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:22px">
+      <div class="roles" id="roles" role="radiogroup" aria-label="Твоя роль">
+        <button type="button" data-r="0" aria-checked="true">Любая роль</button><button type="button" data-r="1" aria-checked="false">Керри</button><button type="button" data-r="2" aria-checked="false">Мид</button><button type="button" data-r="3" aria-checked="false">Оффлейн</button><button type="button" data-r="4" aria-checked="false">Саппорт 4</button><button type="button" data-r="5" aria-checked="false">Саппорт 5</button>
+      </div>
       <div>
         <h2 id="resTitle">Бери против Meepo</h2>
-        <div class="sub">обновляется сразу, кнопку жать не нужно</div>
+        <div class="sub" id="resSub">обновляется сразу, кнопку жать не нужно</div>
       </div>
       <div class="list" id="res"></div>
     </div>
@@ -339,7 +368,7 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
   var ALL = Object.keys(SLUG).sort();
   var HAVE = ["Pudge", "Meepo", "Invoker", "Juggernaut", "Shadow Fiend", "Phantom Assassin", "Anti-Mage", "Earthshaker"];
   var IMG = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/";
-  var enemies = ["Meepo"];
+  var enemies = ["Meepo"], allies = [], side = "enemy", role = 0;
   var query = "";
 
   function norm(s) { return s.toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-я0-9]/g, ""); }
@@ -385,47 +414,87 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
     }
     return "Один из самых сильных ответов на " + esc(e) + " по статистике игр.";
   }
+  // связка кандидата с союзником: проверенные пары, затем механики
+  function synergy(h, a) {
+    var pairs = SYN_PAIRS.concat(LANE_PAIRS);
+    for (var i = 0; i < pairs.length; i++) {
+      var p = pairs[i];
+      if ((p[0] === h && p[1] === a) || (p[1] === h && p[0] === a)) return { w: 1.2, text: p[2] };
+    }
+    var th = tags(h), ta = tags(a);
+    for (var j = 0; j < SYN_RULES.length; j++) {
+      var r = SYN_RULES[j], need = r[2] === "has" ? "has" : "weak";
+      if ((th.has.indexOf(r[0]) !== -1 && ta[need].indexOf(r[1]) !== -1) || (ta.has.indexOf(r[0]) !== -1 && th[need].indexOf(r[1]) !== -1))
+        return { w: .35, text: r[3] };
+    }
+    return null;
+  }
   function pick() {
-    var score = {}, vs = {};
+    var score = {}, vs = {}, taken = enemies.concat(allies);
+    function add(h, v) { if (taken.indexOf(h) === -1 && HERO_POS[h]) score[h] = (score[h] || 0) + v; }
     enemies.forEach(function (e) {
-      (SOURCE_COUNTERS[e] || []).forEach(function (h, i) {
-        if (enemies.indexOf(h) !== -1) return;
-        score[h] = (score[h] || 0) + 2 - i * 0.12;
-        (vs[h] = vs[h] || []).push(e);
+      (SOURCE_COUNTERS[e] || []).forEach(function (h, i) { add(h, 2 - i * .12); if (score[h] !== undefined) (vs[h] = vs[h] || []).push(e); });
+      // контрпики по механикам (стан против мобильных, урон по площади против клонов и т.д.)
+      Object.keys(HERO_POS).forEach(function (h) {
+        var c = tags(h), w = tags(e);
+        RULES.forEach(function (r) {
+          if (c.has.indexOf(r[0]) !== -1 && w.weak.indexOf(r[1]) !== -1) {
+            add(h, r[1] === "squishy" ? .1 : .55);
+            if (score[h] !== undefined && (vs[h] = vs[h] || []).indexOf(e) === -1 && r[1] !== "squishy") vs[h].push(e);
+          }
+        });
       });
     });
-    return Object.keys(score).sort(function (a, b) { return score[b] - score[a] || a.localeCompare(b); })
-      .slice(0, 6).map(function (h) { return { h: h, vs: vs[h] }; });
+    if (!enemies.length) Object.keys(HERO_POS).forEach(function (h) { add(h, 0); });
+    var syn = {};
+    Object.keys(score).forEach(function (h) {
+      allies.forEach(function (a) { var s = synergy(h, a); if (s) { score[h] += s.w; if (!syn[h] || s.w > syn[h].w) syn[h] = { w: s.w, a: a, text: s.text }; } });
+    });
+    var list = Object.keys(score).filter(function (h) { return !role || (HERO_POS[h] || "").indexOf(String(role)) !== -1; });
+    if (!enemies.length) list = list.filter(function (h) { return syn[h]; });
+    return list.sort(function (a, b) { return score[b] - score[a] || a.localeCompare(b); })
+      .slice(0, 6).map(function (h) { return { h: h, vs: vs[h] || [], syn: syn[h] }; });
   }
 
   // ---------- отрисовка ----------
   // перерисовка списка не должна выкидывать стеклянную капсулу
   function keepLens(h) { if (h._lens) h.appendChild(h._lens); }
+  function group() { return side === "enemy" ? enemies : allies; }
   function renderSlots() {
-    var html = "";
+    var g = group(), max = side === "enemy" ? 5 : 4, html = "";
     for (var i = 0; i < 5; i++) {
-      var n = enemies[i];
+      var n = g[i];
+      if (i >= max) { html += '<div class="slot me" aria-hidden="true" style="font-size:12px;font-weight:700;color:var(--ink)">ты</div>'; continue; }
       html += n ? '<button class="slot full" type="button" data-rm="' + esc(n) + '" aria-label="Убрать ' + esc(n) + '">' + pic(n) + '<span class="x">×</span></button>'
-                : '<button class="slot" type="button" data-add aria-label="Добавить врага">+</button>';
+                : '<button class="slot" type="button" data-add aria-label="Добавить">+</button>';
     }
-    $("slots").innerHTML = html; keepLens($("slots"));
+    var sl = $("slots"); sl.innerHTML = html; sl.classList.toggle("ally", side === "ally"); keepLens(sl);
+    $("cE").textContent = enemies.length; $("cA").textContent = allies.length;
+    document.querySelectorAll(".sbtn").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.side === side ? "true" : "false"); });
+    $("h1").textContent = side === "enemy" ? "Кто во врагах?" : "Кто с тобой в команде?";
   }
   function renderGrid() {
     var list = query ? ALL.filter(function (n) { return matches(n, query); })
 .slice(0, 12)
                      : HAVE;
     $("grid").innerHTML = list.length ? list.map(function (n) {
-      return '<button class="tile' + (enemies.indexOf(n) !== -1 ? " on" : "") + '" type="button" data-hero="' + esc(n) + '"><div class="ph">' + pic(n) + '</div><div class="nm">' + esc(n) + "</div></button>";
+      return '<button class="tile' + (enemies.indexOf(n) !== -1 ? " on" : allies.indexOf(n) !== -1 ? " al" : "") + '" type="button" data-hero="' + esc(n) + '"><div class="ph">' + pic(n) + '</div><div class="nm">' + esc(n) + "</div></button>";
     }).join("") : '<div class="empty">Не нашёл такого героя. Попробуй по-английски: «pudge», «meepo».</div>';
     keepLens($("grid"));
   }
+  var ROLE = ["", "керри", "мид", "оффлейн", "саппорт 4", "саппорт 5"];
   function renderResults() {
-    var t = $("resTitle"), box = $("res");
-    if (!enemies.length) { t.textContent = "Выбери врага"; box.innerHTML = '<div class="soon glass"><b>Пока пусто</b>Нажми на героя сверху — ответ появится сразу.</div>'; return; }
-    t.textContent = enemies.length === 1 ? "Бери против " + enemies[0] : "Бери против них";
-    box.innerHTML = pick().map(function (r, i) {
+    var t = $("resTitle"), sub = $("resSub"), box = $("res");
+    if (!enemies.length && !allies.length) { t.textContent = "Выбери врага"; sub.textContent = "обновляется сразу, кнопку жать не нужно"; box.innerHTML = '<div class="soon glass"><b>Пока пусто</b>Нажми на героя сверху — ответ появится сразу.</div>'; return; }
+    t.textContent = !enemies.length ? "Кто лучше всего зайдёт к твоей команде" : enemies.length === 1 ? "Бери против " + enemies[0] : "Бери против них";
+    sub.textContent = (role ? "на позицию: " + ROLE[role] + " · " : "") + (allies.length ? "учитываю союзников · " : "") + "обновляется сразу";
+    var res = pick();
+    if (!res.length) { box.innerHTML = '<div class="soon glass"><b>На эту роль ничего сильного</b>Попробуй другую роль или «Любая роль».</div>'; return; }
+    box.innerHTML = res.map(function (r, i) {
       return '<article class="card glass"><div class="ph">' + pic(r.h) + '</div><div style="min-width:0"><div class="meta"><span class="rank">#' + (i + 1) +
-        '</span><span class="vs">контрит: ' + esc(r.vs.join(", ")) + '</span></div><div class="nm">' + esc(r.h) + '</div><div class="why">' + reason(r.h, r.vs[0]) + "</div></div></article>";
+        '</span><span class="vs">' + (r.vs.length ? "контрит: " + esc(r.vs.join(", ")) : "под твою команду") + '</span></div><div class="nm">' + esc(r.h) + '</div>' +
+        (r.vs.length ? '<div class="why">' + reason(r.h, r.vs[0]) + "</div>" : "") +
+        (r.syn ? '<div class="with"><b>С ' + esc(r.syn.a) + ':</b> ' + esc(r.syn.text) + "</div>" : "") + "</div></article>";
     }).join("");
   }
   var META = [["Керри", "Juggernaut", "53.8%", "берут в 15.5% игр"], ["Мид", "Dragon Knight", "52.6%", "берут в 6.8% игр"],
@@ -442,14 +511,21 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
   q.addEventListener("input", function () { query = q.value.trim(); clr.hidden = !query; renderGrid(); });
   clr.addEventListener("click", function () { q.value = ""; query = ""; clr.hidden = true; renderGrid(); q.focus(); });
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-hero],[data-rm],[data-add],.tab");
+    var t = e.target.closest("[data-hero],[data-rm],[data-add],.tab,.sbtn,.roles button");
     if (!t) return;
     if (t.dataset.hero) {
-      var n = t.dataset.hero, k = enemies.indexOf(n);
-      if (k !== -1) enemies.splice(k, 1); else if (enemies.length < 5) enemies.push(n);
+      var n = t.dataset.hero, g = group(), other = side === "enemy" ? allies : enemies, k = g.indexOf(n);
+      if (k !== -1) g.splice(k, 1);
+      else if (g.length < (side === "enemy" ? 5 : 4)) { if (other.indexOf(n) !== -1) other.splice(other.indexOf(n), 1); g.push(n); }
       if (query) { q.value = ""; query = ""; clr.hidden = true; }
       render();
-    } else if (t.dataset.rm) { enemies.splice(enemies.indexOf(t.dataset.rm), 1); render(); }
+    } else if (t.dataset.rm) { var gg = group(); gg.splice(gg.indexOf(t.dataset.rm), 1); render(); }
+    else if (t.classList.contains("sbtn")) { side = t.dataset.side; render(); }
+    else if (t.dataset.r !== undefined) {
+      role = +t.dataset.r;
+      document.querySelectorAll(".roles button").forEach(function (b) { b.setAttribute("aria-checked", b === t ? "true" : "false"); });
+      renderResults();
+    }
     else if (t.hasAttribute("data-add")) { q.focus(); }
     else if (t.classList.contains("tab")) { selectTab(t); }
   });
