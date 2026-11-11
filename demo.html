@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>DOTA PICK Liquid Glass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@600;700&display=swap">
+<style>
+/* Слои: фиксированный фон с «волнами» → колонка шириной телефона из стеклянных плашек → стеклянное меню снизу → линза, которая едет за пальцем/курсором */
+:root {
+  --night: #03051a;        /* основа фона */
+  --ink: #f3f5ff;          /* основной текст */
+  --muted: rgba(222, 228, 255, 0.64);
+  --glass: rgba(255, 255, 255, 0.075);
+  --glass-hi: rgba(255, 255, 255, 0.16);
+  --rim: rgba(255, 255, 255, 0.34);
+  --win: #74f0b0;          /* винрейт, «хорошо» */
+  --enemy: #ff7a90;        /* рамка врага */
+  --font: "Onest", "SF Pro Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --logo: "Unbounded", "Onest", system-ui, sans-serif;
+  --r-lg: 26px; --r-md: 18px; --r-sm: 14px;
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; background: var(--night); color: var(--ink); font-family: var(--font); font-size: 15px;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+
+/* ---------- фон как на референсе: тёмно-синий с волнами ---------- */
+.bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: var(--night); }
+.bg svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* ---------- колонка ---------- */
+.app {
+  position: relative; z-index: 1; max-width: 460px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px calc(118px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 18px;
+}
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.logo { font-family: var(--logo); font-weight: 700; font-size: 17px; letter-spacing: .04em; }
+.logo small { display: block; font-family: var(--font); font-weight: 500; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.pill { font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 999px; }
+
+h1 { font-size: 30px; line-height: 1.08; font-weight: 800; margin: 4px 0 0; letter-spacing: -.01em; text-wrap: balance; }
+h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
+.sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+/* ---------- стекло ---------- */
+.glass {
+  position: relative; isolation: isolate;
+  background: linear-gradient(160deg, rgba(255,255,255,.13), rgba(255,255,255,.04) 45%, rgba(255,255,255,.07));
+  -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(255,255,255,.06), 0 14px 34px rgba(1, 3, 20, .38);
+}
+/* светящийся край: ярче сверху-слева, как у стекла */
+.glass::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: linear-gradient(145deg, rgba(255,255,255,.62), rgba(255,255,255,.08) 38%, rgba(255,255,255,.04) 62%, rgba(180,170,255,.45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* блик, который идёт за пальцем/курсором */
+.glass::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: radial-gradient(160px circle at var(--mx, 30%) var(--my, -20%), rgba(255,255,255,.16), transparent 60%);
+  opacity: var(--glow, .55); transition: opacity .3s;
+}
+
+/* ---------- поиск ---------- */
+.search { display: flex; align-items: center; gap: 10px; border-radius: 999px; padding: 0 16px; height: 54px; }
+.search svg { flex: none; opacity: .75; }
+.search input {
+  flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--ink);
+  font: 600 17px var(--font);
+}
+.search input::placeholder { color: rgba(222,228,255,.48); font-weight: 500; }
+.search:focus-within { --glow: 1; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 3px rgba(150,160,255,.28), 0 14px 34px rgba(1,3,20,.38); }
+.clear { border: 0; background: transparent; color: var(--muted); font: 600 13px var(--font); padding: 8px; cursor: pointer; }
+
+/* ---------- плитки героев ---------- */
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; padding: 10px; border-radius: var(--r-lg); }
+.tile {
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 0; border: 0; background: transparent;
+  color: var(--ink); font: 600 11px/1.15 var(--font); text-align: center; cursor: pointer;
+  transition: transform .45s var(--spring);
+}
+.tile:active { transform: scale(.95); }
+.tile .ph { aspect-ratio: 16 / 9; border-radius: var(--r-sm); overflow: hidden; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.tile img, .slot img, .card img, .row img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tile .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile.on .ph { box-shadow: inset 0 0 0 2px var(--enemy); }
+.tile.on .ph::after { content: "враг"; position: absolute; left: 4px; bottom: 4px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 99px; background: rgba(255,122,144,.9); color: #1a0710; }
+.empty { grid-column: 1 / -1; color: var(--muted); text-align: center; padding: 18px 6px; font-size: 14px; }
+
+/* монограмма, если портрета нет в демо */
+.mono {
+  width: 100%; height: 100%; display: grid; place-items: center; font: 800 22px var(--logo); color: rgba(255,255,255,.92);
+  background: radial-gradient(circle at 30% 20%, hsla(var(--h), 90%, 72%, .55), hsla(var(--h), 70%, 30%, .55) 70%);
+}
+
+/* ---------- слоты врагов ---------- */
+.slots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; padding: 9px; border-radius: var(--r-lg); }
+.slot {
+  aspect-ratio: 16 / 9; border-radius: 10px; border: 0; padding: 0; overflow: hidden; position: relative; cursor: pointer;
+  background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); color: var(--muted);
+  font: 300 26px var(--font); display: grid; place-items: center; transition: transform .45s var(--spring);
+}
+.slot:active { transform: scale(.88); }
+.slot.full { box-shadow: inset 0 0 0 2px var(--enemy); }
+.slot.full .x { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 99px; display: grid; place-items: center; font: 700 12px/1 var(--font); color: #fff; background: rgba(5,6,26,.7); }
+
+/* ---------- результаты ---------- */
+.list { display: flex; flex-direction: column; gap: 10px; }
+.card { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 14px; padding: 10px 14px 10px 10px; border-radius: var(--r-lg); align-items: center; transition: transform .45s var(--spring); }
+.card:active { transform: scale(.97); }
+.card .ph { width: 104px; height: 58px; border-radius: var(--r-md); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.card .meta { display: flex; align-items: center; gap: 8px; }
+.rank { font: 800 11px var(--font); padding: 3px 8px; border-radius: 99px; color: #062417; background: var(--win); }
+.vs { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .nm { font-size: 19px; font-weight: 800; margin: 4px 0 3px; }
+.card .why { font-size: 13px; line-height: 1.38; color: rgba(236,240,255,.86); }
+.card .why b { color: #fff; font-weight: 700; }
+
+/* ---------- мета ---------- */
+.row { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 14px 10px 10px; border-radius: var(--r-lg); }
+.row .ph { width: 84px; height: 47px; border-radius: var(--r-sm); overflow: hidden; }
+.row .role { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.row .nm { font-size: 17px; font-weight: 800; margin-top: 2px; }
+.row .wr { text-align: right; font: 800 22px var(--font); color: var(--win); font-variant-numeric: tabular-nums; }
+.row .wr small { display: block; font: 500 11px var(--font); color: var(--muted); }
+.soon { border-radius: var(--r-lg); padding: 26px 20px; text-align: center; color: var(--muted); line-height: 1.5; }
+.soon b { display: block; color: var(--ink); font-size: 18px; margin-bottom: 6px; }
+
+/* ---------- нижнее меню ---------- */
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; pointer-events: none;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+}
+.tabs { pointer-events: auto; max-width: 420px; margin: 0 auto; border-radius: 999px; padding: 7px; display: grid; grid-template-columns: repeat(4, 1fr); position: relative; }
+.tab {
+  position: relative; z-index: 3; border: 0; background: transparent; color: rgba(236,240,255,.78); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; font: 600 11px var(--font);
+  transition: color .3s, transform .45s var(--spring);
+}
+.tab:active { transform: scale(.9); }
+.tab[aria-selected="true"] { color: #fff; }
+.pillbg {
+  position: absolute; z-index: 2; top: 7px; bottom: 7px; left: 7px; border-radius: 999px; pointer-events: none;
+  background: linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.08));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(255,255,255,.12), 0 6px 16px rgba(0,0,0,.25);
+}
+
+/* ---------- экран «подпишись на канал» ---------- */
+.gate { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-bottom, 0px));
+  background: rgba(3, 5, 26, .35); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  transition: opacity .5s ease, -webkit-backdrop-filter .5s, backdrop-filter .5s; }
+.gate.out { opacity: 0; pointer-events: none; }
+.gate .box { width: 100%; max-width: 400px; border-radius: 30px; padding: 26px 22px 20px; display: flex; flex-direction: column; gap: 16px; align-items: stretch; text-align: center;
+  transition: transform .55s var(--spring); }
+.gate.out .box { transform: scale(.92) translateY(20px); }
+.gate .ava { width: 74px; height: 74px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; font: 700 20px var(--logo); letter-spacing: .02em;
+  background: radial-gradient(circle at 30% 25%, #7d7bff, #2a22c9 70%); box-shadow: inset 0 1.5px 0 rgba(255,255,255,.6), 0 10px 26px rgba(40, 40, 200, .45); }
+.gate h2 { font-size: 23px; line-height: 1.15; text-wrap: balance; }
+.gate p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.gate ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.gate li { display: flex; gap: 10px; align-items: center; font-size: 14px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+.gate li span { width: 28px; height: 28px; flex: none; border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.1); font-size: 15px; }
+.gbtn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 999px; border: 0; cursor: pointer; text-decoration: none;
+  font: 700 16px var(--font); color: var(--ink); transition: transform .45s var(--spring), background .3s; }
+.gbtn:active { transform: scale(.96); }
+.gbtn.main { color: #0b0d3a; background: linear-gradient(180deg, #ffffff, #dfe3ff); box-shadow: inset 0 -2px 0 rgba(30,40,160,.18), 0 10px 24px rgba(10, 10, 60, .35); }
+.gbtn.alt { background: rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14); }
+.gbtn.ok { background: rgba(116,240,176,.22); box-shadow: inset 0 0 0 1px rgba(116,240,176,.6); color: #dfffee; }
+.gmsg { min-height: 20px; font-size: 13px; color: var(--muted); }
+.gmsg.bad { color: #ffb3c0; }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; animation: sp .8s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+@keyframes shake { 10%, 90% { transform: translateX(-2px); } 30%, 70% { transform: translateX(6px); } 50% { transform: translateX(-6px); } }
+.shake { animation: shake .45s; }
+
+/* ---------- жидкое стекло (капсула-линза) ---------- */
+.glens { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; opacity: 0; will-change: transform;
+  transition: opacity .25s, width .3s var(--spring), height .3s var(--spring);
+  -webkit-backdrop-filter: blur(.6px) saturate(175%) brightness(1.08); backdrop-filter: blur(.6px) saturate(175%) brightness(1.08);
+  background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.02) 50%, rgba(255,255,255,.06)); }
+/* тень и обод — на дочернем слое: в Chrome тень на самом стекле ломает преломление */
+.glens.on { opacity: 1; }
+.glens .shine { position: absolute; inset: 0; border-radius: inherit;
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,.75), inset 0 -1px 1px rgba(255,255,255,.25), inset 1.5px 0 2px rgba(255,255,255,.18), inset -1.5px 0 2px rgba(255,255,255,.18);
+  background: radial-gradient(60% 45% at 28% 12%, rgba(255,255,255,.32), transparent 70%), radial-gradient(40% 30% at 78% 92%, rgba(255,255,255,.14), transparent 70%); }
+.tabs .glens { z-index: 4; }
+
+.demo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 14px; border-radius: var(--r-lg); font-size: 13px; color: var(--muted); }
+.demo .seg { display: flex; gap: 4px; }
+.demo button { border: 0; cursor: pointer; font: 600 13px var(--font); color: var(--ink); padding: 7px 12px; border-radius: 99px; background: rgba(255,255,255,.06); }
+.demo button[aria-pressed="true"] { background: rgba(255,255,255,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+
+:focus-visible { outline: 2px solid #b9c2ff; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .tile, .slot, .card, .tab, .glens { transition: none; }
+}
+@media (max-width: 370px) { h1 { font-size: 26px; } .grid { gap: 6px; padding: 8px; } }
+</style>
+</head>
+<body>
+
+
+<div class="bg" id="bg">
+  <svg viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b22b8"/><stop offset=".55" stop-color="#3b3cf0"/><stop offset="1" stop-color="#7a5cff"/></linearGradient>
+      <linearGradient id="gB" x1="1" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2fd6"/><stop offset=".6" stop-color="#4b46ff"/><stop offset="1" stop-color="#b9a6ff"/></linearGradient>
+      <linearGradient id="gC" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3f7bff"/><stop offset="1" stop-color="#2219a8"/></linearGradient>
+      <radialGradient id="glow" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#2a2fb8" stop-opacity=".45"/><stop offset="1" stop-color="#03051a" stop-opacity="0"/></radialGradient>
+      <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter>
+      <filter id="haze" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="14"/></filter>
+    </defs>
+    <rect width="400" height="860" fill="url(#glow)"/>
+    <path d="M-20,-20 H420 V96 C356,158 300,74 226,128 C158,178 120,300 40,292 C10,289 -10,280 -20,272 Z" fill="url(#gA)" filter="url(#soft)"/>
+    <path d="M226,128 C158,178 120,300 40,292" fill="none" stroke="#c9bcff" stroke-width="10" stroke-opacity=".55" filter="url(#haze)"/>
+    <path d="M420,880 H170 C182,770 300,760 300,650 C300,560 350,505 420,486 Z" fill="url(#gB)" filter="url(#soft)"/>
+    <path d="M170,880 C182,770 300,760 300,650 C300,560 350,505 420,486" fill="none" stroke="#e1d9ff" stroke-width="12" stroke-opacity=".5" filter="url(#haze)"/>
+    <path d="M-20,880 V600 C40,640 92,720 140,760 C176,790 160,880 160,880 Z" fill="url(#gC)" filter="url(#soft)" opacity=".9"/>
+    <path d="M420,250 C380,300 360,380 400,430 L420,430 Z" fill="#5b4cff" opacity=".55" filter="url(#haze)"/>
+  </svg>
+</div>
+
+<main class="app" id="app">
+  <header class="top">
+    <div class="logo">DOTA PICK<small>LowCulture</small></div>
+    <span class="pill glass">демо нового дизайна</span>
+  </header>
+
+  <section id="v-pick" class="view">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <h1>Кто во врагах?</h1>
+      <label class="search glass" for="q">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Начни писать: мип…" aria-label="Поиск героя">
+        <button class="clear" id="clr" type="button" hidden>Стереть</button>
+      </label>
+      <div class="slots glass" id="slots"></div>
+      <div class="grid glass" id="grid"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:22px">
+      <div>
+        <h2 id="resTitle">Бери против Meepo</h2>
+        <div class="sub">обновляется сразу, кнопку жать не нужно</div>
+      </div>
+      <div class="list" id="res"></div>
+    </div>
+    <div class="demo glass" style="margin-top:22px"><span>Настройка демо · преломление стекла:</span>
+      <div class="seg" id="refrSeg"><button type="button" data-s="10" aria-pressed="false">слабо</button><button type="button" data-s="22" aria-pressed="true">средне</button><button type="button" data-s="40" aria-pressed="false">сильно</button></div>
+      <button type="button" id="gateAgain" style="margin-left:auto">Показать экран подписки</button>
+      <span id="refrNote" hidden>В этом браузере преломление не поддерживается, видно упрощённое стекло. В Telegram на Android и на компьютере будет полное.</span></div>
+  </section>
+
+  <section id="v-meta" class="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div><h1>Мета недели</h1><div class="sub">патч 7.41f · Divine–Immortal · кто тащит на каждой позиции</div></div>
+      <div class="list" id="meta"></div>
+    </div>
+  </section>
+
+  <section id="v-heroes" class="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px"><h1>Герои</h1>
+      <div class="soon glass"><b>Страница героя</b>Против кого силён, кому проигрывает и с кем лучше в паре. Появится в новом боте.</div></div>
+  </section>
+  <section id="v-profile" class="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px"><h1>Профиль</h1>
+      <div class="soon glass"><b>Твоя статистика</b>Любимые герои и история подборов. Появится в новом боте.</div></div>
+  </section>
+</main>
+
+<nav class="dock">
+  <div class="tabs glass" id="tabs" role="tablist">
+    <div class="pillbg" id="pill"></div>
+    <button class="tab" role="tab" aria-selected="true" data-v="pick"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg>Подбор</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="meta"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V5M16 20v-6M22 20H2"/></svg>Мета</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="heroes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>Герои</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="profile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Профиль</button>
+  </div>
+</nav>
+
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateT">
+  <div class="box glass">
+    <div class="ava">DP</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h2 id="gateT">Подпишись на канал DOTA PICK</h2>
+      <p>Бот бесплатный. Подписка — единственное, о чём просим, чтобы ты был в курсе новостей.</p>
+    </div>
+    <ul>
+      <li><span>📈</span>Мета каждую неделю: кто сейчас тащит</li>
+      <li><span>🧠</span>Разборы драфтов и контрпики</li>
+      <li><span>⚡</span>Новые функции бота первым</li>
+    </ul>
+    <a class="gbtn main" id="gSub" href="https://t.me/dotapick_lc" target="_blank" rel="noopener">Подписаться</a>
+    <button class="gbtn alt" id="gCheck" type="button">Проверить подписку</button>
+    <div class="gmsg" id="gMsg" aria-live="polite">В демо проверка понарошку: сначала нажми «Подписаться».</div>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="lgDefs"></defs></svg>
+
+<script src="data.js?v=8"></script>
+<script>
+var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloodseeker","Crystal Maiden":"crystal_maiden","Drow Ranger":"drow_ranger","Earthshaker":"earthshaker","Juggernaut":"juggernaut","Mirana":"mirana","Morphling":"morphling","Shadow Fiend":"nevermore","Phantom Lancer":"phantom_lancer","Puck":"puck","Pudge":"pudge","Razor":"razor","Sand King":"sand_king","Storm Spirit":"storm_spirit","Sven":"sven","Tiny":"tiny","Vengeful Spirit":"vengefulspirit","Windranger":"windrunner","Zeus":"zuus","Kunkka":"kunkka","Lina":"lina","Lion":"lion","Shadow Shaman":"shadow_shaman","Slardar":"slardar","Tidehunter":"tidehunter","Witch Doctor":"witch_doctor","Lich":"lich","Riki":"riki","Enigma":"enigma","Tinker":"tinker","Sniper":"sniper","Necrophos":"necrolyte","Warlock":"warlock","Beastmaster":"beastmaster","Queen of Pain":"queenofpain","Venomancer":"venomancer","Faceless Void":"faceless_void","Wraith King":"skeleton_king","Death Prophet":"death_prophet","Phantom Assassin":"phantom_assassin","Pugna":"pugna","Templar Assassin":"templar_assassin","Viper":"viper","Luna":"luna","Dragon Knight":"dragon_knight","Dazzle":"dazzle","Clockwerk":"rattletrap","Leshrac":"leshrac","Nature's Prophet":"furion","Lifestealer":"life_stealer","Dark Seer":"dark_seer","Clinkz":"clinkz","Omniknight":"omniknight","Enchantress":"enchantress","Huskar":"huskar","Night Stalker":"night_stalker","Broodmother":"broodmother","Bounty Hunter":"bounty_hunter","Weaver":"weaver","Jakiro":"jakiro","Batrider":"batrider","Chen":"chen","Spectre":"spectre","Ancient Apparition":"ancient_apparition","Doom":"doom_bringer","Ursa":"ursa","Spirit Breaker":"spirit_breaker","Gyrocopter":"gyrocopter","Alchemist":"alchemist","Invoker":"invoker","Silencer":"silencer","Outworld Destroyer":"obsidian_destroyer","Lycan":"lycan","Brewmaster":"brewmaster","Shadow Demon":"shadow_demon","Lone Druid":"lone_druid","Chaos Knight":"chaos_knight","Meepo":"meepo","Treant Protector":"treant","Ogre Magi":"ogre_magi","Undying":"undying","Rubick":"rubick","Disruptor":"disruptor","Nyx Assassin":"nyx_assassin","Naga Siren":"naga_siren","Keeper of the Light":"keeper_of_the_light","Io":"wisp","Visage":"visage","Slark":"slark","Medusa":"medusa","Troll Warlord":"troll_warlord","Centaur Warrunner":"centaur","Magnus":"magnataur","Timbersaw":"shredder","Bristleback":"bristleback","Tusk":"tusk","Skywrath Mage":"skywrath_mage","Abaddon":"abaddon","Elder Titan":"elder_titan","Legion Commander":"legion_commander","Techies":"techies","Ember Spirit":"ember_spirit","Earth Spirit":"earth_spirit","Underlord":"abyssal_underlord","Terrorblade":"terrorblade","Phoenix":"phoenix","Oracle":"oracle","Winter Wyvern":"winter_wyvern","Arc Warden":"arc_warden","Monkey King":"monkey_king","Dark Willow":"dark_willow","Pangolier":"pangolier","Grimstroke":"grimstroke","Hoodwink":"hoodwink","Void Spirit":"void_spirit","Snapfire":"snapfire","Mars":"mars","Ringmaster":"ringmaster","Dawnbreaker":"dawnbreaker","Marci":"marci","Primal Beast":"primal_beast","Muerta":"muerta","Kez":"kez","Largo":"largo"};
+</script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  // как люди пишут героев по-русски
+  var RU = {
+    "Meepo": ["мипо", "мипа", "мип"], "Earthshaker": ["шейкер", "эс", "эртшейкер", "шейк"], "Pudge": ["пудж", "пуджик"],
+    "Shadow Fiend": ["сф", "шадоу финд", "невермор", "сфчик"], "Juggernaut": ["джаггернаут", "джагер", "джага", "джаг"],
+    "Crystal Maiden": ["цм", "кристал мейден", "кристалка", "ромашка"], "Drow Ranger": ["дровка", "дроу", "дров", "траха"],
+    "Vengeful Spirit": ["венга", "вендж", "венж"], "Ursa": ["урса", "медведь"], "Ogre Magi": ["огр", "огре маги"],
+    "Axe": ["акс", "акса", "топор"], "Legion Commander": ["легион", "легионка", "лц"], "Night Stalker": ["нс", "найт сталкер", "баланар"],
+    "Bounty Hunter": ["баунти", "бх", "гондар"], "Dragon Knight": ["дк", "драгон найт", "дракон"], "Mirana": ["мирана", "пом"],
+    "Lina": ["лина"], "Zeus": ["зевс"], "Storm Spirit": ["шторм", "сторм", "штормяк"], "Windranger": ["виндраннер", "винда", "вр"],
+    "Sven": ["свен"], "Lion": ["лион"], "Winter Wyvern": ["виверна", "вивер"], "Underlord": ["андерлорд", "питлорд"],
+    "Primal Beast": ["праймал", "праймал бист"], "Anti-Mage": ["антимаг", "ам", "антимаге"], "Spectre": ["спектра", "спектр"],
+    "Phantom Assassin": ["фантомка", "па", "мортред"], "Invoker": ["инвокер", "инвик"], "Clockwerk": ["клок", "клокверк"],
+    "Puck": ["пак"], "Nyx Assassin": ["никс"], "Viper": ["вайпер", "випер"], "Sniper": ["снайпер", "снайп"],
+    "Slark": ["сларк"], "Techies": ["течис"], "Tinker": ["тинкер"], "Templar Assassin": ["темпларка", "та", "ланая"]
+  };
+  var ALL = Object.keys(SLUG).sort();
+  var HAVE = ["Pudge", "Meepo", "Invoker", "Juggernaut", "Shadow Fiend", "Phantom Assassin", "Anti-Mage", "Earthshaker"];
+  var IMG = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/";
+  var enemies = ["Meepo"];
+  var query = "";
+
+  function norm(s) { return s.toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-я0-9]/g, ""); }
+  function hue(n) { var h = 0; for (var i = 0; i < n.length; i++) h = (h * 31 + n.charCodeAt(i)) % 360; return h; }
+  function initials(n) { return n.split(/[\s-]+/).map(function (w) { return w[0]; }).join("").slice(0, 2).toUpperCase(); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function pic(n) {
+    return SLUG[n] ? '<img src="' + IMG + SLUG[n] + '.png" alt="" draggable="false" decoding="async">'
+                   : '<div class="mono" style="--h:' + hue(n) + '">' + esc(initials(n)) + "</div>";
+  }
+  function matches(n, q) {
+    if (!q) return true;
+    var nq = norm(q);
+    if (norm(n).indexOf(nq) !== -1) return true;
+    return (RU[n] || []).some(function (a) { return norm(a).indexOf(nq) === 0; });
+  }
+
+  // ---------- подбор ----------
+  function pairValue(str, key) {
+    if (!str) return null;
+    var parts = str.split(";");
+    for (var i = 0; i < parts.length; i++) { var k = parts[i].indexOf("="); if (parts[i].slice(0, k) === key) return parts[i].slice(k + 1); }
+    return null;
+  }
+  function tags(n) {
+    var t = (HERO_TAGS[n] || "|").split("|");
+    return { has: (t[0] || "").split(" ").filter(Boolean), weak: (t[1] || "").split(" ").filter(Boolean) };
+  }
+  function reason(h, e) {
+    for (var i = 0; i < NOTES.length; i++) if (NOTES[i].hero === h && NOTES[i].vs === e) return esc(NOTES[i].why);
+    var c = tags(h), w = tags(e), best = null;
+    RULES.forEach(function (r) {
+      if (best && r[1] === "squishy") return;
+      if (c.has.indexOf(r[0]) !== -1 && w.weak.indexOf(r[1]) !== -1) {
+        var kit = pairValue(HERO_KIT[h], r[0]), weak = pairValue(HERO_WEAK[e], r[1]);
+        if (kit && (!best || best.sq)) best = { kit: kit, weak: weak, sq: r[1] === "squishy" };
+      }
+    });
+    if (best) {
+      var j = best.kit.indexOf(":");
+      var skill = j > 0 ? best.kit.slice(0, j) : best.kit, txt = j > 0 ? best.kit.slice(j + 1).trim() : "";
+      return "<b>" + esc(skill) + "</b> — " + esc(txt) + (best.weak ? ". Слабость " + esc(e) + " — " + esc(best.weak) : "") + ".";
+    }
+    return "Один из самых сильных ответов на " + esc(e) + " по статистике игр.";
+  }
+  function pick() {
+    var score = {}, vs = {};
+    enemies.forEach(function (e) {
+      (SOURCE_COUNTERS[e] || []).forEach(function (h, i) {
+        if (enemies.indexOf(h) !== -1) return;
+        score[h] = (score[h] || 0) + 2 - i * 0.12;
+        (vs[h] = vs[h] || []).push(e);
+      });
+    });
+    return Object.keys(score).sort(function (a, b) { return score[b] - score[a] || a.localeCompare(b); })
+      .slice(0, 6).map(function (h) { return { h: h, vs: vs[h] }; });
+  }
+
+  // ---------- отрисовка ----------
+  // перерисовка списка не должна выкидывать стеклянную капсулу
+  function keepLens(h) { if (h._lens) h.appendChild(h._lens); }
+  function renderSlots() {
+    var html = "";
+    for (var i = 0; i < 5; i++) {
+      var n = enemies[i];
+      html += n ? '<button class="slot full" type="button" data-rm="' + esc(n) + '" aria-label="Убрать ' + esc(n) + '">' + pic(n) + '<span class="x">×</span></button>'
+                : '<button class="slot" type="button" data-add aria-label="Добавить врага">+</button>';
+    }
+    $("slots").innerHTML = html; keepLens($("slots"));
+  }
+  function renderGrid() {
+    var list = query ? ALL.filter(function (n) { return matches(n, query); })
+.slice(0, 12)
+                     : HAVE;
+    $("grid").innerHTML = list.length ? list.map(function (n) {
+      return '<button class="tile' + (enemies.indexOf(n) !== -1 ? " on" : "") + '" type="button" data-hero="' + esc(n) + '"><div class="ph">' + pic(n) + '</div><div class="nm">' + esc(n) + "</div></button>";
+    }).join("") : '<div class="empty">Не нашёл такого героя. Попробуй по-английски: «pudge», «meepo».</div>';
+    keepLens($("grid"));
+  }
+  function renderResults() {
+    var t = $("resTitle"), box = $("res");
+    if (!enemies.length) { t.textContent = "Выбери врага"; box.innerHTML = '<div class="soon glass"><b>Пока пусто</b>Нажми на героя сверху — ответ появится сразу.</div>'; return; }
+    t.textContent = enemies.length === 1 ? "Бери против " + enemies[0] : "Бери против них";
+    box.innerHTML = pick().map(function (r, i) {
+      return '<article class="card glass"><div class="ph">' + pic(r.h) + '</div><div style="min-width:0"><div class="meta"><span class="rank">#' + (i + 1) +
+        '</span><span class="vs">контрит: ' + esc(r.vs.join(", ")) + '</span></div><div class="nm">' + esc(r.h) + '</div><div class="why">' + reason(r.h, r.vs[0]) + "</div></div></article>";
+    }).join("");
+  }
+  var META = [["Керри", "Juggernaut", "53.8%", "берут в 15.5% игр"], ["Мид", "Dragon Knight", "52.6%", "берут в 6.8% игр"],
+              ["Оффлейн", "Night Stalker", "52.7%", "берут в 9.0% игр"], ["Саппорт 4", "Bounty Hunter", "54.2%", "берут в 7.4% игр"],
+              ["Саппорт 5", "Mirana", "52.5%", "берут в 4.5% игр"]];
+  $("meta").innerHTML = META.map(function (m) {
+    return '<div class="row glass"><div class="ph">' + pic(m[1]) + '</div><div style="min-width:0"><div class="role">' + m[0] + '</div><div class="nm">' + m[1] +
+      '</div></div><div class="wr">' + m[2] + "<small>" + m[3] + "</small></div></div>";
+  }).join("");
+  function render() { renderSlots(); renderGrid(); renderResults(); }
+
+  // ---------- действия ----------
+  var q = $("q"), clr = $("clr");
+  q.addEventListener("input", function () { query = q.value.trim(); clr.hidden = !query; renderGrid(); });
+  clr.addEventListener("click", function () { q.value = ""; query = ""; clr.hidden = true; renderGrid(); q.focus(); });
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-hero],[data-rm],[data-add],.tab");
+    if (!t) return;
+    if (t.dataset.hero) {
+      var n = t.dataset.hero, k = enemies.indexOf(n);
+      if (k !== -1) enemies.splice(k, 1); else if (enemies.length < 5) enemies.push(n);
+      if (query) { q.value = ""; query = ""; clr.hidden = true; }
+      render();
+    } else if (t.dataset.rm) { enemies.splice(enemies.indexOf(t.dataset.rm), 1); render(); }
+    else if (t.hasAttribute("data-add")) { q.focus(); }
+    else if (t.classList.contains("tab")) { selectTab(t); }
+  });
+
+  // ---------- меню с «живой» капсулой ----------
+  var pill = $("pill"), tabsEl = $("tabs");
+  function placePill(tab, animate) {
+    var x = tab.offsetLeft, w = tab.offsetWidth;
+    var from = pill.style.transform, to = "translateX(" + (x - 7) + "px)";
+    pill.style.width = w + "px";
+    if (animate && from && from !== to && pill.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      pill.animate([{ transform: from + " scaleX(1)" }, { transform: "translateX(" + ((x - 7 + parseFloat(from.slice(11))) / 2) + "px) scaleX(1.28) scaleY(.9)", offset: .45 },
+                    { transform: to + " scaleX(.94) scaleY(1.04)", offset: .8 }, { transform: to + " scaleX(1)" }],
+                   { duration: 520, easing: "cubic-bezier(.3,.7,.3,1)" });
+    }
+    pill.style.transform = to;
+  }
+  function selectTab(tab) {
+    tabsEl.querySelectorAll(".tab").forEach(function (b) { b.setAttribute("aria-selected", b === tab ? "true" : "false"); });
+    document.querySelectorAll(".view").forEach(function (v) { v.hidden = v.id !== "v-" + tab.dataset.v; });
+    placePill(tab, true);
+    try { scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { scrollTo(0, 0); }
+  }
+  addEventListener("resize", function () { placePill(tabsEl.querySelector('[aria-selected="true"]'), false); });
+
+  // ---------- блик за пальцем ----------
+  var lastGlass = null;
+  function spec(e) {
+    var g = e.target.closest && e.target.closest(".glass");
+    if (lastGlass && lastGlass !== g) lastGlass.style.removeProperty("--glow");
+    if (!g) { lastGlass = null; return; }
+    var r = g.getBoundingClientRect();
+    g.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    g.style.setProperty("--my", (e.clientY - r.top) + "px");
+    g.style.setProperty("--glow", "1");
+    lastGlass = g;
+  }
+
+  // ---------- жидкое стекло как в iOS 26 ----------
+  // Как у Apple: центр почти прозрачный, а по краю стекло преломляет то, что под ним (выпуклый край-«скругление»),
+  // плюс блик по ободу. Капсула плавает за пальцем/курсором и тянется на ходу, отпустил — защёлкивается на месте.
+  var UA = navigator.userAgent, REFRACT = /Chrome\/\d+/.test(UA) && !/iPhone|iPad|iPod/.test(UA);
+  var STRENGTH = 22, mapCache = {}, lensN = 0, svgNS = "http://www.w3.org/2000/svg", defs = $("lgDefs");
+  function dispMap(w, h, r, bezel) {
+    var key = [w, h, r, bezel].join("x"); if (mapCache[key]) return mapCache[key];
+    var c = document.createElement("canvas"); c.width = w; c.height = h;
+    var ctx = c.getContext("2d"), img = ctx.createImageData(w, h), d = img.data;
+    for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
+      var px = x + .5, py = y + .5;
+      var qx = Math.min(Math.max(px, r), w - r), qy = Math.min(Math.max(py, r), h - r);
+      var vx = qx - px, vy = qy - py, L = Math.hypot(vx, vy), dist = r - L, i = (y * w + x) * 4, dx = 0, dy = 0;
+      if (dist > 0 && dist < bezel && L > 0) {
+        var t = dist / bezel, s = Math.pow(1 - t, 3) * Math.pow(1 - Math.pow(1 - t, 4), -.75); // наклон края «сквиркл»
+        var m = Math.min(s, 3) / 3; dx = vx / L * m; dy = vy / L * m;
+      }
+      d[i] = 128 + dx * 127; d[i + 1] = 128 + dy * 127; d[i + 2] = 128; d[i + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    return (mapCache[key] = c.toDataURL());
+  }
+  function Lens(host, cls) {
+    var el = document.createElement("div"); el.className = "glens " + (cls || "");
+    el.innerHTML = '<div class="shine"></div>'; host.appendChild(el);
+    var id = "lg" + (++lensN), f = null, img = null, dm = null;
+    if (REFRACT) {
+      f = document.createElementNS(svgNS, "filter"); f.setAttribute("id", id);
+      f.setAttribute("filterUnits", "userSpaceOnUse"); f.setAttribute("color-interpolation-filters", "sRGB");
+      img = document.createElementNS(svgNS, "feImage"); img.setAttribute("result", "map");
+      dm = document.createElementNS(svgNS, "feDisplacementMap");
+      dm.setAttribute("in", "SourceGraphic"); dm.setAttribute("in2", "map"); dm.setAttribute("xChannelSelector", "R"); dm.setAttribute("yChannelSelector", "G");
+      f.appendChild(img); f.appendChild(dm); defs.appendChild(f);
+    }
+    var L = { el: el, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, w: 0, h: 0, on: false, raf: 0, onArrive: null };
+    L.size = function (w, h, r) {
+      w = Math.round(w); h = Math.round(h); if (w === L.w && h === L.h) return;
+      L.w = w; L.h = h; el.style.width = w + "px"; el.style.height = h + "px"; el.style.borderRadius = r + "px";
+      if (REFRACT) {
+        ["x", "y"].forEach(function (a) { f.setAttribute(a, 0); img.setAttribute(a, 0); });
+        f.setAttribute("width", w); f.setAttribute("height", h); img.setAttribute("width", w); img.setAttribute("height", h);
+        img.setAttribute("href", dispMap(w, h, r, Math.min(r, 16)));
+        dm.setAttribute("scale", STRENGTH);
+        el.style.backdropFilter = el.style.webkitBackdropFilter = "url(#" + id + ") saturate(165%) brightness(1.07)";
+      }
+    };
+    L.dm = dm;
+    function step() {
+      L.raf = 0;
+      L.vx = (L.vx + (L.tx - L.x) * .2) * .68; L.vy = (L.vy + (L.ty - L.y) * .2) * .68;
+      L.x += L.vx; L.y += L.vy;
+      var sp = Math.abs(L.vx), st = Math.min(sp * .018, .22);
+      el.style.left = L.x + "px"; el.style.top = L.y + "px";
+      el.style.transform = st > .005 ? "scale(" + (1 + st) + "," + (1 - st * .45) + ")" : "none";
+      if (Math.abs(L.tx - L.x) + Math.abs(L.ty - L.y) + sp + Math.abs(L.vy) > .15) L.raf = requestAnimationFrame(step);
+      else if (L.onArrive) { var cb = L.onArrive; L.onArrive = null; cb(); }
+    }
+    L.to = function (x, y, jump) {
+      L.tx = x; L.ty = y; if (jump) { L.x = x; L.y = y; L.vx = L.vy = 0; }
+      if (!L.raf) L.raf = requestAnimationFrame(step);
+    };
+    L.show = function () { if (!L.on) { L.on = true; L.onArrive = null; el.classList.add("on"); } };
+    L.hide = function () { L.on = false; el.classList.remove("on"); };
+    return L;
+  }
+
+  // 1) нижнее меню: капсула-линза плавает за курсором/пальцем и защёлкивается на вкладке
+  var tl = Lens(tabsEl, "tabl"), tdrag = false;
+  function tabAt(x) {
+    var best = null, bd = 1e9;
+    tabsEl.querySelectorAll(".tab").forEach(function (t) { var r = t.getBoundingClientRect(), c = Math.abs(r.left + r.width / 2 - x); if (c < bd) { bd = c; best = t; } });
+    return best;
+  }
+  function tabFollow(cx) {
+    var br = tabsEl.getBoundingClientRect(), t = tabsEl.querySelector(".tab");
+    tl.size(t.offsetWidth + 6, tabsEl.offsetHeight - 4, (tabsEl.offsetHeight - 4) / 2);
+    var x = Math.min(Math.max(cx - br.left - tl.w / 2, 2), br.width - tl.w - 2);
+    if (!tl.on) tl.to(x, 2, true);
+    tl.show(); tl.to(x, 2);
+  }
+  function tabRelease() {
+    var sel = tabsEl.querySelector('[aria-selected="true"]');
+    tl.to(sel.offsetLeft - 3, 2); tl.onArrive = function () { if (!tdrag) tl.hide(); };
+  }
+  tabsEl.addEventListener("pointermove", function (e) { if (e.pointerType === "mouse" || tdrag) tabFollow(e.clientX); });
+  tabsEl.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") { tdrag = true; tabFollow(e.clientX); } });
+  tabsEl.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") tabRelease(); });
+  document.addEventListener("pointerup", function (e) {
+    if (!tdrag) return; tdrag = false;
+    var t = tabAt(e.clientX); if (t && t.getAttribute("aria-selected") !== "true") selectTab(t);
+    tabRelease();
+  });
+  document.addEventListener("pointercancel", function () { if (tdrag) { tdrag = false; tabRelease(); } });
+
+  // 2) ряды героев и слоты врагов: такая же капсула скользит по портретам
+  function rowLens(host, itemSel, phSel) {
+    var L = Lens(host, "rowl"), drag = false; host._lens = L.el;
+    function follow(e) {
+      var it = e.target.closest(itemSel) || (L.cur && L.cur.isConnected ? L.cur : null);
+      if (!it) return;
+      L.cur = it;
+      var ph = phSel ? it.querySelector(phSel) : it, hr = host.getBoundingClientRect(), pr = ph.getBoundingClientRect();
+      var w = pr.width + 8, h = pr.height + 8;
+      L.size(w, h, parseFloat(getComputedStyle(ph).borderRadius) + 4 || 18);
+      var x = Math.min(Math.max(e.clientX - hr.left - w / 2, 2), hr.width - w - 2), y = pr.top - hr.top - 4;
+      if (!L.on) L.to(x, y, true);
+      L.show(); L.to(x, y);
+    }
+    host.addEventListener("pointermove", function (e) { if (e.pointerType === "mouse" || drag) follow(e); });
+    host.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") { drag = true; follow(e); } });
+    host.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") L.hide(); });
+    document.addEventListener("pointerup", function () { if (drag) { drag = false; setTimeout(L.hide, 160); } });
+    document.addEventListener("pointercancel", function () { drag = false; L.hide(); });
+    return L;
+  }
+  var lenses = [tl, rowLens($("grid"), ".tile", ".ph"), rowLens($("slots"), ".slot", null)];
+  addEventListener("scroll", function () { lenses.forEach(function (l) { if (l !== tl) l.hide(); }); }, { passive: true });
+
+  document.addEventListener("pointermove", spec, { passive: true });
+  document.addEventListener("pointerdown", spec, { passive: true });
+
+  // сила преломления (только для демо)
+  $("refrSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    this.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    STRENGTH = +b.dataset.s; lenses.forEach(function (l) { if (l.dm) l.dm.setAttribute("scale", STRENGTH); });
+  });
+  if (!REFRACT) $("refrNote").hidden = false;
+
+  // ---------- экран подписки (в демо проверка понарошку) ----------
+  var gate = $("gate"), gBtn = $("gCheck"), gMsg = $("gMsg"), clickedSub = false;
+  $("gSub").addEventListener("click", function () { clickedSub = true; });
+  gBtn.addEventListener("click", function () {
+    if (gBtn.disabled) return;
+    gBtn.disabled = true; gBtn.innerHTML = '<span class="spin"></span>Проверяю…'; gMsg.className = "gmsg"; gMsg.textContent = "";
+    setTimeout(function () {
+      if (!clickedSub) {
+        gBtn.disabled = false; gBtn.textContent = "Проверить подписку";
+        gMsg.className = "gmsg bad"; gMsg.textContent = "Пока не вижу подписки. Подпишись и нажми ещё раз.";
+        var bx = gate.querySelector(".box"); bx.classList.remove("shake"); void bx.offsetWidth; bx.classList.add("shake");
+        return;
+      }
+      gBtn.className = "gbtn ok"; gBtn.textContent = "✓ Подписка есть, спасибо!";
+      setTimeout(function () { gate.classList.add("out"); }, 700);
+    }, 900);
+  });
+  $("gateAgain").addEventListener("click", function () {
+    clickedSub = false; gBtn.disabled = false; gBtn.className = "gbtn alt"; gBtn.textContent = "Проверить подписку";
+    gMsg.className = "gmsg"; gMsg.textContent = "В демо проверка понарошку: сначала нажми «Подписаться».";
+    gate.classList.remove("out");
+  });
+
+  
+
+  render();
+  requestAnimationFrame(function () { placePill(tabsEl.querySelector('[aria-selected="true"]'), false); });
+})();
+</script>
+
+</body>
+</html>
