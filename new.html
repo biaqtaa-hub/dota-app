@@ -352,6 +352,13 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
 .dragghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -50%) scale(1.15) rotate(-3deg); opacity: .95;
   box-shadow: 0 16px 34px rgba(0,0,20,.5), inset 0 0 0 2px rgba(255,255,255,.7) !important; transition: none !important; }
 
+#slots .slot.me.full img { width: 100%; height: 100%; object-fit: cover; }
+.metag { position: absolute; right: 3px; top: 3px; height: 16px; padding: 0 6px; border-radius: 99px; font: 800 10px/16px var(--font); color: #031a24; background: var(--ally); }
+.tile.mine .ph { box-shadow: inset 0 0 0 2px #fff; }
+.tile.mine .ph::after { content: "ты"; position: absolute; left: 4px; bottom: 4px; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 99px; background: #fff; color: #0b0d3a; }
+@keyframes blink { 0%, 100% { color: var(--muted); } 30%, 70% { color: #fff; transform: scale(1.04); } }
+#dragHint.blink { animation: blink .8s; }
+
 </style>
 </head>
 <body>
@@ -394,7 +401,7 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
         <button type="button" class="sbtn ally" data-side="ally" aria-selected="false">Союзники <b id="cA">0</b><i>/4</i></button>
       </div>
       <div class="slots glass" id="slots"></div>
-      <div class="small" id="dragHint" hidden style="margin-top:-6px;text-align:center">Зажми «ты» и перетащи на свою очередь пика</div>
+      <div class="small" id="dragHint" hidden style="margin-top:-6px;text-align:center">Перетащи «ты» на героя — это твой герой. На пустую клетку — твоя очередь пика</div>
       <div class="grid glass" id="grid"></div>
       <button class="allbtn" id="allBtn" type="button">Все герои</button>
     </div>
@@ -562,7 +569,7 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
 
   // состояние: слот = { id, pos (1-5 или 0), guess }
   var heroes = [], byId = {}, byName = {};
-  var enemies = [], allies = [], side = "enemy", role = 0, order = "last", query = "", meAt = 4; // meAt — какой по счёту пикаешь ты в своей команде (0..4)
+  var enemies = [], allies = [], side = "enemy", role = 0, order = "last", query = "", meAt = 4, myHero = null; // myHero — твой герой, если уже выбрал ({ id }) // meAt — какой по счёту пикаешь ты в своей команде (0..4)
 
   // ---------- герои ----------
   function imgUrl(h) { return IMG + h.name.replace("npc_dota_hero_", "") + ".png"; }
@@ -743,7 +750,7 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
       '<button class="wbtn" type="button" data-info="' + esc(h.localized_name) + '" style="width:100%;margin-top:12px">Сборка и контрпики ' + esc(h.localized_name) + "</button>";
     var cls = x.chance >= 58 ? "hi" : (x.chance >= 52 ? "mid" : "lo");
     return '<article class="card glass"><div class="ph"><img src="' + imgUrl(h) + '" alt="" loading="lazy"></div><div style="min-width:0">' +
-      '<div class="top"><span class="rank">#' + (idx + 1) + '</span><span class="chance ' + cls + '">' + x.chance + "% шанс</span></div>" +
+      '<div class="top"><span class="rank">' + (idx < 0 ? "ты" : "#" + (idx + 1)) + '</span><span class="chance ' + cls + '">' + x.chance + "% шанс</span></div>" +
       '<div class="nm">' + esc(h.localized_name) + '</div><div class="tags">' + tags + '</div><button class="more" type="button">Подробнее ▾</button></div>' +
       '<div class="det">' + d + "</div></article>";
   }
@@ -758,7 +765,7 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
       var stats = {}, noStats = false;
       enemies.forEach(function (s, i) { stats[s.id] = results[i]; if (!results[i]) noStats = true; });
       var ctx = { enemies: enemies, allies: allies, mate: mate, stats: stats, laneVs: role ? LANE_VS[role] : [] };
-      var taken = enemies.concat(allies).map(function (s) { return s.id; });
+      var taken = enemies.concat(allies).concat(myHero ? [myHero] : []).map(function (s) { return s.id; });
       var list = heroes.filter(function (h) { return taken.indexOf(h.id) === -1 && canPlay(h, role); }).map(function (h) { return evaluate(h, ctx); });
       list.sort(function (a, b) {
         if (enemies.length) { var ca = a.hits > 0 ? 1 : 0, cb = b.hits > 0 ? 1 : 0; if (ca !== cb) return cb - ca; }
@@ -768,6 +775,10 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
       if (!statsReady) html += '<div class="info">Статистика матчей ещё грузится или недоступна — подсказки по подборке контрпиков и механикам скиллов.</div>';
       else if (enemies.length && noStats) html += '<div class="info">Статистика матчей сейчас недоступна, подсказки по подборке контрпиков и механикам скиллов.</div>';
       if (enemies.length && list.length && list[0].hits === 0) html += '<div class="info">Явных контрпиков на этих врагов для твоей роли нет — показываю самых сильных героев с учётом линии и команды.</div>';
+      if (myHero && byId[myHero.id]) {
+        html += '<div class="label" style="margin:2px 0 0">Твой герой</div>' + cardHtml(evaluate(byId[myHero.id], ctx), -1, ctx) +
+                '<div class="label" style="margin:10px 0 0">Если ещё не залочил — можно взять</div>';
+      }
       list.slice(0, 8).forEach(function (x, i) { html += cardHtml(x, i, ctx); });
       box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
       if (enemies.length && Date.now() - lastCount > 20000) {
@@ -787,8 +798,8 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
   // ---------- экран подбора ----------
   function group() { return side === "enemy" ? enemies : allies; }
   function tileHtml(h, extra) {
-    var on = enemies.some(function (s) { return s.id === h.id; }), al = allies.some(function (s) { return s.id === h.id; });
-    return '<button class="tile' + (on ? " on" : al ? " al" : "") + '" type="button" data-hero="' + esc(h.localized_name) + '"' + (extra || "") + '><div class="ph"><img src="' + imgUrl(h) +
+    var on = enemies.some(function (s) { return s.id === h.id; }), al = allies.some(function (s) { return s.id === h.id; }), mine = myHero && myHero.id === h.id;
+    return '<button class="tile' + (mine ? " mine" : on ? " on" : al ? " al" : "") + '" type="button" data-hero="' + esc(h.localized_name) + '"' + (extra || "") + '><div class="ph"><img src="' + imgUrl(h) +
       '" alt="" loading="lazy" draggable="false"></div><div class="nm">' + esc(h.localized_name) + "</div></button>";
   }
   function keepLens(h) { if (h._lens) h.appendChild(h._lens); }
@@ -828,7 +839,9 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
     var html = "";
     cells().forEach(function (c, i) {
       if (c === "me") {
-        html += '<button class="slot me" type="button" data-me data-cell="' + i + '" aria-label="Ты, пикаешь ' + (i + 1) + '-м">ты' + (role ? '<span class="pos">' + role + "</span>" : "") + "</button>";
+        var mh = myHero && byId[myHero.id];
+        html += '<button class="slot me' + (mh ? " full" : "") + '" type="button" data-me data-cell="' + i + '" aria-label="Ты, пикаешь ' + (i + 1) + '-м">' +
+          (mh ? '<img src="' + imgUrl(mh) + '" alt="" draggable="false"><span class="metag">ты</span>' : "ты") + (role ? '<span class="pos">' + role + "</span>" : "") + "</button>";
       } else if (c) {
         var s = c.s, badge = s.pos ? (s.guess ? "≈" : "") + s.pos : "?";
         html += '<button class="slot full" type="button" data-slot="' + c.idx + '" data-cell="' + i + '" aria-label="' + esc(byId[s.id].localized_name) + ', позиция"><img src="' + imgUrl(byId[s.id]) + '" alt="" draggable="false"><span class="pos' + (s.guess ? " guess" : "") + '">' + badge + "</span></button>";
@@ -855,6 +868,7 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
 
   function toggleHero(name) {
     var h = hero(name); if (!h) return;
+    if (myHero && myHero.id === h.id) { myHero = null; haptic(); renderPick(); if (sheetKind === "all") renderAllSheet(); return; }
     var g = group(), other = side === "enemy" ? allies : enemies, max = side === "enemy" ? 5 : 4;
     var k = g.findIndex(function (s) { return s.id === h.id; });
     if (k !== -1) g.splice(k, 1);
@@ -913,6 +927,17 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
     if (!wasDragging) return;
     suppressClick = Date.now();
     var to = cellAt(x, y); if (to < 0 || to === from) return;
+    if (side === "ally" && (from === meAt || to === meAt)) {
+      var other = from === meAt ? to : from, k = allies.findIndex(function (s) { return s.cell === other; });
+      if (k !== -1) {
+        var a = allies[k];
+        if (myHero) allies[k] = { id: myHero.id, pos: guessPos(byId[myHero.id], allies, true), guess: false, cell: other };  // прошлый твой герой уходит в союзники
+        else allies.splice(k, 1);
+        myHero = { id: a.id };
+        if (!role && a.pos) { role = a.pos; renderRoles(); }
+        haptic("medium"); renderPick(); return;
+      }
+    }
     swapCells(from, to);
     if (side === "ally") syncOrder();
     haptic("medium"); renderPick();
@@ -1095,7 +1120,7 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
 
   // ---------- нажатия ----------
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-hero],[data-slot],[data-add],[data-info],[data-setpos],[data-remove],[data-close],[data-addas],[data-vs],.sbtn,#roles button,.more,.tab");
+    var t = e.target.closest("[data-hero],[data-slot],[data-add],[data-info],[data-setpos],[data-remove],[data-close],[data-addas],[data-vs],[data-me],[data-freeme],.sbtn,#roles button,.more,.tab");
     if (!t) return;
     if (Date.now() - suppressClick < 400) return;                     // только что перетаскивали
     if (sheetKind && !t.closest(".sheet")) return;                 // окно открыто — фон не нажимается
@@ -1104,6 +1129,14 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
     else if (t.dataset.info) { tick(); openHeroSheet(t.dataset.info); }
     else if (t.dataset.vs) { tick(); openVs(t.dataset.vs); }
     else if (t.dataset.slot !== undefined) { tick(); openSlotSheet(+t.dataset.slot); }
+    else if (t.hasAttribute("data-me")) {
+      if (!myHero) { var hn = $("dragHint"); hn.classList.remove("blink"); void hn.offsetWidth; hn.classList.add("blink"); tick(); return; }
+      var mh = byId[myHero.id]; tick();
+      openSheet("me", '<div class="shead"><img src="' + imgUrl(mh) + '" alt=""><div class="nm">Твой герой: ' + esc(mh.localized_name) + '</div><button class="xbtn" type="button" data-close>✕</button></div>' +
+        '<div class="hint" style="margin-top:0">Бот показывает, как он против врагов, и что ещё можно взять, если ты не залочил.</div>' +
+        '<div class="btnrow"><button class="wbtn" type="button" data-info="' + esc(mh.localized_name) + '">Сборка и контрпики</button><button class="wbtn red" type="button" data-freeme>Убрать</button></div>');
+    }
+    else if (t.hasAttribute("data-freeme")) { myHero = null; closeSheet(); haptic(); renderPick(); }
     else if (t.hasAttribute("data-add")) q.focus();
     else if (t.dataset.setpos !== undefined) {
       var s = group()[+$("sheetHost").dataset.slot]; if (s) { s.pos = +t.dataset.setpos; s.guess = false; }
@@ -1365,13 +1398,13 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
     .then(function (r) { return r.json(); })
     .then(function (data) {
       if (!Array.isArray(data) || !data.length) throw new Error("empty");
-      var oldNames = {}; enemies.concat(allies).forEach(function (s) { oldNames[s.id] = byId[s.id] && byId[s.id].localized_name; });
+      var oldNames = {}; enemies.concat(allies).concat(myHero ? [myHero] : []).forEach(function (s) { oldNames[s.id] = byId[s.id] && byId[s.id].localized_name; });
       setHeroes(data.map(function (h) {
         var pick = 0, win = 0; for (var i = 1; i <= 8; i++) { pick += h[i + "_pick"] || 0; win += h[i + "_win"] || 0; }
         h.overall = pick ? win / pick : 0.5; h.picks = pick; return h;
       }).sort(function (a, b) { return a.localized_name.localeCompare(b.localized_name); }));
       // герои, выбранные до загрузки, получают настоящие номера
-      enemies.concat(allies).forEach(function (s) { var h = byName[oldNames[s.id]]; if (h) s.id = h.id; });
+      enemies.concat(allies).concat(myHero ? [myHero] : []).forEach(function (s) { var h = byName[oldNames[s.id]]; if (h) s.id = h.id; });
       POPULAR = heroes.slice().sort(function (a, b) { return b.picks - a.picks; }).slice(0, 8).map(function (h) { return h.localized_name; });
       statsReady = true;
       renderPick();
