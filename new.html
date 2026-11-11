@@ -361,14 +361,14 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
 
   <!-- ================= ПОДБОР ================= -->
   <section id="v-pick" class="view">
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+    <h1 id="h1" style="margin-bottom:14px">Кто во врагах?</h1>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
       <div class="roles" id="roles" role="radiogroup" aria-label="Твоя роль"></div>
       <button type="button" class="toggle glass slim" id="lastPick" aria-pressed="true" title="Тогда контрпик важнее всего">
         <span>Я пикаю последним</span><span class="sw"></span>
       </button>
     </div>
     <div style="display:flex;flex-direction:column;gap:14px">
-      <h1 id="h1">Кто во врагах?</h1>
       <label class="search glass" for="q">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Начни писать: мип…" aria-label="Поиск героя">
