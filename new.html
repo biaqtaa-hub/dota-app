@@ -343,6 +343,15 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
 .stage .row { display: flex; flex-wrap: wrap; gap: 5px; }
 .stage img { width: 44px; height: 32px; object-fit: cover; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
 
+/* ---------- перетаскивание ---------- */
+#slots .slot { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+#slots .slot.me { font: 800 14px var(--font); color: #fff; cursor: grab; background: linear-gradient(160deg, rgba(110,214,255,.35), rgba(110,214,255,.12)); box-shadow: inset 0 0 0 2px var(--ally), inset 0 1px 0 rgba(255,255,255,.5); }
+#slots .slot.full { cursor: grab; }
+#slots .slot.dragging { opacity: .3; }
+#slots .slot.over { box-shadow: inset 0 0 0 2px #fff, 0 0 0 3px rgba(255,255,255,.25); transform: scale(1.06); }
+.dragghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -50%) scale(1.15) rotate(-3deg); opacity: .95;
+  box-shadow: 0 16px 34px rgba(0,0,20,.5), inset 0 0 0 2px rgba(255,255,255,.7) !important; transition: none !important; }
+
 </style>
 </head>
 <body>
@@ -385,6 +394,7 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
         <button type="button" class="sbtn ally" data-side="ally" aria-selected="false">Союзники <b id="cA">0</b><i>/4</i></button>
       </div>
       <div class="slots glass" id="slots"></div>
+      <div class="small" id="dragHint" hidden style="margin-top:-6px;text-align:center">Зажми «ты» и перетащи на свою очередь пика</div>
       <div class="grid glass" id="grid"></div>
       <button class="allbtn" id="allBtn" type="button">Все герои</button>
     </div>
@@ -552,7 +562,7 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
 
   // состояние: слот = { id, pos (1-5 или 0), guess }
   var heroes = [], byId = {}, byName = {};
-  var enemies = [], allies = [], side = "enemy", role = 0, order = "last", query = "";
+  var enemies = [], allies = [], side = "enemy", role = 0, order = "last", query = "", meAt = 4; // meAt — какой по счёту пикаешь ты в своей команде (0..4)
 
   // ---------- герои ----------
   function imgUrl(h) { return IMG + h.name.replace("npc_dota_hero_", "") + ".png"; }
@@ -782,16 +792,26 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
       '" alt="" loading="lazy" draggable="false"></div><div class="nm">' + esc(h.localized_name) + "</div></button>";
   }
   function keepLens(h) { if (h._lens) h.appendChild(h._lens); }
-  function renderSlots() {
-    var g = group(), max = side === "enemy" ? 5 : 4, html = "";
+  // ячейки ряда: для союзников «ты» стоит на своём месте, герои занимают остальные по порядку
+  function cells() {
+    var out = [], k = 0;
     for (var i = 0; i < 5; i++) {
-      var s = g[i];
-      if (i >= max) { html += '<div class="slot" aria-hidden="true" style="font-size:12px;font-weight:700;color:var(--ink)">ты</div>'; continue; }
-      if (s) {
-        var badge = s.pos ? (s.guess ? "≈" : "") + s.pos : "?";
-        html += '<button class="slot full" type="button" data-slot="' + i + '" aria-label="' + esc(byId[s.id].localized_name) + ', позиция"><img src="' + imgUrl(byId[s.id]) + '" alt=""><span class="pos' + (s.guess ? " guess" : "") + '">' + badge + "</span></button>";
-      } else html += '<button class="slot" type="button" data-add aria-label="Добавить">+</button>';
+      if (side === "ally" && i === meAt) out.push("me");
+      else { var g = group(); out.push(g[k] ? { s: g[k], idx: k } : null); k++; }
     }
+    return out;
+  }
+  function renderSlots() {
+    var html = "";
+    cells().forEach(function (c, i) {
+      if (c === "me") {
+        html += '<button class="slot me" type="button" data-me data-cell="' + i + '" aria-label="Ты, пикаешь ' + (i + 1) + '-м">ты' + (role ? '<span class="pos">' + role + "</span>" : "") + "</button>";
+      } else if (c) {
+        var s = c.s, badge = s.pos ? (s.guess ? "≈" : "") + s.pos : "?";
+        html += '<button class="slot full" type="button" data-slot="' + c.idx + '" data-cell="' + i + '" aria-label="' + esc(byId[s.id].localized_name) + ', позиция"><img src="' + imgUrl(byId[s.id]) + '" alt="" draggable="false"><span class="pos' + (s.guess ? " guess" : "") + '">' + badge + "</span></button>";
+      } else html += '<button class="slot" type="button" data-add data-cell="' + i + '" aria-label="Добавить">+</button>';
+    });
+    $("dragHint").hidden = side !== "ally";
     var sl = $("slots"); sl.innerHTML = html; sl.classList.toggle("ally", side === "ally"); keepLens(sl);
     $("cE").textContent = enemies.length; $("cA").textContent = allies.length;
     document.querySelectorAll(".sbtn").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.side === side ? "true" : "false"); });
@@ -829,9 +849,66 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
   var q = $("q"), clr = $("clr");
   q.addEventListener("input", function () { query = q.value.trim(); clr.hidden = !query; renderGrid(); });
   clr.addEventListener("click", function () { q.value = ""; query = ""; clr.hidden = true; renderGrid(); q.focus(); });
+  function syncOrder() { order = meAt === 4 ? "last" : "mid"; $("lastPick").setAttribute("aria-pressed", order === "last" ? "true" : "false"); }
   $("lastPick").addEventListener("click", function () {
-    order = order === "last" ? "mid" : "last"; this.setAttribute("aria-pressed", order === "last" ? "true" : "false"); tick(); scheduleRecommend();
+    meAt = order === "last" ? Math.min(allies.length, 3) : 4;   // выключил — ставим «ты» сразу после уже выбранных союзников
+    syncOrder(); tick(); renderSlots(); scheduleRecommend();
   });
+
+  // ---------- перетаскивание в ряду: зажал и тащишь (на телефоне — подержать) ----------
+  var drag = null, dragging = false, suppressClick = 0;
+  function cellAt(x, y) {
+    var el = document.elementFromPoint(x, y), c = el && el.closest && el.closest("#slots [data-cell]");
+    return c ? +c.dataset.cell : -1;
+  }
+  function startDrag() {
+    dragging = true; var src = drag.el, r = src.getBoundingClientRect();
+    var gh = src.cloneNode(true); gh.className = src.className + " dragghost"; gh.removeAttribute("data-cell");
+    gh.style.width = r.width + "px"; gh.style.height = r.height + "px"; document.body.appendChild(gh); drag.ghost = gh;
+    src.classList.add("dragging"); moveGhost(drag.x, drag.y);
+    try { TG.HapticFeedback.impactOccurred("medium"); } catch (e) {}
+    try { TG.disableVerticalSwipes(); } catch (e) {}
+  }
+  function moveGhost(x, y) {
+    drag.ghost.style.left = x + "px"; drag.ghost.style.top = y + "px";
+    var j = cellAt(x, y);
+    document.querySelectorAll("#slots .over").forEach(function (n) { n.classList.remove("over"); });
+    if (j >= 0 && j !== drag.from) { var t = document.querySelector('#slots [data-cell="' + j + '"]'); if (t) t.classList.add("over"); if (drag.last !== j) tick(); }
+    drag.last = j;
+  }
+  function endDrag(x, y) {
+    clearTimeout(drag.timer);
+    var wasDragging = dragging, from = drag.from;
+    if (drag.ghost) drag.ghost.remove();
+    document.querySelectorAll("#slots .dragging,#slots .over").forEach(function (n) { n.classList.remove("dragging", "over"); });
+    dragging = false; drag = null;
+    try { TG.enableVerticalSwipes(); } catch (e) {}
+    if (!wasDragging) return;
+    suppressClick = Date.now();
+    var to = cellAt(x, y); if (to < 0 || to === from) return;
+    var arr = cells(); var tmp = arr[from]; arr[from] = arr[to]; arr[to] = tmp;
+    var list = arr.filter(function (c) { return c && c !== "me"; }).map(function (c) { return c.s; });
+    if (side === "ally") { allies.length = 0; Array.prototype.push.apply(allies, list); meAt = arr.indexOf("me"); syncOrder(); }
+    else { enemies.length = 0; Array.prototype.push.apply(enemies, list); }
+    haptic("medium"); renderPick();
+  }
+  $("slots").addEventListener("pointerdown", function (e) {
+    var el = e.target.closest("[data-cell]"); if (!el || el.hasAttribute("data-add") || sheetKind) return;
+    drag = { el: el, from: +el.dataset.cell, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, mouse: e.pointerType === "mouse" };
+    if (!drag.mouse) drag.timer = setTimeout(function () { if (drag) startDrag(); }, 260);   // на телефоне — подержать палец
+  });
+  document.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    if (dragging) { moveGhost(e.clientX, e.clientY); return; }
+    var moved = Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy);
+    if (drag.mouse && moved > 6) startDrag();
+    else if (!drag.mouse && moved > 10) { clearTimeout(drag.timer); drag = null; }   // это была прокрутка
+  });
+  document.addEventListener("pointerup", function (e) { if (drag) endDrag(e.clientX, e.clientY); });
+  document.addEventListener("pointercancel", function () { if (drag) endDrag(-1, -1); });
+  document.addEventListener("touchmove", function (e) { if (dragging) e.preventDefault(); }, { passive: false });
+  $("slots").addEventListener("contextmenu", function (e) { e.preventDefault(); });
 
   // ---------- шторки ----------
   var sheetKind = null, sheetAt = 0;
@@ -995,6 +1072,7 @@ var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-hero],[data-slot],[data-add],[data-info],[data-setpos],[data-remove],[data-close],[data-addas],[data-vs],.sbtn,#roles button,.more,.tab");
     if (!t) return;
+    if (Date.now() - suppressClick < 400) return;                     // только что перетаскивали
     if (sheetKind && !t.closest(".sheet")) return;                 // окно открыто — фон не нажимается
     if (sheetKind && Date.now() - sheetAt < 350 && (t.dataset.hero || t.dataset.info)) return; // защита от случайного двойного нажатия
     if (t.dataset.hero) toggleHero(t.dataset.hero);
