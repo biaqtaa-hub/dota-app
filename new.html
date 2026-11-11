@@ -910,7 +910,7 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
 
   // ---------- мета ----------
   var rateRank = 0, rateLane = 0, rateSort = "pick";
-  var RANKS = [[0, "Все ранги"], [1, "Рекрут"], [2, "Страж"], [3, "Рыцарь"], [4, "Герой"], [5, "Легенда"], [6, "Властелин"], [7, "Божество"], [8, "Титан"]];
+  var RANKS = [[0, "Все ранги"], [1, "Рекрут"], [2, "Страж"], [3, "Рыцарь"], [4, "Герой"], [5, "Легенда"], [6, "Властелин"], [7, "Божество"]];
   var LANES = [[0, "Все позиции"], [1, "Керри"], [2, "Мид"], [3, "Оффлейн"], [4, "Саппорт 4"], [5, "Саппорт 5"]];
   function chipRow(id, items, cur, attr) {
     $(id).innerHTML = items.map(function (r) { return '<button type="button" ' + attr + '="' + r[0] + '" aria-checked="' + (r[0] === cur) + '">' + r[1] + "</button>"; }).join("");
