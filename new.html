@@ -666,15 +666,15 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
     if (!tags) tags = '<span class="tag plain">' + (ctx.enemies.length ? "явных контрпиков нет, сильный по общей статистике" : "сильный герой по общей статистике") + "</span>";
 
     var d = "";
-    if (x.vs.length) {
+    var shown = x.vs.filter(function (v) { return v.bad || v.isCounter || v.r.source; }); // «особого контра нет» не показываем
+    if (shown.length) {
       d += '<div class="sec"><b>Почему он контрит</b>';
-      x.vs.forEach(function (v) {
+      shown.forEach(function (v) {
         var en = esc(v.e.localized_name) + (v.onLane ? " (твоя линия)" : "");
         if (v.bad) d += '<div class="note">Против ' + en + ": здесь он сам в минусе — смотри «Осторожно».</div>";
         else if (v.r.texts.length && v.isCounter) d += '<div class="note"><b>Против ' + en + ":</b> " + esc(v.r.texts.join(" ")) + "</div>";
         else if (v.r.source) d += '<div class="note"><b>Против ' + en + ":</b> один из главных контрпиков на " + esc(v.e.localized_name) + ".</div>";
         else if (v.isCounter) d += '<div class="note"><b>Против ' + en + ":</b> по статистике матчей выигрывает заметно чаще обычного.</div>";
-        else d += '<div class="note">Против ' + en + ": особого контра нет.</div>";
         if (v.g >= 200) d += '<div class="small">Статистика: ' + Math.round(v.wr * 100) + "% побед (обычно " + Math.round(h.overall * 100) + "%), игр: " + v.g.toLocaleString("ru-RU") + "</div>";
       });
       d += "</div>";
