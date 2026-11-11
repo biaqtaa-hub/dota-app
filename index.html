@@ -1,835 +1,1428 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <title>Dota Pick</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Rubik:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: 'Rubik', sans-serif;
-      color: #fff;
-      background:
-        radial-gradient(circle at 15% 0%, rgba(168, 85, 247, 0.35), transparent 45%),
-        radial-gradient(circle at 90% 20%, rgba(236, 72, 153, 0.25), transparent 40%),
-        #0a0a12;
-      background-attachment: fixed;
-      padding: 16px 12px 40px;
-    }
-    .title {
-      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 26px; text-align: center; margin: 6px 0 2px;
-      background: linear-gradient(90deg, #c084fc, #f472b6, #22d3ee);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    .brand {
-      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 13px; letter-spacing: 7px; text-align: center;
-      margin: 0 0 8px; padding-left: 7px;
-      background: linear-gradient(90deg, #22d3ee, #f472b6, #c084fc);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    .sub { text-align: center; color: #9ca3af; font-size: 14px; margin-bottom: 20px; }
-    .tabs { display: flex; gap: 6px; padding: 5px; margin: 0 0 6px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; }
-    .tab { flex: 1; padding: 12px; border: none; border-radius: 12px; background: none; color: #9ca3af; font-family: 'Unbounded', sans-serif; font-weight: 600; font-size: 13px; cursor: pointer; }
-    .tab.active { color: #fff; background: linear-gradient(90deg, #a855f7, #ec4899); box-shadow: 0 0 14px rgba(168,85,247,.5); }
-    .label {
-      font-family: 'Unbounded', sans-serif; font-size: 11px; letter-spacing: 1px; color: #9ca3af;
-      margin: 18px 0 8px; text-transform: uppercase;
-    }
-    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip {
-      padding: 10px 14px; border-radius: 999px; font-size: 14px;
-      background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
-      cursor: pointer; transition: 0.15s;
-    }
-    .chip.active { background: linear-gradient(90deg, #a855f7, #ec4899); border-color: transparent; box-shadow: 0 0 14px rgba(168, 85, 247, 0.6); }
-    .row { display: grid; gap: 8px; grid-template-columns: repeat(4, 1fr); }
-    .slot {
-      position: relative; aspect-ratio: 1 / 1.15; border-radius: 12px;
-      border: 2px dashed rgba(255, 255, 255, 0.2);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px; color: rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.04);
-      overflow: hidden; cursor: pointer;
-    }
-    .slot img { width: 100%; height: 100%; object-fit: cover; }
-    .slot.ally.filled { border: 2px solid #22d3ee; box-shadow: 0 0 12px rgba(34, 211, 238, 0.5); }
-    .slot.enemy.filled { border: 2px solid #f43f5e; box-shadow: 0 0 12px rgba(244, 63, 94, 0.5); }
-    .pos {
-      position: absolute; left: 4px; bottom: 4px; min-width: 26px; padding: 3px 6px; border-radius: 999px;
-      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 11px; line-height: 1.2; text-align: center;
-      background: rgba(0, 0, 0, 0.75);
-    }
-    .ally .pos { color: #22d3ee; border: 1px solid rgba(34, 211, 238, 0.7); }
-    .enemy .pos { color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.7); }
-    .enemy .pos.guess { opacity: 0.75; border-style: dashed; }
-    .hint { font-size: 12px; color: #6b7280; margin-top: 6px; }
-    #go {
-      width: 100%; margin-top: 22px; padding: 16px;
-      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 16px; color: #fff;
-      border: none; border-radius: 14px;
-      background: linear-gradient(90deg, #a855f7, #ec4899, #22d3ee);
-      box-shadow: 0 0 22px rgba(236, 72, 153, 0.5); cursor: pointer;
-    }
-    #go:active { transform: scale(0.97); }
-    .res { padding: 10px; margin-top: 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); }
-    .top { display: flex; align-items: center; gap: 12px; }
-    .pic { width: 84px; text-align: center; flex: none; }
-    .pic img { width: 84px; border-radius: 8px; display: block; }
-    .chance { margin-top: 6px; font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 15px; line-height: 1.1; }
-    .chance span { display: block; font-family: 'Rubik', sans-serif; font-weight: 400; font-size: 9px; opacity: .7; margin-top: 3px; }
-    .rinfo { flex: 1; min-width: 0; }
-    .rname { font-weight: 500; font-size: 15px; }
-    .rwhy { font-size: 12px; color: #9ca3af; margin-top: 4px; line-height: 1.45; }
-    .tag { display: inline-block; margin: 4px 4px 0 0; padding: 3px 8px; border-radius: 999px; font-size: 11px; }
-    .tag.good { color: #4ade80; background: rgba(74, 222, 128, 0.12); border: 1px solid rgba(74, 222, 128, 0.35); }
-    .tag.lane { color: #22d3ee; background: rgba(34, 211, 238, 0.12); border: 1px solid rgba(34, 211, 238, 0.35); }
-    .tag.bad { color: #fda4af; background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.35); }
-    .btn-more {
-      margin-top: 10px; padding: 7px 14px; font-size: 12px; font-family: 'Rubik', sans-serif; color: #d8b4fe;
-      background: none; border: 1px solid rgba(192, 132, 252, 0.45); border-radius: 999px; cursor: pointer;
-    }
-    .more { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.1); font-size: 13px; line-height: 1.5; color: #d1d5db; }
-    .sec { margin-bottom: 12px; }
-    .sec > b { color: #f9a8d4; }
-    .sec.lane > b { color: #22d3ee; }
-    .sec.warn > b { color: #fb7185; }
-    .note { border-left: 3px solid #f472b6; padding-left: 10px; margin: 6px 0; }
-    .sec.lane .note { border-color: #22d3ee; }
-    .sec.warn .note { border-color: #fb7185; }
-    .small { font-size: 11px; color: #9ca3af; }
-    .loading { text-align: center; color: #9ca3af; padding: 24px; }
-    .idea { display: block; margin: 36px auto 0; padding: 12px 20px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: #fff; font: inherit; font-size: 14px; cursor: pointer; }
-    .idea:active { transform: scale(0.97); }
-    .foot { text-align: center; margin-top: 22px; }
-    .foot a { font-size: 11px; color: #fff; opacity: 0.3; text-decoration: none; }
-    .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); align-items: flex-end; z-index: 10; }
-    .sheet { width: 100%; max-height: 82vh; overflow-y: auto; background: #12121c; border-radius: 20px 20px 0 0; padding: 14px; }
-    .sheethead { display: flex; gap: 8px; margin-bottom: 12px; position: sticky; top: 0; background: #12121c; padding-bottom: 6px; }
-    #psearch, #rsearch {
-      flex: 1; width: 100%; padding: 12px 14px; font-size: 16px; font-family: 'Rubik', sans-serif; color: #fff;
-      background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; outline: none;
-    }
-    #rsearch { margin-top: 16px; }
-    #psearch:focus, #rsearch:focus { border-color: #c084fc; box-shadow: 0 0 14px rgba(192, 132, 252, 0.5); }
-    .xbtn { width: 46px; border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 18px; }
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-    .hero { position: relative; border-radius: 10px; overflow: hidden; cursor: pointer; background: rgba(255, 255, 255, 0.05); }
-    .hero:active { transform: scale(0.94); }
-    .hero img { width: 100%; display: block; }
-    .hero .name { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 3px 4px; font-size: 10px; text-align: center; background: linear-gradient(transparent, rgba(0, 0, 0, 0.9)); }
-    .shead { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
-    .shead img { width: 72px; border-radius: 8px; }
-    .shead .nm { font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 16px; flex: 1; }
-    .sbtns { display: flex; gap: 8px; margin-top: 18px; }
-    .sbtn { flex: 1; padding: 13px; border-radius: 12px; font-family: 'Rubik', sans-serif; font-size: 14px; color: #fff; cursor: pointer; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); }
-    .sbtn.del { color: #fda4af; border-color: rgba(244,63,94,.5); }
-    .lanesel { position: relative; }
-    .lanesel select {
-      width: 100%; appearance: none; -webkit-appearance: none; padding: 12px 40px 12px 14px; font-size: 15px; font-family: 'Rubik', sans-serif;
-      color: #fff; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.15); border-radius: 12px; outline: none; cursor: pointer;
-    }
-    .lanesel::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #c084fc; pointer-events: none; font-size: 16px; }
-    .lanesel option { background: #12121c; color: #fff; }
-    .rrow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin-top: 8px; border-radius: 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
-    .rnum { width: 22px; font-size: 12px; color: #6b7280; text-align: right; }
-    .rrow img { width: 58px; border-radius: 6px; }
-    .rmid { flex: 1; min-width: 0; }
-    .rbar { height: 5px; border-radius: 3px; background: rgba(255,255,255,.08); margin: 6px 0 4px; overflow: hidden; }
-    .rbar i { display: block; height: 100%; background: linear-gradient(90deg, #a855f7, #ec4899, #22d3ee); }
-    .rsub { font-size: 11px; color: #9ca3af; }
-    .rwr { font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 15px; text-align: right; }
-    .rwr span { display: block; font-family: 'Rubik', sans-serif; font-weight: 400; font-size: 9px; color: #9ca3af; margin-top: 3px; }
-    .gate { text-align: center; padding: 10px 6px 18px; }
-    .gate h3 { font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 18px; margin: 6px 0 10px;
-      background: linear-gradient(90deg, #c084fc, #f472b6, #22d3ee); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .gate p { color: #d1d5db; font-size: 14px; line-height: 1.5; margin: 0 0 16px; }
-    .gbtn { display: block; width: 100%; margin-top: 10px; padding: 15px; border-radius: 14px; border: none; cursor: pointer;
-      font-family: 'Unbounded', sans-serif; font-weight: 800; font-size: 14px; color: #fff; }
-    .gbtn.main { background: linear-gradient(90deg, #a855f7, #ec4899, #22d3ee); box-shadow: 0 0 20px rgba(236, 72, 153, 0.45); }
-    .gbtn.sec { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.18); font-family: 'Rubik', sans-serif; font-weight: 500; }
-    #gmsg { min-height: 18px; margin-top: 10px; font-size: 13px; color: #fda4af; }
-    #freeleft { text-align: center; font-size: 12px; color: #6b7280; margin-top: 8px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>DOTA PICK</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Unbounded:wght@600;700&display=swap">
+<style>
+
+/* Слои: фиксированный фон с «волнами» → колонка шириной телефона из стеклянных плашек → стеклянное меню снизу → линза, которая едет за пальцем/курсором */
+:root {
+  --night: #03051a;        /* основа фона */
+  --ink: #f3f5ff;          /* основной текст */
+  --muted: rgba(222, 228, 255, 0.64);
+  --glass: rgba(255, 255, 255, 0.075);
+  --glass-hi: rgba(255, 255, 255, 0.16);
+  --rim: rgba(255, 255, 255, 0.34);
+  --win: #74f0b0;          /* винрейт, «хорошо» */
+  --enemy: #ff7a90;        /* рамка врага */
+  --ally: #6ed6ff;         /* рамка союзника */
+  --font: "Onest", "SF Pro Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --logo: "Unbounded", "Onest", system-ui, sans-serif;
+  --r-lg: 26px; --r-md: 18px; --r-sm: 14px;
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; background: var(--night); color: var(--ink); font-family: var(--font); font-size: 15px;
+  -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+
+/* ---------- фон как на референсе: тёмно-синий с волнами ---------- */
+.bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: var(--night); }
+.bg svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* ---------- колонка ---------- */
+.app {
+  position: relative; z-index: 1; max-width: 460px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px calc(118px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 18px;
+}
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.logo { font-family: var(--logo); font-weight: 700; font-size: 17px; letter-spacing: .04em; }
+.logo small { display: block; font-family: var(--font); font-weight: 500; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.pill { font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 999px; }
+
+h1 { font-size: 30px; line-height: 1.08; font-weight: 800; margin: 4px 0 0; letter-spacing: -.01em; text-wrap: balance; }
+h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
+.sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+/* ---------- стекло ---------- */
+.glass {
+  position: relative; isolation: isolate;
+  background: linear-gradient(160deg, rgba(255,255,255,.13), rgba(255,255,255,.04) 45%, rgba(255,255,255,.07));
+  -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(255,255,255,.06), 0 14px 34px rgba(1, 3, 20, .38);
+}
+/* светящийся край: ярче сверху-слева, как у стекла */
+.glass::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: linear-gradient(145deg, rgba(255,255,255,.62), rgba(255,255,255,.08) 38%, rgba(255,255,255,.04) 62%, rgba(180,170,255,.45));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* блик, который идёт за пальцем/курсором */
+.glass::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  background: radial-gradient(160px circle at var(--mx, 30%) var(--my, -20%), rgba(255,255,255,.16), transparent 60%);
+  opacity: var(--glow, .55); transition: opacity .3s;
+}
+
+/* ---------- поиск ---------- */
+.search { display: flex; align-items: center; gap: 10px; border-radius: 999px; padding: 0 16px; height: 54px; }
+.search svg { flex: none; opacity: .75; }
+.search input {
+  flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--ink);
+  font: 600 17px var(--font);
+}
+.search input::placeholder { color: rgba(222,228,255,.48); font-weight: 500; }
+.search:focus-within { --glow: 1; box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 0 0 3px rgba(150,160,255,.28), 0 14px 34px rgba(1,3,20,.38); }
+.clear { border: 0; background: transparent; color: var(--muted); font: 600 13px var(--font); padding: 8px; cursor: pointer; }
+
+/* ---------- плитки героев ---------- */
+.grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; padding: 10px; border-radius: var(--r-lg); }
+.tile {
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 0; border: 0; background: transparent;
+  color: var(--ink); font: 600 11px/1.15 var(--font); text-align: center; cursor: pointer;
+  transition: transform .45s var(--spring);
+}
+.tile:active { transform: scale(.95); }
+.tile .ph { aspect-ratio: 16 / 9; border-radius: var(--r-sm); overflow: hidden; position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.tile img, .slot img, .card img, .row img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tile .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile.on .ph { box-shadow: inset 0 0 0 2px var(--enemy); }
+.tile.on .ph::after { content: "враг"; position: absolute; left: 4px; bottom: 4px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 99px; background: rgba(255,122,144,.9); color: #1a0710; }
+.empty { grid-column: 1 / -1; color: var(--muted); text-align: center; padding: 18px 6px; font-size: 14px; }
+
+/* монограмма, если портрета нет в демо */
+.mono {
+  width: 100%; height: 100%; display: grid; place-items: center; font: 800 22px var(--logo); color: rgba(255,255,255,.92);
+  background: radial-gradient(circle at 30% 20%, hsla(var(--h), 90%, 72%, .55), hsla(var(--h), 70%, 30%, .55) 70%);
+}
+
+/* ---------- слоты врагов ---------- */
+.slots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; padding: 9px; border-radius: var(--r-lg); }
+.slot {
+  aspect-ratio: 16 / 9; border-radius: 10px; border: 0; padding: 0; overflow: hidden; position: relative; cursor: pointer;
+  background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16); color: var(--muted);
+  font: 300 26px var(--font); display: grid; place-items: center; transition: transform .45s var(--spring);
+}
+.slot:active { transform: scale(.88); }
+.slot.full { box-shadow: inset 0 0 0 2px var(--enemy); }
+.slot.full .x { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 99px; display: grid; place-items: center; font: 700 12px/1 var(--font); color: #fff; background: rgba(5,6,26,.7); }
+
+/* ---------- враги / союзники ---------- */
+.side { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; border-radius: 999px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+.sbtn { border: 0; cursor: pointer; height: 40px; border-radius: 999px; background: transparent; color: var(--muted); font: 700 14px var(--font);
+  display: flex; align-items: center; justify-content: center; gap: 6px; transition: background .3s, color .3s, transform .45s var(--spring); }
+.sbtn:active { transform: scale(.96); }
+.sbtn b { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; display: inline-grid; place-items: center; font-size: 12px; background: rgba(255,255,255,.12); color: var(--ink); }
+.sbtn i { font-style: normal; font-weight: 500; font-size: 12px; opacity: .6; margin-left: -4px; }
+.sbtn[aria-selected="true"] { color: #fff; background: linear-gradient(160deg, rgba(255,255,255,.24), rgba(255,255,255,.08)); box-shadow: inset 0 1px 0 rgba(255,255,255,.55); }
+.sbtn.enemy[aria-selected="true"] b { background: var(--enemy); color: #1a0710; }
+.sbtn.ally[aria-selected="true"] b { background: var(--ally); color: #031a24; }
+.slots.ally .slot.full { box-shadow: inset 0 0 0 2px var(--ally); }
+.tile.al .ph { box-shadow: inset 0 0 0 2px var(--ally); }
+.tile.al .ph::after { content: "союзник"; position: absolute; left: 4px; bottom: 4px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 99px; background: rgba(110,214,255,.92); color: #031a24; }
+.roles { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-inline: -2px; padding: 2px; }
+.roles::-webkit-scrollbar { display: none; }
+.roles button { flex: none; border: 0; cursor: pointer; height: 36px; padding: 0 14px; border-radius: 999px; font: 600 13px var(--font); color: var(--ink);
+  background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); transition: background .3s, transform .45s var(--spring); }
+.roles button:active { transform: scale(.94); }
+.roles button[aria-checked="true"] { background: rgba(255,255,255,.24); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.3); }
+.card .with { margin-top: 6px; font-size: 12.5px; line-height: 1.38; color: #cdeeff; padding: 6px 9px; border-radius: 10px; background: rgba(110,214,255,.1); box-shadow: inset 0 0 0 1px rgba(110,214,255,.22); }
+
+/* ---------- результаты ---------- */
+.list { display: flex; flex-direction: column; gap: 10px; }
+.card { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 14px; padding: 10px 14px 10px 10px; border-radius: var(--r-lg); align-items: start; transition: transform .45s var(--spring); }
+.card:active { transform: scale(.97); }
+.card .ph { width: 104px; height: 58px; border-radius: var(--r-md); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.card .meta { display: flex; align-items: center; gap: 8px; }
+.rank { font: 800 11px var(--font); padding: 3px 8px; border-radius: 99px; color: #062417; background: var(--win); }
+.vs { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card .nm { font-size: 19px; font-weight: 800; margin: 4px 0 3px; }
+.card .why { font-size: 13px; line-height: 1.38; color: rgba(236,240,255,.86); }
+.card .why b { color: #fff; font-weight: 700; }
+
+/* ---------- мета ---------- */
+.row { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 14px 10px 10px; border-radius: var(--r-lg); }
+.row .ph { width: 84px; height: 47px; border-radius: var(--r-sm); overflow: hidden; }
+.row .role { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.row .nm { font-size: 17px; font-weight: 800; margin-top: 2px; }
+.row .wr { text-align: right; font: 800 22px var(--font); color: var(--win); font-variant-numeric: tabular-nums; }
+.row .wr small { display: block; font: 500 11px var(--font); color: var(--muted); }
+.soon { border-radius: var(--r-lg); padding: 26px 20px; text-align: center; color: var(--muted); line-height: 1.5; }
+.soon b { display: block; color: var(--ink); font-size: 18px; margin-bottom: 6px; }
+
+/* ---------- нижнее меню ---------- */
+.dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; pointer-events: none;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+}
+.tabs { pointer-events: auto; max-width: 420px; margin: 0 auto; border-radius: 999px; padding: 7px; display: grid; grid-template-columns: repeat(4, 1fr); position: relative; }
+.tab {
+  position: relative; z-index: 3; border: 0; background: transparent; color: rgba(236,240,255,.78); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; font: 600 11px var(--font);
+  transition: color .3s, transform .45s var(--spring);
+}
+.tab:active { transform: scale(.9); }
+.tab[aria-selected="true"] { color: #fff; }
+.pillbg {
+  position: absolute; z-index: 2; top: 7px; bottom: 7px; left: 7px; border-radius: 999px; pointer-events: none;
+  background: linear-gradient(160deg, rgba(255,255,255,.26), rgba(255,255,255,.08));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(255,255,255,.12), 0 6px 16px rgba(0,0,0,.25);
+}
+
+/* ---------- экран «подпишись на канал» ---------- */
+.gate { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-bottom, 0px));
+  background: rgba(3, 5, 26, .35); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  transition: opacity .5s ease, -webkit-backdrop-filter .5s, backdrop-filter .5s; }
+.gate.out { opacity: 0; pointer-events: none; }
+.gate .box { width: 100%; max-width: 400px; border-radius: 30px; padding: 26px 22px 20px; display: flex; flex-direction: column; gap: 16px; align-items: stretch; text-align: center;
+  transition: transform .55s var(--spring); }
+.gate.out .box { transform: scale(.92) translateY(20px); }
+.gate .ava { width: 74px; height: 74px; margin: 0 auto; border-radius: 50%; display: grid; place-items: center; font: 700 20px var(--logo); letter-spacing: .02em;
+  background: radial-gradient(circle at 30% 25%, #7d7bff, #2a22c9 70%); box-shadow: inset 0 1.5px 0 rgba(255,255,255,.6), 0 10px 26px rgba(40, 40, 200, .45); }
+.gate h2 { font-size: 23px; line-height: 1.15; text-wrap: balance; }
+.gate p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.gate ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.gate li { display: flex; gap: 10px; align-items: center; font-size: 14px; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+.gate li span { width: 28px; height: 28px; flex: none; border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.1); font-size: 15px; }
+.gbtn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 999px; border: 0; cursor: pointer; text-decoration: none;
+  font: 700 16px var(--font); color: var(--ink); transition: transform .45s var(--spring), background .3s; }
+.gbtn:active { transform: scale(.96); }
+.gbtn.main { color: #0b0d3a; background: linear-gradient(180deg, #ffffff, #dfe3ff); box-shadow: inset 0 -2px 0 rgba(30,40,160,.18), 0 10px 24px rgba(10, 10, 60, .35); }
+.gbtn.alt { background: rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14); }
+.gbtn.ok { background: rgba(116,240,176,.22); box-shadow: inset 0 0 0 1px rgba(116,240,176,.6); color: #dfffee; }
+.gmsg { min-height: 20px; font-size: 13px; color: var(--muted); }
+.gmsg.bad { color: #ffb3c0; }
+.spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; animation: sp .8s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+@keyframes shake { 10%, 90% { transform: translateX(-2px); } 30%, 70% { transform: translateX(6px); } 50% { transform: translateX(-6px); } }
+.shake { animation: shake .45s; }
+
+/* ---------- жидкое стекло (капсула-линза) ---------- */
+.glens { position: absolute; left: 0; top: 0; z-index: 4; pointer-events: none; opacity: 0; will-change: transform;
+  transition: opacity .25s, width .3s var(--spring), height .3s var(--spring);
+  -webkit-backdrop-filter: blur(.6px) saturate(175%) brightness(1.08); backdrop-filter: blur(.6px) saturate(175%) brightness(1.08);
+  background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.02) 50%, rgba(255,255,255,.06)); }
+/* тень и обод — на дочернем слое: в Chrome тень на самом стекле ломает преломление */
+.glens.on { opacity: 1; }
+.glens .shine { position: absolute; inset: 0; border-radius: inherit;
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,.75), inset 0 -1px 1px rgba(255,255,255,.25), inset 1.5px 0 2px rgba(255,255,255,.18), inset -1.5px 0 2px rgba(255,255,255,.18);
+  background: radial-gradient(60% 45% at 28% 12%, rgba(255,255,255,.32), transparent 70%), radial-gradient(40% 30% at 78% 92%, rgba(255,255,255,.14), transparent 70%); }
+.tabs .glens { z-index: 4; }
+
+.demo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 14px; border-radius: var(--r-lg); font-size: 13px; color: var(--muted); }
+.demo .seg { display: flex; gap: 4px; }
+.demo button { border: 0; cursor: pointer; font: 600 13px var(--font); color: var(--ink); padding: 7px 12px; border-radius: 99px; background: rgba(255,255,255,.06); }
+.demo button[aria-pressed="true"] { background: rgba(255,255,255,.22); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+
+:focus-visible { outline: 2px solid #b9c2ff; outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  .tile, .slot, .card, .tab, .glens { transition: none; }
+}
+@media (max-width: 370px) { h1 { font-size: 26px; } .grid { gap: 6px; padding: 8px; } }
+
+/* ---------- нижняя шторка (позиция героя, все герои, карточка героя) ---------- */
+.sheetwrap { position: fixed; inset: 0; z-index: 25; display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(3, 5, 26, .45); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.sheet { width: 100%; max-width: 460px; max-height: 86vh; overflow: auto; border-radius: 28px 28px 0 0;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(180deg, rgba(30, 30, 110, .82), rgba(8, 10, 46, .95)); animation: up .38s var(--spring); }
+@keyframes up { from { transform: translateY(40%); opacity: .4; } to { transform: none; opacity: 1; } }
+.grab { width: 40px; height: 5px; border-radius: 9px; background: rgba(255,255,255,.3); margin: 0 auto 12px; }
+.shead { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.shead img { width: 92px; height: 52px; object-fit: cover; border-radius: 12px; }
+.shead .nm { font-size: 20px; font-weight: 800; flex: 1; min-width: 0; }
+.xbtn { min-width: 36px; padding: 0 12px; height: 36px; flex: none; border-radius: 99px; border: 0; cursor: pointer; color: var(--ink); background: rgba(255,255,255,.1); font: 600 16px var(--font); }
+.label { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border: 0; cursor: pointer; height: 38px; padding: 0 14px; border-radius: 999px; font: 600 14px var(--font); color: var(--ink);
+  background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); transition: transform .45s var(--spring); }
+.chips button:active { transform: scale(.94); }
+.chips button[aria-pressed="true"] { background: rgba(255,255,255,.26); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 0 0 1px rgba(255,255,255,.3); }
+.hint { font-size: 13px; color: var(--muted); line-height: 1.45; margin-top: 10px; }
+.btnrow { display: flex; gap: 8px; margin-top: 16px; }
+.wbtn { flex: 1; height: 48px; border-radius: 999px; border: 0; cursor: pointer; font: 700 15px var(--font); color: var(--ink);
+  background: rgba(255,255,255,.1); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), inset 0 0 0 1px rgba(255,255,255,.14); transition: transform .45s var(--spring); }
+.wbtn:active { transform: scale(.96); }
+.wbtn.red { background: rgba(255,122,144,.18); box-shadow: inset 0 0 0 1px rgba(255,122,144,.5); }
+.wbtn.blue { background: rgba(110,214,255,.16); box-shadow: inset 0 0 0 1px rgba(110,214,255,.5); }
+.mini { display: flex; flex-wrap: wrap; gap: 8px; }
+.mini button { width: calc((100% - 24px) / 4); border: 0; padding: 0; background: transparent; cursor: pointer; color: var(--ink); font: 600 11px var(--font); text-align: center; }
+.mini img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; margin-bottom: 4px; }
+
+/* ---------- все герои по атрибутам ---------- */
+.allbtn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 44px; border-radius: 999px; border: 0; cursor: pointer; width: 100%;
+  font: 700 14px var(--font); color: var(--ink); background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.attr { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin: 16px 0 8px; }
+.attr i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.attr.str i { background: #ff5a4f; } .attr.agi i { background: #45e07a; } .attr.int i { background: #3fb6ff; } .attr.all i { background: #e9c25a; }
+.allgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.allgrid .tile .nm { font-size: 10.5px; }
+.tile.off { opacity: .35; }
+
+/* ---------- настройки подбора ---------- */
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-radius: 18px; font-size: 14px; font-weight: 600; cursor: pointer; border: 0; color: var(--ink); text-align: left; }
+.toggle small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.sw { flex: none; width: 48px; height: 28px; border-radius: 99px; background: rgba(255,255,255,.14); position: relative; transition: background .3s; box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 99px; background: #fff; transition: transform .4s var(--spring); box-shadow: 0 2px 6px rgba(0,0,0,.3); }
+.toggle[aria-pressed="true"] .sw { background: #4bd88f; }
+.toggle[aria-pressed="true"] .sw::after { transform: translateX(20px); }
+
+/* ---------- позиция на слоте ---------- */
+.slot .pos { position: absolute; left: 3px; bottom: 3px; min-width: 18px; height: 16px; padding: 0 4px; border-radius: 99px; font: 800 10px/16px var(--font); color: #fff; background: rgba(5,6,26,.75); }
+.slot .pos.guess { color: rgba(255,255,255,.7); }
+
+/* ---------- карточка результата ---------- */
+.card .top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chance { font: 800 13px var(--font); padding: 3px 8px; border-radius: 99px; background: rgba(255,255,255,.1); font-variant-numeric: tabular-nums; }
+.chance.hi { color: #062417; background: var(--win); } .chance.mid { color: #031a24; background: var(--ally); } .chance.lo { color: #2a1800; background: #f5b74a; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.tag { font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: rgba(116,240,176,.14); color: #c9ffe2; box-shadow: inset 0 0 0 1px rgba(116,240,176,.3); }
+.tag.lane { background: rgba(110,214,255,.13); color: #d4f2ff; box-shadow: inset 0 0 0 1px rgba(110,214,255,.32); }
+.tag.bad { background: rgba(255,122,144,.14); color: #ffd4dc; box-shadow: inset 0 0 0 1px rgba(255,122,144,.35); }
+.tag.plain { background: rgba(255,255,255,.07); color: var(--muted); box-shadow: none; }
+.more { border: 0; background: transparent; color: #c8ceff; font: 700 13px var(--font); padding: 8px 0 0; cursor: pointer; }
+.det { display: none; grid-column: 1 / -1; margin-top: 4px; }
+.card.open .det { display: block; }
+.sec { margin-top: 10px; font-size: 13.5px; line-height: 1.45; color: rgba(236,240,255,.9); }
+.sec > b { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.sec .note { padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); margin-bottom: 6px; }
+.sec.warn .note { background: rgba(255,122,144,.08); box-shadow: inset 0 0 0 1px rgba(255,122,144,.22); }
+.small { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 4px; }
+.info { font-size: 13px; color: var(--muted); padding: 10px 14px; border-radius: 16px; background: rgba(255,255,255,.05); line-height: 1.45; }
+
+/* ---------- мета ---------- */
+.rrow { display: grid; grid-template-columns: 22px 84px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 12px 8px 8px; border-radius: 18px; }
+.rrow .n { font: 700 12px var(--font); color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.rrow img { width: 84px; height: 47px; object-fit: cover; border-radius: 10px; display: block; }
+.rrow .nm { font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rrow .bar { height: 4px; border-radius: 9px; background: rgba(255,255,255,.08); margin: 5px 0 3px; overflow: hidden; }
+.rrow .bar i { display: block; height: 100%; border-radius: 9px; background: linear-gradient(90deg, #7d7bff, #b9a6ff); }
+.rrow .sub2 { font-size: 11px; color: var(--muted); }
+.rrow .wr { text-align: right; font: 800 17px var(--font); font-variant-numeric: tabular-nums; }
+.rrow .wr small { display: block; font: 500 10px var(--font); color: var(--muted); }
+.wr.g { color: var(--win); } .wr.r { color: #ff8f9f; }
+
+/* ---------- профиль ---------- */
+.plist { display: flex; flex-direction: column; gap: 8px; }
+.prow { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 20px; border: 0; cursor: pointer; color: var(--ink); text-align: left; font: 600 15px var(--font); width: 100%; text-decoration: none; }
+.prow .ic { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.1); font-size: 18px; flex: none; }
+.prow small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.ok { color: var(--win); }
+.loading { color: var(--muted); font-size: 14px; padding: 14px; text-align: center; }
+
+/* роли и переключатели видны целиком, без прокрутки вбок */
+.roles { flex-wrap: wrap; overflow: visible; }
+.toggle.slim { padding: 8px 10px 8px 16px; border-radius: 999px; }
+
+/* ---------- против чего собрать ---------- */
+.vsrow button.hot { background: rgba(255,122,144,.16); box-shadow: inset 0 0 0 1px rgba(255,122,144,.55); }
+.vsrow button b { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 99px; font-size: 11px; background: var(--enemy); color: #1a0710; }
+.items { display: flex; flex-direction: column; gap: 8px; }
+.item { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 14px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.item img { width: 52px; height: 38px; object-fit: cover; border-radius: 8px; flex: none; }
+.item b { display: block; font-size: 14px; }
+.item span { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
+/* ---------- сборка ---------- */
+.stage { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
+.stage > span { flex: none; width: 92px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.stage .row { display: flex; flex-wrap: wrap; gap: 5px; }
+.stage img { width: 44px; height: 32px; object-fit: cover; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+
+/* ---------- перетаскивание ---------- */
+#slots .slot { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+#slots .slot.me { font: 800 14px var(--font); color: #fff; cursor: grab; background: linear-gradient(160deg, rgba(110,214,255,.35), rgba(110,214,255,.12)); box-shadow: inset 0 0 0 2px var(--ally), inset 0 1px 0 rgba(255,255,255,.5); }
+#slots .slot.full { cursor: grab; }
+#slots .slot.dragging { opacity: .3; }
+#slots .slot.over { box-shadow: inset 0 0 0 2px #fff, 0 0 0 3px rgba(255,255,255,.25); transform: scale(1.06); }
+.dragghost { position: fixed; z-index: 60; pointer-events: none; transform: translate(-50%, -50%) scale(1.15) rotate(-3deg); opacity: .95;
+  box-shadow: 0 16px 34px rgba(0,0,20,.5), inset 0 0 0 2px rgba(255,255,255,.7) !important; transition: none !important; }
+
+#slots .slot.me.full img { width: 100%; height: 100%; object-fit: cover; }
+.metag { position: absolute; right: 3px; top: 3px; height: 16px; padding: 0 6px; border-radius: 99px; font: 800 10px/16px var(--font); color: #031a24; background: var(--ally); }
+.tile.mine .ph { box-shadow: inset 0 0 0 2px #fff; }
+.tile.mine .ph::after { content: "ты"; position: absolute; left: 4px; bottom: 4px; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 99px; background: #fff; color: #0b0d3a; }
+@keyframes blink { 0%, 100% { color: var(--muted); } 30%, 70% { color: #fff; transform: scale(1.04); } }
+#dragHint.blink { animation: blink .8s; }
+
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand img { height: 34px; width: auto; filter: drop-shadow(0 4px 10px rgba(80,80,255,.5)); }
+.brand span { display: flex; flex-direction: column; line-height: 1.1; }
+
+/* ---------- скорость: тяжёлое размытие только там, где оно реально видно ---------- */
+.bg { background: #03051a url(bg.jpg?v=2) center / cover no-repeat; }
+.glass { -webkit-backdrop-filter: none; backdrop-filter: none;
+  background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05) 45%, rgba(255,255,255,.08));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(255,255,255,.06), 0 8px 18px rgba(1,3,20,.3); }
+.dock .tabs.glass { -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%); background: linear-gradient(160deg, rgba(40,44,140,.55), rgba(12,14,60,.6)); }
+.sheet.glass { background: linear-gradient(180deg, rgba(34,34,120,.97), rgba(8,10,46,.99)); }
+.sheetwrap { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(3,5,26,.7); }
+.gate { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(3,5,26,.82); }
+.gate .box.glass { background: linear-gradient(170deg, rgba(48,50,150,.95), rgba(14,16,70,.97)); }
+img { -webkit-user-drag: none; }
+
+</style>
 </head>
 <body>
-  <div class="title">DOTA PICK</div>
-  <div class="brand">LOWCULTURE</div>
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-v="pick">Подбор</button>
-    <button class="tab" data-v="rate">Винрейты</button>
-  </div>
+<div class="bg" id="bg" aria-hidden="true"></div>
 
-  <div id="pickView">
-    <div class="sub">найди идеального героя в пике</div>
+<main class="app" id="app">
+  <header class="top">
+    <div class="logo brand"><img src="dp-logo.png" alt="DP" width="64" height="34"><span>DOTA PICK<small>LowCulture</small></span></div>
+    <button class="pill glass" type="button" data-reset style="border:0;color:var(--ink);cursor:pointer;font:600 12px var(--font)">↺ Новый драфт</button>
+  </header>
 
-    <div class="label">Твоя роль</div>
-    <div class="chips" id="roles"></div>
-
-    <div class="label">Порядок пика</div>
-    <div class="chips" id="orders"></div>
-
-    <div class="label">Твоя команда (сколько видишь)</div>
-    <div class="row" id="allies"></div>
-
-    <div class="label">Враги (сколько видишь)</div>
-    <div class="row" id="enemies"></div>
-    <div class="hint">Нажми на пустой слот, чтобы выбрать героя. Нажми на героя, чтобы поменять ему позицию или убрать. Позиции врагов — примерные, ≈ значит «бот угадал».</div>
-
-    <button id="go">ПОДОБРАТЬ</button>
-    <div id="freeleft"></div>
-    <div id="results"></div>
-  </div>
-
-  <div id="rateView" style="display:none">
-    <div class="label">Ранг</div>
-    <div class="chips" id="rranks"></div>
-    <div class="label">Линия</div>
-    <div class="lanesel"><select id="rlane"></select></div>
-    <div class="label">Сортировка</div>
-    <div class="chips" id="rsort"></div>
-    <input id="rsearch" placeholder="Найти героя...">
-    <div id="rlist"></div>
-    <div class="hint" style="margin-top:12px">Данные OpenDota по недавним публичным матчам, обновляются сами. Фильтр по линии показывает героев, которые на ней играются, а винрейт у героя общий на выбранном ранге. При сортировке по винрейту скрыты редкие герои (меньше 1% игр).</div>
-  </div>
-
-  <button class="idea" id="idea">💡 Предложить улучшение</button>
-  <div class="foot"><a id="dc" href="#">discord</a></div>
-
-  <div class="modal" id="modal">
-    <div class="sheet">
-      <div class="sheethead">
-        <input id="psearch" placeholder="Найти героя...">
-        <button class="xbtn" id="pclose">✕</button>
+  <!-- ================= ПОДБОР ================= -->
+  <section id="v-pick" class="view">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <h1 id="h1">Кто во врагах?</h1>
+      <label class="search glass" for="q">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Начни писать: мип…" aria-label="Поиск героя">
+        <button class="clear" id="clr" type="button" hidden>Стереть</button>
+      </label>
+      <div class="side" role="tablist" aria-label="Кого добавляем">
+        <button type="button" class="sbtn enemy" data-side="enemy" aria-selected="true">Враги <b id="cE">0</b><i>/5</i></button>
+        <button type="button" class="sbtn ally" data-side="ally" aria-selected="false">Союзники <b id="cA">0</b><i>/4</i></button>
       </div>
-      <div class="grid" id="pgrid"></div>
+      <div class="slots glass" id="slots"></div>
+      <div class="small" id="dragHint" hidden style="margin-top:-6px;text-align:center">Перетащи «ты» на героя — это твой герой. На пустую клетку — твоя очередь пика</div>
+      <div class="grid glass" id="grid"></div>
+      <button class="allbtn" id="allBtn" type="button">Все герои</button>
     </div>
-  </div>
 
-  <div class="modal" id="gmodal">
-    <div class="sheet">
-      <div class="gate">
-        <h3>Подпишись на канал</h3>
-        <p>Бот бесплатный 🎁 Чтобы пользоваться им дальше, подпишись на наш канал — там мета недели, разборы героев и обновления бота.</p>
-        <button class="gbtn main" id="gsub">ПОДПИСАТЬСЯ</button>
-        <button class="gbtn sec" id="gdone">Я подписался</button>
-        <div id="gmsg"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:22px">
+      <div class="roles" id="roles" role="radiogroup" aria-label="Твоя роль"></div>
+      <button type="button" class="toggle glass" id="lastPick" aria-pressed="true">
+        <span>Я пикаю последним<small>тогда контрпик важнее всего</small></span><span class="sw"></span>
+      </button>
+      <div>
+        <div class="label" style="margin:4px 0 8px">Против чего собрать</div>
+        <div class="roles vsrow" id="vsRow"></div>
       </div>
+      <div>
+        <h2 id="resTitle">Сильные герои сейчас</h2>
+        <div class="sub" id="resSub">обновляется сразу, кнопку жать не нужно</div>
+      </div>
+      <div class="list" id="res"><div class="loading">Загружаю героев…</div></div>
     </div>
+  </section>
+
+  <!-- ================= МЕТА ================= -->
+  <section id="v-meta" class="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><h1>Мета</h1><div class="sub">винрейты героев по свежим играм</div></div>
+      <div class="roles" id="rRanks"></div>
+      <div class="roles" id="rLanes"></div>
+      <div class="roles" id="rSort"></div>
+      <label class="search glass" for="rq">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="rq" type="search" autocomplete="off" spellcheck="false" placeholder="Найти героя" aria-label="Найти героя в мете">
+      </label>
+      <div class="list" id="rlist"><div class="loading">Загружаю статистику…</div></div>
+    </div>
+  </section>
+
+  <!-- ================= ГЕРОИ ================= -->
+  <section id="v-heroes" class="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><h1>Герои</h1><div class="sub">нажми на героя: кто его контрит и кого контрит он</div></div>
+      <label class="search glass" for="hq">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="hq" type="search" autocomplete="off" spellcheck="false" placeholder="Найти героя" aria-label="Найти героя">
+      </label>
+      <div id="hgrid"></div>
+    </div>
+  </section>
+
+  <!-- ================= ПРОФИЛЬ ================= -->
+  <section id="v-profile" class="view" hidden>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <h1>Профиль</h1>
+      <div class="plist">
+        <div class="prow glass" style="cursor:default"><span class="ic">📢</span><span>Подписка на канал<small id="subState">проверяю…</small></span></div>
+        <button class="prow glass" id="idea" type="button"><span class="ic">💡</span><span>Предложить улучшение<small>напиши идею — читаю всё лично</small></span></button>
+        <button class="prow glass" id="chan" type="button"><span class="ic">📈</span><span>Канал DOTA PICK<small>мета, разборы драфтов, новости бота</small></span></button>
+        <button class="prow glass" id="dc" type="button"><span class="ic">🎧</span><span>Discord<small>найти пати и пообщаться</small></span></button>
+      </div>
+      <div class="small" style="text-align:center;margin-top:8px">Подсказки бота — это оценка по статистике и механикам, а не гарантия победы.</div>
+    </div>
+  </section>
+</main>
+
+<nav class="dock">
+  <div class="tabs glass" id="tabs" role="tablist">
+    <div class="pillbg" id="pill"></div>
+    <button class="tab" role="tab" aria-selected="true" data-v="pick"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg>Подбор</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="meta"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M10 20V5M16 20v-6M22 20H2"/></svg>Мета</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="heroes"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>Герои</button>
+    <button class="tab" role="tab" aria-selected="false" data-v="profile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Профиль</button>
   </div>
+</nav>
 
-  <div class="modal" id="smodal">
-    <div class="sheet" id="ssheet"></div>
+<div id="sheetHost"></div>
+
+<div class="gate out" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateT">
+  <div class="box glass">
+    <div class="ava">DP</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h2 id="gateT">Подпишись на канал DOTA PICK</h2>
+      <p>Бот бесплатный. Подписка — единственное, о чём просим, чтобы ты был в курсе новостей.</p>
+    </div>
+    <ul>
+      <li><span>📈</span>Мета каждую неделю: кто сейчас тащит</li>
+      <li><span>🧠</span>Разборы драфтов и контрпики</li>
+      <li><span>⚡</span>Новые функции бота первым</li>
+    </ul>
+    <button class="gbtn main" id="gSub" type="button">Подписаться</button>
+    <button class="gbtn alt" id="gCheck" type="button">Проверить подписку</button>
+    <div class="gmsg" id="gMsg" aria-live="polite">Подпишись и нажми «Проверить подписку». Спросим один раз.</div>
   </div>
+</div>
 
-  <script src="data.js?v=8"></script>
-  <script>
-    var DISCORD_URL = "https://discord.gg/QnAGbqWXA2";
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="lgDefs"></defs></svg>
 
-    var ROLES = [
-      { id: 1, t: "Керри" }, { id: 2, t: "Мид" }, { id: 3, t: "Оффлейн" },
-      { id: 4, t: "Саппорт 4" }, { id: 5, t: "Саппорт 5" }
-    ];
-    var POS_NAME = { 1: "керри", 2: "мид", 3: "оффлейн", 4: "саппорт 4", 5: "саппорт 5" };
-    var ORDERS = [{ id: "mid", t: "Середина" }, { id: "last", t: "Последний пик" }];
-    var ROLE_MAP = { 1: ["Carry"], 2: ["Carry", "Nuker", "Escape"], 3: ["Durable", "Initiator"], 4: ["Support"], 5: ["Support"] };
-    var ROLE_RU = {
-      Carry: "сильный в лейте (керри)", Support: "помогает команде (саппорт)", Nuker: "большой взрывной урон",
-      Disabler: "контроль (станы, сайленсы)", Jungler: "может фармить лес", Durable: "живучий",
-      Escape: "умеет убегать", Pusher: "быстро сносит башни", Initiator: "хорошо начинает драки"
-    };
-    var ATTR_RU = { str: "сила", agi: "ловкость", int: "интеллект", all: "универсал" };
-    var ATTACK_RU = { Melee: "ближний бой", Ranged: "дальний бой" };
-    // с кем ты стоишь на линии и против кого
-    var LANE_MATE = { 1: 5, 5: 1, 3: 4, 4: 3, 2: null };
-    var LANE_VS = { 1: [3, 4], 5: [3, 4], 3: [1, 5], 4: [1, 5], 2: [2] };
-
-    var role = 2;
-    var order = "last";
-    // слот: null или { id: героя, pos: 1-5 или 0 (не знаю), guess: true если позицию угадал бот }
-    var allies = [null, null, null, null];
-    var enemies = [null, null, null, null];
-    var heroes = [];
-    var byId = {};
-    var byName = {};
-    var picking = null;
-
-    function $(id) { return document.getElementById(id); }
-    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-    function imgUrl(h) {
-      return "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" + h.name.replace("npc_dota_hero_", "") + ".png";
-    }
-    function haptic(kind) { try { Telegram.WebApp.HapticFeedback.impactOccurred(kind || "light"); } catch (e) {} }
-
-    try {
-      Telegram.WebApp.ready();
-      Telegram.WebApp.expand();
-      Telegram.WebApp.setHeaderColor("#0a0a12");
-      Telegram.WebApp.setBackgroundColor("#0a0a12");
-    } catch (e) {}
-
-    // ---------- данные о героях ----------
-    function tagsOf(name) {
-      var s = HERO_TAGS[name];
-      if (!s) return { has: [], weak: [] };
-      var p = s.split("|");
-      return { has: p[0].split(" ").filter(Boolean), weak: (p[1] || "").split(" ").filter(Boolean) };
-    }
-    function pairValue(str, key) {
-      if (!str) return null;
-      var parts = str.split(";");
-      for (var i = 0; i < parts.length; i++) {
-        var k = parts[i].indexOf("=");
-        if (k > 0 && parts[i].slice(0, k).trim() === key) return parts[i].slice(k + 1).trim();
-      }
-      return null;
-    }
-    function positionsOf(h) {
-      var p = HERO_POS[h.localized_name];
-      if (p) return p.split("").map(Number);
-      var out = [];
-      for (var pos = 1; pos <= 5; pos++) {
-        if (h.roles.some(function (r) { return ROLE_MAP[pos].indexOf(r) !== -1; })) out.push(pos);
-      }
-      return out;
-    }
-    function canPlay(h, pos) { return positionsOf(h).indexOf(pos) !== -1; }
-    function inSource(hero, enemy) {
-      var list = SOURCE_COUNTERS[enemy.localized_name];
-      return !!(list && list.indexOf(hero.localized_name) !== -1);
-    }
-
-    // почему hero контрит enemy (по подборке и механикам скиллов)
-    function counterReasons(hero, enemy) {
-      var hn = hero.localized_name, en = enemy.localized_name;
-      var c = tagsOf(hn), e = tagsOf(en);
-      var texts = [], rules = 0, generic = 0;
-      var byWeak = {}, order_ = [];
-      NOTES.forEach(function (n) { if (n.hero === hn && n.vs === en) texts.push(n.why); });
-      RULES.forEach(function (r) {
-        if (c.has.indexOf(r[0]) !== -1 && e.weak.indexOf(r[1]) !== -1) {
-          var kit = pairValue(HERO_KIT[hn], r[0]);
-          var weak = pairValue(HERO_WEAK[en], r[1]);
-          if (kit && weak) {
-            // одну и ту же слабость врага объясняем один раз, перечисляя все подходящие скиллы
-            if (!byWeak[weak]) { byWeak[weak] = []; order_.push(weak); }
-            if (byWeak[weak].indexOf(kit) === -1) byWeak[weak].push(kit);
-          } else {
-            texts.push(r[2].replace(/\{C\}/g, hn).replace(/\{E\}/g, en));
-          }
-          // «хрупкий против стана/урона» есть почти у всех — это слабый довод
-          if (r[1] === "squishy") generic++; else rules++;
-        }
-      });
-      order_.forEach(function (w) { texts.push(hn + " — " + byWeak[w].join("; ") + ". Почему против " + en + ": " + w + "."); });
-      return { source: inSource(hero, enemy), rules: rules, generic: generic, texts: texts,
-               note: NOTES.some(function (n) { return n.hero === hn && n.vs === en; }) };
-    }
-
-    function synergyWith(hero, ally) {
-      var hn = hero.localized_name, an = ally.localized_name;
-      var texts = [], bonus = 0;
-      SYN_PAIRS.forEach(function (p) {
-        if ((p[0] === hn && p[1] === an) || (p[0] === an && p[1] === hn)) { texts.push(p[2]); bonus += 0.02; }
-      });
-      var c = tagsOf(hn), a = tagsOf(an);
-      SYN_RULES.forEach(function (r) {
-        [[hn, c, an, a], [an, a, hn, c]].forEach(function (d) {
-          var okG = d[1].has.indexOf(r[0]) !== -1;
-          var okT = (r[2] === "weak" ? d[3].weak : d[3].has).indexOf(r[1]) !== -1;
-          if (okG && okT) {
-            var kg = pairValue(HERO_KIT[d[0]], r[0]);
-            texts.push((kg ? d[0] + ", " + kg + ". " : "") + r[3]);
-            bonus += 0.005;
-          }
-        });
-      });
-      return texts.length ? { bonus: Math.min(0.02, bonus), why: texts.join(" ") } : null;
-    }
-
-    // связка на одной линии: core = керри/оффлейнер, sup = саппорт
-    function laneCombo(hero, heroPos, mate, matePos) {
-      var core = heroPos === 1 || heroPos === 3 ? hero : mate;
-      var sup = core === hero ? mate : hero;
-      var cn = core.localized_name, sn = sup.localized_name;
-      var ct = tagsOf(cn), st = tagsOf(sn);
-      var texts = [], score = 0;
-      LANE_PAIRS.forEach(function (p) {
-        if ((p[0] === cn && p[1] === sn) || (p[0] === sn && p[1] === cn)) { texts.push(p[2]); score += 3; }
-      });
-      if (st.has.indexOf("stun") !== -1 && (core.attack_type === "Melee" || ct.weak.indexOf("phys") !== -1)) {
-        var k = pairValue(HERO_KIT[sn], "stun");
-        texts.push((k ? sn + " — " + k + ". " : "") + "Пока враг в стане, " + cn + " спокойно бьёт его на линии.");
-        score += 1;
-      }
-      if (HEALERS.indexOf(sn) !== -1) { texts.push(sn + " лечит и спасает " + cn + " — на линии ему проще стоять и фармить."); score += 1; }
-      if (core.attack_type === "Ranged" && sup.attack_type === "Ranged") { texts.push("Оба бьют издалека и могут давить врагов с безопасной дистанции."); score += 1; }
-      if (st.has.indexOf("burst") !== -1 && (ct.has.indexOf("stun") !== -1 || ct.has.indexOf("burst") !== -1)) {
-        texts.push("У обоих много урона и контроля — вдвоём убивают врага, который подошёл слишком близко."); score += 1;
-      }
-      if (!texts.length) return null;
-      var level = score >= 3 ? "отличная" : (score >= 2 ? "хорошая" : "нормальная");
-      return { score: score, level: level, why: texts.join(" ") };
-    }
-
-    // ---------- интерфейс подбора ----------
-    function makeChips(boxId, items, current, onPick) {
-      var box = $(boxId);
-      box.innerHTML = "";
-      items.forEach(function (it) {
-        var d = document.createElement("div");
-        d.className = "chip" + (it.id === current ? " active" : "");
-        d.textContent = it.t;
-        d.onclick = function () { onPick(it.id); haptic(); };
-        box.appendChild(d);
-      });
-    }
-    function drawChips() {
-      makeChips("roles", ROLES, role, function (id) { role = id; drawChips(); });
-      makeChips("orders", ORDERS, order, function (id) { order = id; drawChips(); });
-    }
-
-    function guessPos(h, team, isAlly) {
-      var used = team.filter(Boolean).map(function (s) { return s.pos; });
-      if (isAlly) used.push(role);
-      var p = positionsOf(h).filter(function (x) { return used.indexOf(x) === -1; });
-      return p.length ? p[0] : (positionsOf(h)[0] || 0);
-    }
-
-    function drawTeam(boxId, arr, cls) {
-      var box = $(boxId);
-      box.innerHTML = "";
-      arr.forEach(function (s, i) {
-        var d = document.createElement("div");
-        d.className = "slot " + cls + (s ? " filled" : "");
-        if (s) {
-          var badge = s.pos ? (s.guess ? "≈" : "") + s.pos : "?";
-          d.innerHTML = '<img src="' + imgUrl(byId[s.id]) + '"><div class="pos' + (s.guess ? " guess" : "") + '">' + badge + "</div>";
-          d.onclick = function () { openSlot(arr, i, cls === "ally"); };
-        } else {
-          d.textContent = "+";
-          d.onclick = function () { openPicker(arr, i, cls === "ally"); };
-        }
-        box.appendChild(d);
-      });
-    }
-    function drawSlots() { drawTeam("allies", allies, "ally"); drawTeam("enemies", enemies, "enemy"); }
-
-    function taken() { return allies.concat(enemies).filter(Boolean).map(function (s) { return s.id; }); }
-
-    function openPicker(arr, i, isAlly) {
-      if (!heroes.length) return;
-      picking = { arr: arr, i: i, ally: isAlly };
-      $("psearch").value = "";
-      $("modal").style.display = "flex";
-      drawPicker("");
-    }
-    function closePicker() { $("modal").style.display = "none"; }
-    function drawPicker(q) {
-      var tk = taken();
-      var grid = $("pgrid");
-      grid.innerHTML = "";
-      heroes.forEach(function (h) {
-        if (tk.indexOf(h.id) !== -1) return;
-        if (h.localized_name.toLowerCase().indexOf(q) === -1) return;
-        var d = document.createElement("div");
-        d.className = "hero";
-        d.innerHTML = '<img src="' + imgUrl(h) + '" onerror="this.style.visibility=\'hidden\'"><div class="name">' + esc(h.localized_name) + "</div>";
-        d.onclick = function () {
-          var old = picking.arr[picking.i];
-          picking.arr[picking.i] = null;
-          var pos = guessPos(h, picking.arr, picking.ally);
-          picking.arr[picking.i] = { id: h.id, pos: pos, guess: !picking.ally };
-          if (old && old.pos && !old.guess) { picking.arr[picking.i].pos = old.pos; picking.arr[picking.i].guess = false; }
-          closePicker();
-          drawSlots();
-          haptic();
-        };
-        grid.appendChild(d);
-      });
-    }
-
-    function openSlot(arr, i, isAlly) {
-      var s = arr[i];
-      var h = byId[s.id];
-      var sh = $("ssheet");
-      var opts = [1, 2, 3, 4, 5].map(function (p) { return { id: p, t: p + " · " + POS_NAME[p] }; });
-      if (!isAlly) opts.push({ id: 0, t: "не знаю" });
-      sh.innerHTML =
-        '<div class="shead"><img src="' + imgUrl(h) + '"><div class="nm">' + esc(h.localized_name) + '</div><button class="xbtn" id="sclose">✕</button></div>' +
-        '<div class="label">' + (isAlly ? "На какой позиции играет" : "На какой позиции, как думаешь") + "</div>" +
-        '<div class="chips" id="spos"></div>' +
-        (isAlly ? "" : '<div class="hint">Точно знать не обязательно — бот просто внимательнее посмотрит, кто будет против тебя на линии.</div>') +
-        '<div class="sbtns"><button class="sbtn" id="schange">Сменить героя</button><button class="sbtn del" id="sdel">Убрать</button></div>';
-      var cur = s.guess ? -1 : s.pos;
-      makeChips("spos", opts, cur, function (p) {
-        s.pos = p; s.guess = false;
-        drawSlots(); closeSlot();
-      });
-      $("sclose").onclick = closeSlot;
-      $("sdel").onclick = function () { arr[i] = null; drawSlots(); closeSlot(); };
-      $("schange").onclick = function () { closeSlot(); openPicker(arr, i, isAlly); };
-      $("smodal").style.display = "flex";
-    }
-    function closeSlot() { $("smodal").style.display = "none"; }
-
-    $("psearch").addEventListener("input", function (e) { drawPicker(e.target.value.toLowerCase()); });
-    $("pclose").onclick = closePicker;
-    $("modal").onclick = function (e) { if (e.target === $("modal")) closePicker(); };
-    $("smodal").onclick = function (e) { if (e.target === $("smodal")) closeSlot(); };
-    $("idea").onclick = function () {
-      try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "idea", title: "Нажали Предложить улучшение", event: true }); } catch (e) {}
-      var msg = "Напиши свою идею или что бесит прямо в чат с ботом — одним сообщением. Я читаю всё лично 🙌";
-      try {
-        Telegram.WebApp.showPopup({ title: "Предложить улучшение", message: msg, buttons: [{ id: "ok", type: "default", text: "Написать" }, { type: "cancel" }] },
-          function (id) { if (id === "ok") Telegram.WebApp.close(); });
-      } catch (e) { alert(msg); }
-    };
-    $("dc").onclick = function (e) {
-      e.preventDefault();
-      try { Telegram.WebApp.openLink(DISCORD_URL); } catch (err) { window.open(DISCORD_URL, "_blank"); }
-    };
-
-    // ---------- статистика матчей ----------
-    var MATCHUP_CACHE = {};
-    function fetchMatchups(id) {
-      if (MATCHUP_CACHE[id]) return Promise.resolve(MATCHUP_CACHE[id]);
-      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-      var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
-      return fetch("https://api.opendota.com/api/heroes/" + id + "/matchups", ctrl ? { signal: ctrl.signal } : {})
-        .then(function (r) { return r.json(); })
-        .then(function (arr) {
-          if (timer) clearTimeout(timer);
-          if (!Array.isArray(arr)) return null;
-          var m = {};
-          arr.forEach(function (x) { m[x.hero_id] = { g: x.games_played, w: x.wins }; });
-          MATCHUP_CACHE[id] = m;
-          return m;
-        })
-        .catch(function () { if (timer) clearTimeout(timer); return null; });
-    }
-
-    // ---------- подбор ----------
-    function evaluate(h, ctx) {
-      var res = { h: h, vs: [], countered: [], hits: 0, counterScore: 0, syn: [], synBonus: 0, lane: null, laneVs: [] };
-      ctx.enemies.forEach(function (es) {
-        var e = byId[es.id];
-        var onLane = !!(es.pos && ctx.laneVs.indexOf(es.pos) !== -1);
-        var w = onLane ? (es.guess ? 1.3 : 1.6) : 1;
-        var m = ctx.stats[es.id] ? ctx.stats[es.id][h.id] : null;
-        var wr = m && m.g ? (m.g - m.w + 50) / (m.g + 100) : null;
-        var statEdge = (m && m.g >= 200) ? wr - h.overall : 0;
-        var r = counterReasons(h, e);
-        var bad = !!(SOURCE_COUNTERS[h.localized_name] && SOURCE_COUNTERS[h.localized_name].indexOf(e.localized_name) !== -1);
-        // если враг сам контрит этого героя — контр-пиком на него он не считается
-        var isCounter = !bad && (r.source || r.note || r.rules > 0 || statEdge >= 0.02 || (r.generic > 0 && statEdge > 0.005));
-        var s = Math.max(-0.05, Math.min(0.05, statEdge)) + (r.source ? 0.035 : 0) + Math.min(0.03, r.rules * 0.015) +
-                Math.min(0.01, r.generic * 0.005) + (r.note ? 0.03 : 0) - (bad ? 0.05 : 0);
-        res.counterScore += s * w;
-        if (isCounter) res.hits++;
-        if (bad) res.countered.push(e);
-        var item = { e: e, es: es, onLane: onLane, wr: wr, g: m ? m.g : 0, edge: statEdge, r: r, isCounter: isCounter, bad: bad };
-        res.vs.push(item);
-        if (onLane) res.laneVs.push(item);
-      });
-      ctx.allies.forEach(function (as) {
-        var a = byId[as.id];
-        if (ctx.mate && as === ctx.mate) {
-          res.lane = laneCombo(h, role, a, as.pos);
-          if (res.lane) res.lane.mate = a;
-        }
-        var s = synergyWith(h, a);
-        if (s) { res.syn.push({ a: a, why: s.why }); res.synBonus += s.bonus; }
-      });
-      var laneBonus = res.lane ? Math.min(0.04, res.lane.score * 0.012) : 0;
-      var cw = order === "last" ? 1 : 0.7;
-      res.score = h.overall + cw * res.counterScore + Math.min(0.03, res.synBonus) + laneBonus;
-      res.chance = Math.max(40, Math.min(68, Math.round((h.overall + cw * res.counterScore * 0.6 + Math.min(0.03, res.synBonus) + laneBonus * 0.7) * 100)));
-      return res;
-    }
-
-    function cardHtml(x, idx, ctx) {
-      var h = x.h;
-      var tags = "";
-      var good = x.vs.filter(function (v) { return v.isCounter; }).map(function (v) { return v.e.localized_name; });
-      if (good.length) tags += '<span class="tag good">контрит ' + esc(good.join(", ")) + "</span>";
-      if (x.lane) tags += '<span class="tag lane">' + x.lane.level + " связка на лайн с " + esc(x.lane.mate.localized_name) + "</span>";
-      if (x.countered.length) tags += '<span class="tag bad">⚠ его контрит ' + esc(x.countered.map(function (e) { return e.localized_name; }).join(", ")) + "</span>";
-      if (!tags) tags = ctx.enemies.length ? "явных контр-пиков нет, сильный по общей статистике" : "враги не выбраны — подбор по общей силе героя";
-
-      var d = "";
-      if (x.vs.length) {
-        d += '<div class="sec"><b>Почему он контрит</b>';
-        x.vs.forEach(function (v) {
-          var en = esc(v.e.localized_name) + (v.onLane ? " (твоя линия)" : "");
-          if (v.bad) {
-            d += "<div>• Против " + en + ": здесь он сам в минусе — см. «Осторожно» ниже</div>";
-          } else if (v.r.texts.length && v.isCounter) {
-            d += '<div class="note"><b>Против ' + en + ":</b> " + esc(v.r.texts.join(" ")) +
-              (v.r.source ? ' <span class="small">· есть в подборке контр-пиков (esports.gg)</span>' : "") + "</div>";
-          } else if (v.r.source) {
-            d += '<div class="note"><b>Против ' + en + ":</b> есть в подборке главных контр-пиков на " + esc(v.e.localized_name) + " (esports.gg).</div>";
-          } else if (v.isCounter) {
-            d += '<div class="note"><b>Против ' + en + ":</b> по статистике матчей выигрывает заметно чаще обычного.</div>";
-          } else {
-            d += "<div>• Против " + en + ": особого контра нет</div>";
-          }
-          if (v.g >= 200) {
-            d += '<div class="small">Статистика: ' + Math.round(v.wr * 100) + "% побед (обычно " + Math.round(h.overall * 100) + "%), игр: " + v.g.toLocaleString("ru-RU") + "</div>";
-          }
-        });
-        d += "</div>";
-      }
-      if (x.countered.length) {
-        d += '<div class="sec warn"><b>Осторожно</b>';
-        x.countered.forEach(function (e) {
-          d += '<div class="note">' + esc(e.localized_name) + " — один из главных контр-пиков на " + esc(h.localized_name) + ". Против него играй аккуратнее.</div>";
-        });
-        d += "</div>";
-      }
-      if (ctx.mate || x.laneVs.length || role === 2) {
-        d += '<div class="sec lane"><b>Линия</b>';
-        if (x.lane) d += '<div class="note"><b>' + x.lane.level[0].toUpperCase() + x.lane.level.slice(1) + " связка с " + esc(x.lane.mate.localized_name) + ":</b> " + esc(x.lane.why) + "</div>";
-        else if (ctx.mate) d += "<div>С " + esc(byId[ctx.mate.id].localized_name) + " особой связки на линии нет, но и мешать друг другу не будете.</div>";
-        if (x.laneVs.length) {
-          var names = x.laneVs.map(function (v) { return esc(v.e.localized_name) + (v.es.guess ? " (примерно)" : ""); });
-          var beats = x.laneVs.filter(function (v) { return v.isCounter; }).length;
-          var loses = x.laneVs.filter(function (v) { return v.bad; }).length;
-          d += "<div>На линии против: " + names.join(", ") + ". " +
-            (loses ? "Будет тяжело — кто-то из них его контрит." : beats ? "Здесь у тебя преимущество." : "Линия примерно равная.") + "</div>";
-        } else if (ctx.enemies.length) {
-          d += '<div class="small">Кто будет против тебя на линии, бот не знает. Поставь врагам позиции — нажми на героя.</div>';
-        }
-        d += "</div>";
-      }
-      if (x.syn.length) {
-        d += '<div class="sec"><b>Как он сочетается с командой</b>';
-        x.syn.forEach(function (s) { d += '<div class="note"><b>С ' + esc(s.a.localized_name) + ":</b> " + esc(s.why) + "</div>"; });
-        d += "</div>";
-      }
-      var myRoles = h.roles.filter(function (r) { return ROLE_MAP[role].indexOf(r) !== -1; }).map(function (r) { return ROLE_RU[r] || r; });
-      d += '<div class="sec"><b>Почему стоит взять</b><br>' +
-        "На твоей роли он: " + (myRoles.length ? myRoles.join(", ") : "играется на этой позиции") + ".<br>" +
-        "Герой: " + (ATTR_RU[h.primary_attr] || "") + ", " + (ATTACK_RU[h.attack_type] || "") + ". Общий процент побед: " + Math.round(h.overall * 100) + "%.<br>" +
-        (!ctx.enemies.length ? "Враги не выбраны, поэтому подсказка идёт по общей силе героя."
-          : order === "last" ? "Ты пикаешь последним, поэтому контр-пик важнее всего."
-          : "Ты пикаешь не последним, поэтому учитываем и контр-пик, и общую силу героя.") + "</div>";
-      d += '<div class="small">Шанс на победу — это оценка бота: статистика против врагов, подборка контр-пиков, механики скиллов, линия и синергии. Подсказка, а не гарантия.</div>';
-
-      var col = x.chance >= 58 ? "#4ade80" : (x.chance >= 52 ? "#22d3ee" : "#f59e0b");
-      return '<div class="res"><div class="top">' +
-        '<div class="pic"><img src="' + imgUrl(h) + '"><div class="chance" style="color:' + col + '">' + x.chance + "%<span>шанс на победу</span></div></div>" +
-        '<div class="rinfo"><div class="rname">' + (idx + 1) + ". " + esc(h.localized_name) + "</div>" +
-        '<div class="rwhy">' + tags + "</div>" +
-        '<button class="btn-more">Подробнее ▾</button></div></div>' +
-        '<div class="more">' + d + "</div></div>";
-    }
-
-    async function recommend() {
-      var box = $("results");
-      try {
-        if (!heroes.length) { box.innerHTML = '<div class="loading">Герои ещё грузятся, подожди пару секунд и нажми ещё раз</div>'; return; }
-        box.innerHTML = '<div class="loading">Считаю...</div>';
-        var ens = enemies.filter(Boolean), als = allies.filter(Boolean);
-        var mate = LANE_MATE[role] ? als.filter(function (a) { return a.pos === LANE_MATE[role]; })[0] || null : null;
-        var results = await Promise.all(ens.map(function (s) { return fetchMatchups(s.id); }));
-        var stats = {}, noStats = false;
-        ens.forEach(function (s, i) { stats[s.id] = results[i]; if (!results[i]) noStats = true; });
-        var ctx = { enemies: ens, allies: als, mate: mate, stats: stats, laneVs: LANE_VS[role] };
-
-        var tk = taken();
-        var list = heroes.filter(function (h) { return tk.indexOf(h.id) === -1 && canPlay(h, role); })
-          .map(function (h) { return evaluate(h, ctx); });
-        // сначала те, кто реально контрит врагов; герои без контр-пиков — ниже
-        list.sort(function (a, b) {
-          if (ens.length) {
-            var ca = a.hits > 0 ? 1 : 0, cb = b.hits > 0 ? 1 : 0;
-            if (ca !== cb) return cb - ca;
-          }
-          return b.score - a.score;
-        });
-
-        var html = "";
-        if (noStats) html += '<div class="loading">Статистика матчей сейчас недоступна, подсказки посчитаны по подборке контр-пиков и механикам скиллов.</div>';
-        if (ens.length && list.length && list[0].hits === 0) html += '<div class="loading">Явных контр-пиков на этих врагов для твоей роли не нашлось — показываю самых сильных героев с учётом линии и команды.</div>';
-        list.slice(0, 8).forEach(function (x, i) { html += cardHtml(x, i, ctx); });
-        box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
-        Array.prototype.forEach.call(box.querySelectorAll(".btn-more"), function (b) {
-          b.onclick = function () {
-            var m = b.closest(".res").querySelector(".more");
-            var open = m.style.display === "block";
-            m.style.display = open ? "none" : "block";
-            b.textContent = open ? "Подробнее ▾" : "Скрыть ▴";
-          };
-        });
-        haptic("medium");
-        box.scrollIntoView({ behavior: "smooth" });
-      } catch (err) {
-        box.innerHTML = '<div class="loading">Что-то пошло не так: ' + esc(err && err.message ? err.message : err) + "</div>";
-      }
-    }
-
-    // ---------- подписка на канал ----------
-    var CHANNEL_URL = "https://t.me/dotapick_lc";
-    var WORKER_URL = "https://dotapick-check.biaqtaa.workers.dev/";
-    var FREE_USES = 3;
-    function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
-    function uses() { return parseInt(store("dp_uses") || "0", 10) || 0; }
-    function subRecently() { var t = parseInt(store("dp_sub_ok") || "0", 10); return t && Date.now() - t < 3 * 86400000; }
-    function drawFreeLeft() {
-      var left = FREE_USES - uses();
-      $("freeleft").textContent = (left > 0 && !subRecently()) ? "Бесплатных подборов без подписки: " + left : "";
-    }
-    // ответ: { known: удалось ли проверить через сервер, subscribed: подписан ли }
-    async function checkSub() {
-      var initData = "";
-      try { initData = Telegram.WebApp.initData || ""; } catch (e) {}
-      if (!initData) return { known: true, subscribed: true };   // открыто не в Telegram — не блокируем
-      if (WORKER_URL.indexOf("https://") !== 0) return { known: false, subscribed: false };
-      // сервер недавно не отвечал — не ждём его снова сутки
-      var down = parseInt(store("dp_srv_down") || "0", 10);
-      if (down && Date.now() - down < 86400000) return { known: false, subscribed: false };
-      try {
-        var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
-        var tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 2500) : null;
-        var r = await fetch(WORKER_URL, { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ initData: initData }), signal: ctrl ? ctrl.signal : undefined });
-        if (tm) clearTimeout(tm);
-        var d = await r.json();
-        if (!d.ok) { store("dp_srv_down", String(Date.now())); return { known: false, subscribed: false }; }
-        store("dp_srv_down", "0");
-        return { known: true, subscribed: d.subscribed === true };
-      } catch (e) {
-        store("dp_srv_down", String(Date.now()));                  // сервер недоступен (например, Cloudflare заблокирован)
-        return { known: false, subscribed: false };
-      }
-    }
-    var pressedSub = false;
-    function openGate() { $("gmsg").textContent = ""; $("gmodal").style.display = "flex"; }
-    function closeGate() { $("gmodal").style.display = "none"; }
-    function passGate() {
-      store("dp_sub_ok", String(Date.now()));
-      closeGate(); haptic("medium");
-      go();
-    }
-    $("gsub").onclick = function () {
-      pressedSub = true;
-      try { Telegram.WebApp.openTelegramLink(CHANNEL_URL); } catch (e) { window.open(CHANNEL_URL, "_blank"); }
-    };
-    $("gdone").onclick = async function () {
-      $("gmsg").style.color = "#9ca3af"; $("gmsg").textContent = "Проверяю...";
-      var r = await checkSub();
-      if (r.subscribed) return passGate();
-      if (!r.known && pressedSub) return passGate();   // проверить нельзя — верим тому, кто нажал «Подписаться»
-      $("gmsg").style.color = "#fda4af";
-      $("gmsg").textContent = r.known
-        ? "Пока не вижу подписку. Подпишись и нажми ещё раз 🙏"
-        : "Сначала нажми «Подписаться» и подпишись на канал 🙏";
-    };
-    $("gmodal").onclick = function (e) { if (e.target === $("gmodal")) closeGate(); };
-    async function go() {
-      if (uses() >= FREE_USES && !subRecently()) {
-        $("results").innerHTML = '<div class="loading">Проверяю подписку...</div>';
-        var r = await checkSub();
-        if (!r.subscribed) { $("results").innerHTML = ""; openGate(); return; }
-        store("dp_sub_ok", String(Date.now()));
-      }
-      store("dp_uses", String(uses() + 1));
-      drawFreeLeft();
-      recommend();
-    }
-    $("go").onclick = go;
-    drawFreeLeft();
-
-    // ---------- вкладка винрейтов ----------
-    var RANKS = [{ id: 0, t: "Все ранги" }, { id: 1, t: "Рекрут" }, { id: 2, t: "Страж" }, { id: 3, t: "Рыцарь" },
-                 { id: 4, t: "Герой" }, { id: 5, t: "Легенда" }, { id: 6, t: "Властелин" }, { id: 7, t: "Божество" }];
-    var LANES = [{ id: 0, t: "Все линии" }, { id: 1, t: "Керри (1)" }, { id: 2, t: "Мид (2)" }, { id: 3, t: "Оффлейн (3)" }, { id: 4, t: "Саппорт 4" }, { id: 5, t: "Саппорт 5" }];
-    var rateRank = 0, rateLane = 0, rateSort = "pick";
-    LANES.forEach(function (l) { var o = document.createElement("option"); o.value = l.id; o.textContent = l.t; $("rlane").appendChild(o); });
-    $("rlane").addEventListener("change", function () { rateLane = parseInt(this.value, 10) || 0; drawRates(); });
-    $("rsearch").addEventListener("input", function () { drawRates(); });
-
-    function rankStats(h) {
-      if (rateRank) return { p: h[rateRank + "_pick"] || 0, w: h[rateRank + "_win"] || 0 };
-      var p = 0, w = 0;
-      for (var i = 1; i <= 8; i++) { p += h[i + "_pick"] || 0; w += h[i + "_win"] || 0; }
-      return { p: p, w: w };
-    }
-    function drawRateChips() {
-      makeChips("rranks", RANKS, rateRank, function (id) { rateRank = id; drawRateChips(); drawRates(); });
-      makeChips("rsort", [{ id: "pick", t: "Популярные" }, { id: "wr", t: "Самый высокий винрейт" }], rateSort, function (id) { rateSort = id; drawRateChips(); drawRates(); });
-    }
-    function drawRates() {
-      var box = $("rlist");
-      if (!heroes.length) { box.innerHTML = '<div class="loading">Загружаю статистику...</div>'; return; }
-      var q = ($("rsearch").value || "").toLowerCase();
-      var rows = heroes.map(function (h) { var s = rankStats(h); return { h: h, p: s.p, wr: s.p ? s.w / s.p : 0 }; });
-      var total = rows.reduce(function (a, r) { return a + r.p; }, 0);
-      if (!total) { box.innerHTML = '<div class="loading">На этом ранге пока нет данных</div>'; return; }
-      rows.forEach(function (r) { r.pr = r.p / total * 10; });
-      rows = rows.filter(function (r) {
-        if (!r.p) return false;
-        if (rateLane && !canPlay(r.h, rateLane)) return false;
-        if (rateSort === "wr" && r.pr < 0.01) return false;
-        return r.h.localized_name.toLowerCase().indexOf(q) !== -1;
-      });
-      var maxPr = Math.max.apply(null, rows.map(function (r) { return r.pr; }).concat([0.0001]));
-      rows.sort(rateSort === "wr" ? function (a, b) { return b.wr - a.wr; } : function (a, b) { return b.p - a.p; });
-      var html = "";
-      rows.forEach(function (r, i) {
-        var col = r.wr >= 0.52 ? "#4ade80" : (r.wr >= 0.48 ? "#e5e7eb" : "#f87171");
-        var pos = positionsOf(r.h);
-        html += '<div class="rrow"><div class="rnum">' + (i + 1) + '</div><img src="' + imgUrl(r.h) + '" onerror="this.style.visibility=\'hidden\'">' +
-          '<div class="rmid"><div class="rname">' + esc(r.h.localized_name) + '</div><div class="rbar"><i style="width:' + Math.round(r.pr / maxPr * 100) + '%"></i></div>' +
-          '<div class="rsub">берут в ' + (r.pr * 100).toFixed(1) + "% игр" + (pos.length ? ", позиции: " + pos.join(", ") : "") + "</div></div>" +
-          '<div class="rwr" style="color:' + col + '">' + (r.wr * 100).toFixed(1) + "%<span>винрейт</span></div></div>";
-      });
-      box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
-    }
-
-    Array.prototype.forEach.call($("tabs").querySelectorAll(".tab"), function (b) {
-      b.onclick = function () {
-        Array.prototype.forEach.call($("tabs").querySelectorAll(".tab"), function (x) { x.classList.remove("active"); });
-        b.classList.add("active");
-        var isRate = b.getAttribute("data-v") === "rate";
-        $("pickView").style.display = isRate ? "none" : "";
-        $("rateView").style.display = isRate ? "" : "none";
-        if (isRate) drawRates();
-        try { Telegram.WebApp.HapticFeedback.selectionChanged(); } catch (e) {}
-      };
-    });
-
-    // ---------- старт ----------
-    fetch("https://api.opendota.com/api/heroStats")
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        heroes = data.map(function (h) {
-          var pick = 0, win = 0;
-          for (var i = 1; i <= 8; i++) { pick += h[i + "_pick"] || 0; win += h[i + "_win"] || 0; }
-          h.overall = pick ? win / pick : 0.5;
-          return h;
-        }).sort(function (a, b) { return a.localized_name.localeCompare(b.localized_name); });
-        heroes.forEach(function (h) { byId[h.id] = h; byName[h.localized_name] = h; });
-        drawSlots();
-        if ($("rateView").style.display !== "none") drawRates();
-      })
-      .catch(function () { $("results").innerHTML = '<div class="loading">Не удалось загрузить героев, обнови страницу</div>'; });
-
-    drawChips();
-    drawRateChips();
-    drawSlots();
-  </script>
-<script data-goatcounter="https://dotapick.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<script src="data.js?v=8"></script>
 <script>
-  document.getElementById("go").addEventListener("click", function () {
-    if (window.goatcounter && window.goatcounter.count) {
-      window.goatcounter.count({ path: "podbor", title: "Нажали Подобрать", event: true });
-    }
-  });
+// Как герои называются по-русски в чатах и в игре (для поиска по буквам)
+var RU = {
+  "Abaddon": ["абаддон", "абадон", "аба"], "Alchemist": ["алхимик", "алх"], "Ancient Apparition": ["аа", "апарат", "эншент"],
+  "Anti-Mage": ["антимаг", "ам", "маг"], "Arc Warden": ["арк варден", "арк", "зет"], "Axe": ["акс", "акса", "топор"],
+  "Bane": ["бейн", "бэйн"], "Batrider": ["бэтрайдер", "бетрайдер", "бэт", "бат"], "Beastmaster": ["бистмастер", "бист", "бм"],
+  "Bloodseeker": ["бладсикер", "блад", "бс"], "Bounty Hunter": ["баунти", "бх", "гондар"], "Brewmaster": ["брюмастер", "брю", "панда"],
+  "Bristleback": ["бристлбек", "бристл", "бб", "ёж"], "Broodmother": ["бруда", "брудмазер", "паук"], "Centaur Warrunner": ["кентавр", "цент", "кент"],
+  "Chaos Knight": ["хаос", "чаос", "ск", "хаос найт"], "Chen": ["чен"], "Clinkz": ["клинкз", "клинкс", "скелет лучник"],
+  "Clockwerk": ["клок", "клокверк", "клокв"], "Crystal Maiden": ["цм", "кристал мейден", "кристалка", "рилай"], "Dark Seer": ["дарк сир", "дс", "сир"],
+  "Dark Willow": ["дарк виллоу", "виллоу", "ива"], "Dawnbreaker": ["даунбрейкер", "даун", "валора"], "Dazzle": ["даззл", "дазл", "дазз"],
+  "Death Prophet": ["дп", "дез профет", "крорбаал"], "Disruptor": ["дисраптор", "дизраптор", "дис"], "Doom": ["дум"],
+  "Dragon Knight": ["дк", "драгон найт", "дракон"], "Drow Ranger": ["дровка", "дроу", "дров", "траха"], "Earth Spirit": ["эрс спирит", "земля", "камень", "ес"],
+  "Earthshaker": ["шейкер", "эс", "эртшейкер", "шейк"], "Elder Titan": ["элдер титан", "титан", "эт"], "Ember Spirit": ["эмбер", "ембер", "огонь"],
+  "Enchantress": ["энча", "энчантресс", "энчантрес"], "Enigma": ["энигма", "энига"], "Faceless Void": ["войд", "фв", "фейслес"],
+  "Grimstroke": ["гримстрок", "грим"], "Gyrocopter": ["гирокоптер", "гиро"], "Hoodwink": ["худвинк", "белка"],
+  "Huskar": ["хускар", "хуск"], "Invoker": ["инвокер", "инвик", "инвок"], "Io": ["ио", "висп", "wisp"],
+  "Jakiro": ["джакиро", "жакиро", "джак"], "Juggernaut": ["джаггернаут", "джагер", "джага", "джаг"], "Keeper of the Light": ["котл", "кипер", "котел"],
+  "Kez": ["кез"], "Kunkka": ["кунка", "кунк", "адмирал"], "Largo": ["ларго"], "Legion Commander": ["легион", "легионка", "лц"],
+  "Leshrac": ["лешрак", "леш"], "Lich": ["лич"], "Lifestealer": ["гуль", "лайфстилер", "лс"], "Lina": ["лина"], "Lion": ["лион", "лев"],
+  "Lone Druid": ["друид", "лон друид", "ллд", "лд"], "Luna": ["луна"], "Lycan": ["ликан", "волк"], "Magnus": ["магнус", "маг нус", "магн"],
+  "Marci": ["марси"], "Mars": ["марс"], "Medusa": ["медуза", "дуза"], "Meepo": ["мипо", "мипа", "мип"], "Mirana": ["мирана", "пом"],
+  "Monkey King": ["манки кинг", "мк", "обезьяна"], "Morphling": ["морфлинг", "морф"], "Muerta": ["муэрта", "муерта"], "Naga Siren": ["нага"],
+  "Nature's Prophet": ["фурион", "профет", "нп"], "Necrophos": ["некрофос", "некр", "некрос"], "Night Stalker": ["нс", "найт сталкер", "баланар"],
+  "Nyx Assassin": ["никс"], "Ogre Magi": ["огр", "огре маги", "огре"], "Omniknight": ["омник", "омни"], "Oracle": ["оракл", "оракул"],
+  "Outworld Destroyer": ["од", "аутворлд", "аутворлд дестроер", "оводе"], "Pangolier": ["панголиер", "панго"], "Phantom Assassin": ["фантомка", "па", "мортред"],
+  "Phantom Lancer": ["пл", "лансер", "фантом лансер"], "Phoenix": ["феникс"], "Primal Beast": ["праймал", "праймал бист", "бист"],
+  "Puck": ["пак"], "Pudge": ["пудж", "пуджик"], "Pugna": ["пугна"], "Queen of Pain": ["квопа", "куопа", "акаша", "qop"],
+  "Razor": ["разор", "рейзор"], "Riki": ["рики"], "Ringmaster": ["рингмастер", "ринг"], "Rubick": ["рубик"], "Sand King": ["сенд кинг", "ск", "краб"],
+  "Shadow Demon": ["шадоу демон", "сд", "демон"], "Shadow Fiend": ["сф", "шадоу финд", "невермор"], "Shadow Shaman": ["шаман", "раста", "шш"],
+  "Silencer": ["сайленсер", "сайлен"], "Skywrath Mage": ["скай", "скайрат", "скаймаг"], "Slardar": ["слардар", "слар"], "Slark": ["сларк"],
+  "Snapfire": ["снэпфаер", "снапфаер", "бабка"], "Sniper": ["снайпер", "снайп"], "Spectre": ["спектра", "спектр"], "Spirit Breaker": ["бара", "спирит брейкер", "сб"],
+  "Storm Spirit": ["шторм", "сторм", "штормяк"], "Sven": ["свен"], "Techies": ["течис", "минер"], "Templar Assassin": ["темпларка", "та", "ланая"],
+  "Terrorblade": ["терорблейд", "террорблейд", "тб"], "Tidehunter": ["тайд", "тайдхантер", "тайдхан"], "Timbersaw": ["тимбер", "пила"],
+  "Tinker": ["тинкер", "тинк"], "Tiny": ["тини", "тайни"], "Treant Protector": ["трент", "дерево"], "Troll Warlord": ["тролль", "тролль варлорд", "трол"],
+  "Tusk": ["таск", "туск"], "Underlord": ["андерлорд", "питлорд", "андер"], "Undying": ["андаинг", "андаин", "зомби"], "Ursa": ["урса", "медведь"],
+  "Vengeful Spirit": ["венга", "вендж", "венж"], "Venomancer": ["веник", "веномансер", "веном"], "Viper": ["вайпер", "випер"], "Visage": ["визаж"],
+  "Void Spirit": ["войд спирит", "войд спир", "вс"], "Warlock": ["варлок", "лок"], "Weaver": ["вивер", "жук"], "Windranger": ["виндраннер", "винда", "вр"],
+  "Winter Wyvern": ["виверна", "вивер", "ww"], "Witch Doctor": ["вд", "доктор", "вич доктор"], "Wraith King": ["вк", "рейз кинг", "скелет кинг", "король"],
+  "Zeus": ["зевс"]
+};
+
+var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloodseeker","Crystal Maiden":"crystal_maiden","Drow Ranger":"drow_ranger","Earthshaker":"earthshaker","Juggernaut":"juggernaut","Mirana":"mirana","Morphling":"morphling","Shadow Fiend":"nevermore","Phantom Lancer":"phantom_lancer","Puck":"puck","Pudge":"pudge","Razor":"razor","Sand King":"sand_king","Storm Spirit":"storm_spirit","Sven":"sven","Tiny":"tiny","Vengeful Spirit":"vengefulspirit","Windranger":"windrunner","Zeus":"zuus","Kunkka":"kunkka","Lina":"lina","Lion":"lion","Shadow Shaman":"shadow_shaman","Slardar":"slardar","Tidehunter":"tidehunter","Witch Doctor":"witch_doctor","Lich":"lich","Riki":"riki","Enigma":"enigma","Tinker":"tinker","Sniper":"sniper","Necrophos":"necrolyte","Warlock":"warlock","Beastmaster":"beastmaster","Queen of Pain":"queenofpain","Venomancer":"venomancer","Faceless Void":"faceless_void","Wraith King":"skeleton_king","Death Prophet":"death_prophet","Phantom Assassin":"phantom_assassin","Pugna":"pugna","Templar Assassin":"templar_assassin","Viper":"viper","Luna":"luna","Dragon Knight":"dragon_knight","Dazzle":"dazzle","Clockwerk":"rattletrap","Leshrac":"leshrac","Nature's Prophet":"furion","Lifestealer":"life_stealer","Dark Seer":"dark_seer","Clinkz":"clinkz","Omniknight":"omniknight","Enchantress":"enchantress","Huskar":"huskar","Night Stalker":"night_stalker","Broodmother":"broodmother","Bounty Hunter":"bounty_hunter","Weaver":"weaver","Jakiro":"jakiro","Batrider":"batrider","Chen":"chen","Spectre":"spectre","Ancient Apparition":"ancient_apparition","Doom":"doom_bringer","Ursa":"ursa","Spirit Breaker":"spirit_breaker","Gyrocopter":"gyrocopter","Alchemist":"alchemist","Invoker":"invoker","Silencer":"silencer","Outworld Destroyer":"obsidian_destroyer","Lycan":"lycan","Brewmaster":"brewmaster","Shadow Demon":"shadow_demon","Lone Druid":"lone_druid","Chaos Knight":"chaos_knight","Meepo":"meepo","Treant Protector":"treant","Ogre Magi":"ogre_magi","Undying":"undying","Rubick":"rubick","Disruptor":"disruptor","Nyx Assassin":"nyx_assassin","Naga Siren":"naga_siren","Keeper of the Light":"keeper_of_the_light","Io":"wisp","Visage":"visage","Slark":"slark","Medusa":"medusa","Troll Warlord":"troll_warlord","Centaur Warrunner":"centaur","Magnus":"magnataur","Timbersaw":"shredder","Bristleback":"bristleback","Tusk":"tusk","Skywrath Mage":"skywrath_mage","Abaddon":"abaddon","Elder Titan":"elder_titan","Legion Commander":"legion_commander","Techies":"techies","Ember Spirit":"ember_spirit","Earth Spirit":"earth_spirit","Underlord":"abyssal_underlord","Terrorblade":"terrorblade","Phoenix":"phoenix","Oracle":"oracle","Winter Wyvern":"winter_wyvern","Arc Warden":"arc_warden","Monkey King":"monkey_king","Dark Willow":"dark_willow","Pangolier":"pangolier","Grimstroke":"grimstroke","Hoodwink":"hoodwink","Void Spirit":"void_spirit","Snapfire":"snapfire","Mars":"mars","Ringmaster":"ringmaster","Dawnbreaker":"dawnbreaker","Marci":"marci","Primal Beast":"primal_beast","Muerta":"muerta","Kez":"kez","Largo":"largo"};
+var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades of Attack",450,0],"3":["broadsword","Broadsword",1000,0],"4":["chainmail","Chainmail",500,0],"5":["claymore","Claymore",1350,0],"6":["helm_of_iron_will","Helm of Iron Will",975,0],"7":["javelin","Javelin",900,0],"8":["mithril_hammer","Mithril Hammer",1600,0],"9":["platemail","Platemail",1400,0],"10":["quarterstaff","Quarterstaff",875,0],"11":["quelling_blade","Quelling Blade",100,0],"12":["ring_of_protection","Ring of Protection",175,0],"13":["gauntlets","Gauntlets of Strength",140,0],"14":["slippers","Slippers of Agility",140,0],"15":["mantle","Mantle of Intelligence",140,0],"16":["branches","Iron Branch",55,0],"17":["belt_of_strength","Belt of Strength",450,0],"18":["boots_of_elves","Band of Elvenskin",450,0],"19":["robe","Robe of the Magi",450,0],"20":["circlet","Circlet",155,0],"21":["ogre_axe","Ogre Axe",1000,0],"22":["blade_of_alacrity","Blade of Alacrity",1000,0],"23":["staff_of_wizardry","Staff of Wizardry",1000,0],"24":["ultimate_orb","Ultimate Orb",2800,0],"25":["gloves","Gloves of Haste",450,0],"26":["lifesteal","Morbid Mask",900,0],"27":["ring_of_regen","Ring of Regen",175,0],"28":["sobi_mask","Sage's Mask",175,0],"29":["boots","Boots of Speed",500,0],"30":["gem","Gem of True Sight",900,0],"31":["cloak","Cloak",900,0],"32":["talisman_of_evasion","Talisman of Evasion",1300,0],"33":["cheese","Cheese",1000,0],"34":["magic_stick","Magic Stick",200,0],"36":["magic_wand","Magic Wand",460,1],"37":["ghost","Ghost Scepter",1500,0],"38":["clarity","Clarity",60,0],"39":["flask","Healing Salve",100,0],"40":["dust","Dust of Appearance",80,0],"41":["bottle","Bottle",675,0],"42":["ward_observer","Observer Ward",0,0],"43":["ward_sentry","Sentry Ward",50,0],"44":["tango","Tango",90,0],"45":["courier","Animal Courier",50,0],"46":["tpscroll","Town Portal Scroll",100,0],"48":["travel_boots","Boots of Travel",2500,1],"50":["phase_boots","Phase Boots",1450,1],"51":["demon_edge","Demon Edge",2200,0],"52":["eagle","Eaglesong",2800,0],"53":["reaver","Reaver",2800,0],"54":["relic","Sacred Relic",3400,0],"55":["hyperstone","Hyperstone",2000,0],"56":["ring_of_health","Ring of Health",700,0],"57":["void_stone","Void Stone",700,0],"58":["mystic_staff","Mystic Staff",2800,0],"59":["energy_booster","Energy Booster",800,0],"60":["point_booster","Point Booster",1200,0],"61":["vitality_booster","Vitality Booster",1000,0],"63":["power_treads","Power Treads",1400,1],"65":["hand_of_midas","Hand of Midas",2200,1],"67":["oblivion_staff","Oblivion Staff",1625,1],"69":["pers","Perseverance",1400,1],"71":["poor_mans_shield","Poor Man's Shield",0,0],"73":["bracer","Bracer",505,1],"75":["wraith_band","Wraith Band",505,1],"77":["null_talisman","Null Talisman",505,1],"79":["mekansm","Mekansm",1775,1],"81":["vladmir","Vladmir's Offering",2200,1],"86":["buckler","Buckler",425,1],"88":["ring_of_basilius","Ring of Basilius",425,1],"90":["pipe","Pipe of Insight",3725,1],"92":["urn_of_shadows","Urn of Shadows",825,1],"94":["headdress","Headdress",425,1],"96":["sheepstick","Scythe of Vyse",5200,1],"98":["orchid","Orchid Malevolence",3275,1],"100":["cyclone","Eul's Scepter of Divinity",2600,1],"102":["force_staff","Force Staff",2200,1],"104":["dagon","Dagon",3000,1],"106":["necronomicon","Necronomicon",2050,1],"108":["ultimate_scepter","Aghanim's Scepter",4200,1],"110":["refresher","Refresher Orb",5000,1],"112":["assault","Assault Cuirass",5125,1],"114":["heart","Heart of Tarrasque",5300,1],"116":["black_king_bar","Black King Bar",4050,1],"117":["aegis","Aegis of the Immortal",0,0],"119":["shivas_guard","Shiva's Guard",4500,1],"121":["bloodstone","Bloodstone",4700,1],"123":["sphere","Linken's Sphere",4800,1],"125":["vanguard","Vanguard",1700,1],"127":["blade_mail","Blade Mail",2400,1],"129":["soul_booster","Soul Booster",3000,1],"131":["hood_of_defiance","Hood of Defiance",0,0],"133":["rapier","Divine Rapier",5600,1],"135":["monkey_king_bar","Monkey King Bar",5000,1],"137":["radiance","Radiance",4700,1],"139":["butterfly","Butterfly",5450,1],"141":["greater_crit","Daedalus",5200,1],"143":["basher","Skull Basher",2875,1],"145":["bfury","Battle Fury",3900,1],"147":["manta","Manta Style",4650,1],"149":["lesser_crit","Crystalys",2000,1],"151":["armlet","Armlet of Mordiggian",2500,1],"152":["invis_sword","Shadow Blade",3250,1],"154":["sange_and_yasha","Sange and Yasha",4200,1],"156":["satanic","Satanic",5050,1],"158":["mjollnir","Mjollnir",5500,1],"160":["skadi","Eye of Skadi",5900,1],"162":["sange","Sange",2100,1],"164":["helm_of_the_dominator","Helm of the Dominator",2550,1],"166":["maelstrom","Maelstrom",2950,1],"168":["desolator","Desolator",3500,1],"170":["yasha","Yasha",2100,1],"172":["mask_of_madness","Mask of Madness",1900,1],"174":["diffusal_blade","Diffusal Blade",2500,1],"176":["ethereal_blade","Ethereal Blade",5200,1],"178":["soul_ring","Soul Ring",805,1],"180":["arcane_boots","Arcane Boots",1500,1],"181":["orb_of_venom","Orb of Venom",350,0],"182":["stout_shield","Stout Shield",100,0],"185":["ancient_janggo","Drum of Endurance",1625,1],"187":["medallion_of_courage","Medallion of Courage",0,1],"188":["smoke_of_deceit","Smoke of Deceit",50,0],"190":["veil_of_discord","Veil of Discord",1700,1],"193":["necronomicon_2","Necronomicon",3300,1],"194":["necronomicon_3","Necronomicon",4550,1],"196":["diffusal_blade_2","Diffusal Blade",3850,1],"201":["dagon_2","Dagon",4100,0],"202":["dagon_3","Dagon",5200,0],"203":["dagon_4","Dagon",6300,0],"204":["dagon_5","Dagon",7400,0],"206":["rod_of_atos","Rod of Atos",2250,1],"208":["abyssal_blade","Abyssal Blade",6250,1],"210":["heavens_halberd","Heaven's Halberd",3300,1],"212":["ring_of_aquila","Ring of Aquila",0,0],"214":["tranquil_boots","Tranquil Boots",900,1],"215":["shadow_amulet","Shadow Amulet",900,0],"216":["enchanted_mango","Enchanted Mango",65,0],"218":["ward_dispenser","Observer and Sentry Wards",50,1],"220":["travel_boots_2","Boots of Travel 2",4500,1],"223":["meteor_hammer","Meteor Hammer",2850,1],"225":["nullifier","Nullifier",4350,1],"226":["lotus_orb","Lotus Orb",3850,1],"229":["solar_crest","Solar Crest",2575,1],"231":["guardian_greaves","Guardian Greaves",4450,1],"232":["aether_lens","Aether Lens",2275,1],"235":["octarine_core","Octarine Core",5100,1],"236":["dragon_lance","Dragon Lance",2000,1],"237":["faerie_fire","Faerie Fire",65,0],"239":["iron_talon","Iron Talon",0,1],"240":["blight_stone","Orb of Blight",300,0],"241":["tango_single","Tango (Shared)",30,0],"242":["crimson_guard","Crimson Guard",3725,1],"244":["wind_lace","Wind Lace",225,0],"247":["moon_shard","Moon Shard",4000,1],"249":["silver_edge","Silver Edge",5700,1],"250":["bloodthorn","Bloodthorn",6400,1],"252":["echo_sabre","Echo Sabre",2700,1],"254":["glimmer_cape","Glimmer Cape",2150,1],"256":["aeon_disk","Aeon Disk",3000,1],"257":["tome_of_knowledge","Tome of Knowledge",75,0],"259":["kaya","Kaya",2100,1],"260":["refresher_shard","Refresher Shard",1000,0],"261":["crown","Crown",450,0],"263":["hurricane_pike","Hurricane Pike",4550,1],"265":["infused_raindrop","Infused Raindrops",225,0],"267":["spirit_vessel","Spirit Vessel",2725,1],"269":["holy_locket","Holy Locket",2250,1],"271":["ultimate_scepter_2","Aghanim's Blessing",5800,1],"273":["kaya_and_sange","Kaya and Sange",4200,1],"277":["yasha_and_kaya","Yasha and Kaya",4200,1],"279":["ring_of_tarrasque","Ring of Tarrasque",1700,0],"286":["flying_courier","Flying Courier",100,0],"287":["keen_optic","Keen Optic",0,0],"288":["grove_bow","Grove Bow",0,0],"289":["quickening_charm","Quickening Charm",0,0],"290":["philosophers_stone","Philosopher's Stone",0,0],"291":["force_boots","Force Boots",0,0],"292":["desolator_2","Stygian Desolator",0,0],"293":["phoenix_ash","Phoenix Ash",0,0],"294":["seer_stone","Seer Stone",0,0],"295":["greater_mango","greater_mango",0,0],"297":["vampire_fangs","Vampire Fangs",0,0],"298":["craggy_coat","Craggy Coat",0,0],"299":["greater_faerie_fire","Greater Faerie Fire",0,0],"300":["timeless_relic","Timeless Relic",0,0],"301":["mirror_shield","Mirror Shield",0,0],"302":["elixer","Elixir",0,0],"304":["ironwood_tree","Ironwood Tree",0,0],"305":["royal_jelly","Royal Jelly",0,0],"306":["pupils_gift","Pupil's Gift",0,0],"307":["tome_of_aghanim","Tome of Aghanim",0,0],"308":["repair_kit","Repair Kit",0,0],"309":["mind_breaker","Mind Breaker",0,0],"310":["third_eye","Third Eye",0,0],"311":["spell_prism","Spell Prism",0,0],"312":["horizon","horizon",0,0],"313":["fusion_rune","Fusion Rune",0,0],"325":["princes_knife","Prince's Knife",0,0],"326":["spider_legs","Spider Legs",0,0],"327":["helm_of_the_undying","Helm of the Undying",0,0],"328":["mango_tree","Mango Tree",0,0],"330":["witless_shako","Witless Shako",0,0],"331":["vambrace","Vambrace",0,0],"334":["imp_claw","Imp Claw",0,0],"335":["flicker","Flicker",0,0],"336":["spy_gadget","Telescope",0,0],"349":["arcane_ring","Arcane Ring",0,0],"354":["ocean_heart","Ocean Heart",0,0],"355":["broom_handle","Broom Handle",0,0],"356":["trusty_shovel","Trusty Shovel",0,0],"357":["nether_shawl","Nether Shawl",0,0],"358":["dragon_scale","Dragon Scale",0,0],"359":["essence_ring","Essence Ring",0,0],"360":["clumsy_net","Clumsy Net",0,0],"361":["enchanted_quiver","Enchanted Quiver",0,0],"362":["ninja_gear","Ninja Gear",0,0],"363":["illusionsts_cape","Illusionist's Cape",0,0],"364":["havoc_hammer","Havoc Hammer",0,0],"365":["panic_button","Magic Lamp",0,0],"366":["apex","Apex",0,0],"367":["ballista","Ballista",0,0],"368":["woodland_striders","Woodland Striders",0,0],"369":["trident","Trident",6301,1],"370":["demonicon","Book of the Dead",0,0],"371":["fallen_sky","Fallen Sky",0,0],"372":["pirate_hat","Pirate Hat",0,0],"374":["ex_machina","Ex Machina",0,0],"375":["faded_broach","Faded Broach",0,0],"376":["paladin_sword","Paladin Sword",0,0],"377":["minotaur_horn","Minotaur Horn",0,0],"378":["orb_of_destruction","Orb of Destruction",0,0],"379":["the_leveller","The Leveller",0,0],"381":["titan_sliver","Titan Sliver",0,0],"473":["voodoo_mask","Voodoo Mask",650,0],"485":["blitz_knuckles","Blitz Knuckles",1000,0],"534":["witch_blade","Witch Blade",2775,1],"565":["chipped_vest","Chipped Vest",0,0],"569":["orb_of_corrosion","Orb of Corrosion",1050,1],"571":["trickster_cloak","Trickster Cloak",0,0],"573":["elven_tunic","Elven Tunic",0,0],"574":["cloak_of_flames","Cloak of Flames",0,0],"577":["possessed_mask","Possessed Mask",0,0],"585":["stormcrafter","Stormcrafter",0,0],"589":["mysterious_hat","Fairy's Trinket",0,0],"593":["fluffy_hat","Fluffy Hat",250,0],"596":["falcon_blade","Falcon Blade",1125,1],"598":["mage_slayer","Mage Slayer",3100,1],"600":["overwhelming_blink","Overwhelming Blink",6800,1],"603":["swift_blink","Swift Blink",6800,1],"604":["arcane_blink","Arcane Blink",6800,1],"609":["aghanims_shard","Aghanim's Shard",1400,0],"610":["wind_waker","Wind Waker",6800,1],"635":["helm_of_the_overlord","Helm of the Overlord",5650,1],"638":["penta_edged_sword","Penta-Edged Sword",0,0],"675":["psychic_headband","Psychic Headband",0,0],"676":["ceremonial_robe","Ceremonial Robe",0,0],"677":["book_of_shadows","Book of Shadows",0,0],"678":["giants_ring","Giant's Ring",0,0],"680":["bullwhip","Bullwhip",0,0],"686":["quicksilver_amulet","Quicksilver Amulet",0,0],"692":["eternal_shroud","Eternal Shroud",3900,1],"725":["aghanims_shard_roshan","Aghanim's Shard - Consumable",1400,0],"727":["ultimate_scepter_roshan","Aghanim's Blessing - Roshan",5800,0],"825":["ascetic_cap","Ascetic's Cap",0,0],"828":["misericorde","Brigand's Blade",0,0],"829":["force_field","Arcanist's Armor",0,0],"834":["black_powder_bag","Blast Rig",0,0],"835":["paintball","Fae Grenade",0,0],"837":["heavy_blade","Witchbane",0,0],"838":["unstable_wand","Pig Pole",0,0],"840":["pogo_stick","Tumbler's Toy",0,0],"849":["mechanical_arm","mechanical_arm",0,0],"908":["wraith_pact","Wraith Pact",3800,1],"911":["revenants_brooch","Revenant's Brooch",3300,1],"931":["boots_of_bearing","Boots of Bearing",4225,1],"939":["harpoon","Harpoon",4700,1],"945":["seeds_of_serenity","Seeds of Serenity",0,0],"946":["lance_of_pursuit","Lance of Pursuit",0,0],"947":["occult_bracelet","Occult Bracelet",0,0],"949":["ogre_seal_totem","Ogre Seal Totem",0,0],"950":["defiant_shell","Defiant Shell",0,0],"990":["eye_of_the_vizier","Eye of the Vizier",0,0],"1000":["bottomless_chalice","bottomless_chalice",0,0],"1021":["river_painter","River Vial: Chrome",0,0],"1022":["river_painter2","River Vial: Dry",0,0],"1023":["river_painter3","River Vial: Slime",0,0],"1024":["river_painter4","River Vial: Oil",0,0],"1025":["river_painter5","River Vial: Electrified",0,0],"1026":["river_painter6","River Vial: Potion",0,0],"1027":["river_painter7","River Vial: Blood",0,0],"1028":["mutation_tombstone","Tombstone",0,0],"1029":["super_blink","super_blink",0,0],"1030":["pocket_tower","Pocket Tower",0,0],"1032":["pocket_roshan","Pocket Roshan",1000,0],"1076":["specialists_array","Specialist's Array",2550,1],"1077":["dagger_of_ristul","Dagger of Ristul",0,0],"1090":["muertas_gun","Mercy & Grace",0,0],"1097":["disperser","Disperser",6100,1],"1107":["phylactery","Phylactery",2600,1],"1122":["diadem","Diadem",1000,0],"1123":["blood_grenade","Blood Grenade",50,0],"1124":["spark_of_courage","Spark of Courage",0,0],"1125":["cornucopia","Cornucopia",1200,0],"1128":["pavise","Pavise",1350,1],"1154":["royale_with_cheese","Block of Cheese",2,0],"1156":["ancient_guardian","Ancient Guardian",0,0],"1157":["safety_bubble","Safety Bubble",0,0],"1158":["whisper_of_the_dread","Whisper of the Dread",0,0],"1159":["nemesis_curse","Nemesis Curse",0,0],"1160":["avianas_feather","Aviana's Feather",0,0],"1161":["unwavering_condition","Unwavering Condition",0,0],"1167":["light_collector","Light Collector",0,0],"1168":["rattlecage","Rattlecage",0,0],"1440":["black_grimoire","Black Grimoire\\n(Warlock)",0,0],"1441":["grisgris","Gris-Gris",0,0],"1466":["gungir","Gleipnir",4650,1],"1575":["orb_of_frost","Orb of Frost",300,0],"1576":["enhancement_vast","Vast",0,0],"1577":["enhancement_quickened","Quickened",0,0],"1581":["enhancement_audacious","Audacious",0,0],"1583":["enhancement_mystical","Mystical",0,0],"1584":["enhancement_alert","Alert",0,0],"1585":["enhancement_brawny","Brawny",0,0],"1586":["enhancement_tough","Tough",0,0],"1587":["enhancement_feverish","Feverish",0,0],"1588":["enhancement_fleetfooted","Fleetfooted",0,0],"1589":["enhancement_crude","Crude",0,0],"1590":["enhancement_boundless","Boundless",0,0],"1591":["enhancement_wise","Wise",0,0],"1592":["enhancement_timeless","Timeless",0,0],"1593":["enhancement_greedy","Greedy",0,0],"1594":["enhancement_vampiric","Vampiric",0,0],"1595":["enhancement_keen_eyed","Keen-eyed",0,0],"1596":["enhancement_evolved","Evolved",0,0],"1597":["enhancement_titanic","Titanic",0,0],"1598":["unrelenting_eye","Unrelenting Eye",0,0],"1599":["mana_draught","Mana Draught",0,0],"1600":["rippers_lash","Ripper's Lash",0,0],"1601":["crippling_crossbow","Crippling Crossbow",0,0],"1602":["gale_guard","Gale Guard",0,0],"1603":["gunpowder_gauntlets","Gunpowder Gauntlet",0,0],"1604":["searing_signet","Searing Signet",0,0],"1605":["serrated_shiv","Serrated Shiv",0,0],"1606":["polliwog_charm","Pollywog Charm",0,0],"1607":["magnifying_monocle","Magnifying Monocle",0,0],"1608":["pyrrhic_cloak","Pyrrhic Cloak",0,0],"1609":["madstone_bundle","Madstone Bundle",0,0],"1610":["miniboss_minion_summoner","miniboss_minion_summoner",0,0],"1637":["kobold_cup","Kobold Cup",0,0],"1638":["dormant_curio","Dormant Curio",0,0],"1639":["sisters_shroud","Sister's Shroud",0,0],"1640":["jidi_pollen_bag","Jidi Pollen Bag",0,0],"1641":["outworld_staff","Outworld Staff",0,0],"1642":["dezun_bloodrite","Dezun Bloodrite",0,0],"1643":["giant_maul","Giant's Maul",0,0],"1644":["divine_regalia","Divine Regalia",0,0],"1645":["divine_regalia_broken","Disgraced Regalia",0,0],"1647":["enhancement_fierce","Fierce",0,0],"1648":["enhancement_dominant","Dominant",0,0],"1649":["enhancement_restorative","Restorative",0,0],"1650":["enhancement_thick","Thick",0,0],"1651":["enhancement_curious","Unleashed",0,0],"1652":["furion_gold_bag","Bag of Gold",0,0],"1716":["weighted_dice","Weighted Dice",0,0],"1717":["ash_legion_shield","Ash Legion Shield",0,0],"1718":["riftshadow_prism","Riftshadow Prism",0,0],"1719":["metamorphic_mandible","Metamorphic Mandible",0,0],"1720":["idol_of_screeauk","Idol of Scree'auk",0,0],"1721":["flayers_bota","Flayer's Bota",0,0],"1801":["caster_rapier","caster_rapier",5600,0],"1802":["tiara_of_selemene","Tiara of Selemene",1700,0],"1803":["doubloon","Doubloon",0,0],"1804":["roshans_banner","Roshan's Banner",0,0],"1806":["devastator","Parasma",5975,1],"1808":["angels_demise","Khanda",5600,1],"1847":["splintmail","Splintmail",950,0],"1848":["shawl","Shawl",450,0],"1849":["wizard_hat","Wizard Hat",250,0],"1850":["eldwurms_edda","Eldwurm's Edda",0,0],"1852":["essence_distiller","Essence Distiller",1775,1],"1854":["consecrated_wraps","Consecrated Wraps",2600,1],"1856":["crellas_crozier","Crella's Crozier",4800,1],"1858":["hydras_breath","Hydra's Breath",5900,1],"1859":["spellslinger","Spellslinger",0,0],"1860":["prophets_pendulum","Prophet's Pendulum",0,0],"1861":["stonefeather_satchel","Stonefeather Satchel",0,0],"1862":["enchanters_bauble","Enchanter's Bauble",0,0],"1863":["harmonizer","Harmonizer",0,0],"1864":["conjurers_catalyst","Conjurer's Catalyst",0,0],"1865":["enhancement_vital","Vital",0,0],"1866":["enhancement_hulking","Hulking",0,0],"1867":["enhancement_manic","Manic",0,0],"1868":["foragers_kit","Forager's Kit",0,0],"1869":["foragers_health","Vital Toadstool",0,0],"1870":["foragers_stats","Ironwood Nut",0,0],"1871":["foragers_mana","Tomo'kan Ringcap",0,0],"1872":["chasm_stone","Chasm Stone",900,0],"1873":["partisans_brand","Partisan's Brand",0,0],"1874":["enhancement_nimble","Nimble",0,0],"1875":["tidehunter_fish","Leviathan's Fish",0,0],"2091":["tier1_token","Tier 1 Token",0,0],"2092":["tier2_token","Tier 2 Token",0,0],"2093":["tier3_token","Tier 3 Token",0,0],"2094":["tier4_token","Tier 4 Token",0,0],"2095":["tier5_token","Tier 5 Token",0,0],"2096":["vindicators_axe","Vindicator's Axe",0,0],"2097":["duelist_gloves","Duelist Gloves",0,0],"2190":["dandelion_amulet","Dandelion Amulet",0,0],"2192":["martyrs_plate","Martyr's Plate",0,0],"2193":["gossamer_cape","Gossamer Cape",0,0],"4204":["famango","Healing Lotus",0,0],"4205":["great_famango","Great Healing Lotus",0,1],"4206":["greater_famango","Greater Healing Lotus",0,1],"4300":["ofrenda","Beloved Memory",0,0],"4301":["ofrenda_shovel","Scrying Shovel",0,0],"4302":["ofrenda_pledge","Forebearer's Fortune",0,0]};
 </script>
+<script>
+(function () {
+  "use strict";
+  var TG = window.Telegram && Telegram.WebApp ? Telegram.WebApp : null;
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function haptic(kind) { try { TG.HapticFeedback.impactOccurred(kind || "light"); } catch (e) {} }
+  function tick() { try { TG.HapticFeedback.selectionChanged(); } catch (e) {} }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  try { TG.ready(); TG.expand(); TG.setHeaderColor("#03051a"); TG.setBackgroundColor("#03051a"); } catch (e) {}
+
+  var CHANNEL_URL = "https://t.me/dotapick_lc";
+  var WORKER_URL = "https://dotapick-check.biaqtaa.workers.dev/";
+  var DISCORD_URL = "https://discord.gg/QnAGbqWXA2";
+  var IMG = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/";
+  var POS_NAME = { 1: "керри", 2: "мид", 3: "оффлейн", 4: "саппорт 4", 5: "саппорт 5" };
+  var ROLE_MAP = { 1: ["Carry"], 2: ["Carry", "Nuker", "Escape"], 3: ["Durable", "Initiator"], 4: ["Support"], 5: ["Support"] };
+  var ROLE_RU = { Carry: "сильный в лейте (керри)", Support: "помогает команде (саппорт)", Nuker: "большой взрывной урон", Disabler: "контроль (станы, сайленсы)",
+    Jungler: "может фармить лес", Durable: "живучий", Escape: "умеет убегать", Pusher: "быстро сносит башни", Initiator: "хорошо начинает драки" };
+  var ATTR_RU = { str: "сила", agi: "ловкость", int: "интеллект", all: "универсал" };
+  var ATTACK_RU = { Melee: "ближний бой", Ranged: "дальний бой" };
+  var LANE_MATE = { 1: 5, 5: 1, 3: 4, 4: 3, 2: null };
+  var LANE_VS = { 1: [3, 4], 5: [3, 4], 3: [1, 5], 4: [1, 5], 2: [2] };
+
+  // состояние: слот = { id, pos (1-5 или 0), guess }
+  var heroes = [], byId = {}, byName = {};
+  var enemies = [], allies = [], side = "enemy", role = 0, order = "last", query = "", meAt = 4, myHero = null; // myHero — твой герой, если уже выбрал ({ id }) // meAt — какой по счёту пикаешь ты в своей команде (0..4)
+
+  // ---------- герои ----------
+  function imgUrl(h) { return IMG + h.name.replace("npc_dota_hero_", "") + ".png"; }
+  function hero(n) { return byName[n]; }
+  function fallbackHeroes() {
+    return Object.keys(SLUG).sort().map(function (n) {
+      return { id: "x_" + SLUG[n], localized_name: n, name: "npc_dota_hero_" + SLUG[n], roles: [], overall: 0.5, primary_attr: null, attack_type: null, picks: 0 };
+    });
+  }
+  function setHeroes(list) {
+    heroes = list; byId = {}; byName = {};
+    heroes.forEach(function (h) { byId[h.id] = h; byName[h.localized_name] = h; });
+  }
+  setHeroes(fallbackHeroes());
+
+  function norm(s) { return String(s).toLowerCase().replace(/ё/g, "е").replace(/[^a-zа-я0-9]/g, ""); }
+  function matches(h, q) {
+    if (!q) return true;
+    var nq = norm(q), n = h.localized_name;
+    if (norm(n).indexOf(nq) !== -1) return true;
+    return (RU[n] || []).some(function (a) { return norm(a).indexOf(nq) === 0; });
+  }
+
+  // ---------- логика подбора (та же, что в боте) ----------
+  function tagsOf(name) {
+    var s = HERO_TAGS[name]; if (!s) return { has: [], weak: [] };
+    var p = s.split("|");
+    return { has: p[0].split(" ").filter(Boolean), weak: (p[1] || "").split(" ").filter(Boolean) };
+  }
+  function pairValue(str, key) {
+    if (!str) return null;
+    var parts = str.split(";");
+    for (var i = 0; i < parts.length; i++) { var k = parts[i].indexOf("="); if (k > 0 && parts[i].slice(0, k).trim() === key) return parts[i].slice(k + 1).trim(); }
+    return null;
+  }
+  function positionsOf(h) {
+    var p = HERO_POS[h.localized_name];
+    if (p) return p.split("").map(Number);
+    var out = [];
+    for (var pos = 1; pos <= 5; pos++) if ((h.roles || []).some(function (r) { return ROLE_MAP[pos].indexOf(r) !== -1; })) out.push(pos);
+    return out;
+  }
+  function canPlay(h, pos) { return !pos || positionsOf(h).indexOf(pos) !== -1; }
+  function inSource(h, e) { var l = SOURCE_COUNTERS[e.localized_name]; return !!(l && l.indexOf(h.localized_name) !== -1); }
+  function counterReasons(hero, enemy) {
+    var hn = hero.localized_name, en = enemy.localized_name, c = tagsOf(hn), e = tagsOf(en);
+    var texts = [], rules = 0, generic = 0, byWeak = {}, ord = [];
+    NOTES.forEach(function (n) { if (n.hero === hn && n.vs === en) texts.push(n.why); });
+    RULES.forEach(function (r) {
+      if (c.has.indexOf(r[0]) !== -1 && e.weak.indexOf(r[1]) !== -1) {
+        var kit = pairValue(HERO_KIT[hn], r[0]), weak = pairValue(HERO_WEAK[en], r[1]);
+        if (kit && weak) { if (!byWeak[weak]) { byWeak[weak] = []; ord.push(weak); } if (byWeak[weak].indexOf(kit) === -1) byWeak[weak].push(kit); }
+        else texts.push(r[2].replace(/\{C\}/g, hn).replace(/\{E\}/g, en));
+        if (r[1] === "squishy") generic++; else rules++;
+      }
+    });
+    ord.forEach(function (w) { texts.push(hn + " — " + byWeak[w].join("; ") + ". Почему против " + en + ": " + w + "."); });
+    return { source: inSource(hero, enemy), rules: rules, generic: generic, texts: texts, note: NOTES.some(function (n) { return n.hero === hn && n.vs === en; }) };
+  }
+  function synergyWith(hero, ally) {
+    var hn = hero.localized_name, an = ally.localized_name, texts = [], bonus = 0;
+    SYN_PAIRS.forEach(function (p) { if ((p[0] === hn && p[1] === an) || (p[0] === an && p[1] === hn)) { texts.push(p[2]); bonus += 0.02; } });
+    var c = tagsOf(hn), a = tagsOf(an);
+    SYN_RULES.forEach(function (r) {
+      [[hn, c, an, a], [an, a, hn, c]].forEach(function (d) {
+        var okG = d[1].has.indexOf(r[0]) !== -1, okT = (r[2] === "weak" ? d[3].weak : d[3].has).indexOf(r[1]) !== -1;
+        if (okG && okT) { var kg = pairValue(HERO_KIT[d[0]], r[0]); texts.push((kg ? d[0] + ", " + kg + ". " : "") + r[3]); bonus += 0.005; }
+      });
+    });
+    return texts.length ? { bonus: Math.min(0.02, bonus), why: texts.join(" ") } : null;
+  }
+  function laneCombo(hero, heroPos, mate) {
+    var core = heroPos === 1 || heroPos === 3 ? hero : mate, sup = core === hero ? mate : hero;
+    var cn = core.localized_name, sn = sup.localized_name, ct = tagsOf(cn), st = tagsOf(sn), texts = [], score = 0;
+    LANE_PAIRS.forEach(function (p) { if ((p[0] === cn && p[1] === sn) || (p[0] === sn && p[1] === cn)) { texts.push(p[2]); score += 3; } });
+    if (st.has.indexOf("stun") !== -1 && (core.attack_type === "Melee" || ct.weak.indexOf("phys") !== -1)) {
+      var k = pairValue(HERO_KIT[sn], "stun"); texts.push((k ? sn + " — " + k + ". " : "") + "Пока враг в стане, " + cn + " спокойно бьёт его на линии."); score += 1;
+    }
+    if (HEALERS.indexOf(sn) !== -1) { texts.push(sn + " лечит и спасает " + cn + " — на линии ему проще стоять и фармить."); score += 1; }
+    if (core.attack_type === "Ranged" && sup.attack_type === "Ranged") { texts.push("Оба бьют издалека и могут давить врагов с безопасной дистанции."); score += 1; }
+    if (st.has.indexOf("burst") !== -1 && (ct.has.indexOf("stun") !== -1 || ct.has.indexOf("burst") !== -1)) { texts.push("У обоих много урона и контроля — вдвоём убивают врага, который подошёл слишком близко."); score += 1; }
+    if (!texts.length) return null;
+    return { score: score, level: score >= 3 ? "отличная" : (score >= 2 ? "хорошая" : "нормальная"), why: texts.join(" ") };
+  }
+  var MATCHUPS = {};
+  function fetchMatchups(id) {
+    if (typeof id !== "number") return Promise.resolve(null);
+    if (MATCHUPS[id]) return Promise.resolve(MATCHUPS[id]);
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null, tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 8000) : null;
+    return fetch("https://api.opendota.com/api/heroes/" + id + "/matchups", ctrl ? { signal: ctrl.signal } : {})
+      .then(function (r) { return r.json(); })
+      .then(function (arr) { if (tm) clearTimeout(tm); if (!Array.isArray(arr)) return null; var m = {}; arr.forEach(function (x) { m[x.hero_id] = { g: x.games_played, w: x.wins }; }); return (MATCHUPS[id] = m); })
+      .catch(function () { if (tm) clearTimeout(tm); return null; });
+  }
+  function evaluate(h, ctx) {
+    var res = { h: h, vs: [], countered: [], hits: 0, counterScore: 0, syn: [], synBonus: 0, lane: null, laneVs: [] };
+    ctx.enemies.forEach(function (es) {
+      var e = byId[es.id], onLane = !!(es.pos && ctx.laneVs.indexOf(es.pos) !== -1), w = onLane ? (es.guess ? 1.3 : 1.6) : 1;
+      var m = ctx.stats[es.id] ? ctx.stats[es.id][h.id] : null, wr = m && m.g ? (m.g - m.w + 50) / (m.g + 100) : null;
+      var statEdge = (m && m.g >= 200) ? wr - h.overall : 0, r = counterReasons(h, e);
+      var bad = !!(SOURCE_COUNTERS[h.localized_name] && SOURCE_COUNTERS[h.localized_name].indexOf(e.localized_name) !== -1);
+      var isCounter = !bad && (r.source || r.note || r.rules > 0 || statEdge >= 0.02 || (r.generic > 0 && statEdge > 0.005));
+      var s = Math.max(-0.05, Math.min(0.05, statEdge)) + (r.source ? 0.035 : 0) + Math.min(0.03, r.rules * 0.015) + Math.min(0.01, r.generic * 0.005) + (r.note ? 0.03 : 0) - (bad ? 0.05 : 0);
+      res.counterScore += s * w;
+      if (isCounter) res.hits++;
+      if (bad) res.countered.push(e);
+      var item = { e: e, es: es, onLane: onLane, wr: wr, g: m ? m.g : 0, r: r, isCounter: isCounter, bad: bad };
+      res.vs.push(item); if (onLane) res.laneVs.push(item);
+    });
+    ctx.allies.forEach(function (as) {
+      var a = byId[as.id];
+      if (ctx.mate && as === ctx.mate) { res.lane = laneCombo(h, role, a); if (res.lane) res.lane.mate = a; }
+      var s = synergyWith(h, a); if (s) { res.syn.push({ a: a, why: s.why }); res.synBonus += s.bonus; }
+    });
+    var laneBonus = res.lane ? Math.min(0.04, res.lane.score * 0.012) : 0, cw = order === "last" ? 1 : 0.7;
+    res.score = h.overall + cw * res.counterScore + Math.min(0.03, res.synBonus) + laneBonus;
+    res.chance = Math.max(40, Math.min(68, Math.round((h.overall + cw * res.counterScore * 0.6 + Math.min(0.03, res.synBonus) + laneBonus * 0.7) * 100)));
+    return res;
+  }
+  function guessPos(h, team, isAlly) {
+    var used = team.map(function (s) { return s.pos; }); if (isAlly && role) used.push(role);
+    var p = positionsOf(h).filter(function (x) { return used.indexOf(x) === -1; });
+    return p.length ? p[0] : (positionsOf(h)[0] || 0);
+  }
+
+  // ---------- карточка результата ----------
+  function cardHtml(x, idx, ctx) {
+    var h = x.h, tags = "";
+    var good = x.vs.filter(function (v) { return v.isCounter; }).map(function (v) { return v.e.localized_name; });
+    if (good.length) tags += '<span class="tag">контрит ' + esc(good.join(", ")) + "</span>";
+    if (x.lane) tags += '<span class="tag lane">' + x.lane.level + " связка на линии с " + esc(x.lane.mate.localized_name) + "</span>";
+    if (x.syn.length) tags += '<span class="tag lane">заходит к ' + esc(x.syn.map(function (s) { return s.a.localized_name; }).join(", ")) + "</span>";
+    if (x.countered.length) tags += '<span class="tag bad">⚠ его контрит ' + esc(x.countered.map(function (e) { return e.localized_name; }).join(", ")) + "</span>";
+    if (!tags) tags = '<span class="tag plain">' + (ctx.enemies.length ? "явных контрпиков нет, сильный по общей статистике" : "сильный герой по общей статистике") + "</span>";
+
+    var d = "";
+    var shown = x.vs.filter(function (v) { return v.bad || v.isCounter || v.r.source; }); // «особого контра нет» не показываем
+    if (shown.length) {
+      d += '<div class="sec"><b>Почему он контрит</b>';
+      shown.forEach(function (v) {
+        var en = esc(v.e.localized_name) + (v.onLane ? " (твоя линия)" : "");
+        if (v.bad) d += '<div class="note">Против ' + en + ": здесь он сам в минусе — смотри «Осторожно».</div>";
+        else if (v.r.texts.length && v.isCounter) d += '<div class="note"><b>Против ' + en + ":</b> " + esc(v.r.texts.join(" ")) + "</div>";
+        else if (v.r.source) d += '<div class="note"><b>Против ' + en + ":</b> один из главных контрпиков на " + esc(v.e.localized_name) + ".</div>";
+        else if (v.isCounter) d += '<div class="note"><b>Против ' + en + ":</b> по статистике матчей выигрывает заметно чаще обычного.</div>";
+        if (v.g >= 200) d += '<div class="small">Статистика: ' + Math.round(v.wr * 100) + "% побед (обычно " + Math.round(h.overall * 100) + "%), игр: " + v.g.toLocaleString("ru-RU") + "</div>";
+      });
+      d += "</div>";
+    }
+    if (x.countered.length) {
+      d += '<div class="sec warn"><b>Осторожно</b>';
+      x.countered.forEach(function (e) { d += '<div class="note">' + esc(e.localized_name) + " — один из главных контрпиков на " + esc(h.localized_name) + ". Против него играй аккуратнее.</div>"; });
+      d += "</div>";
+    }
+    if (role && (ctx.mate || x.laneVs.length)) {
+      d += '<div class="sec"><b>Линия</b>';
+      if (x.lane) d += '<div class="note"><b>' + x.lane.level[0].toUpperCase() + x.lane.level.slice(1) + " связка с " + esc(x.lane.mate.localized_name) + ":</b> " + esc(x.lane.why) + "</div>";
+      else if (ctx.mate) d += '<div class="note">С ' + esc(byId[ctx.mate.id].localized_name) + " особой связки на линии нет, но и мешать друг другу не будете.</div>";
+      if (x.laneVs.length) {
+        var beats = x.laneVs.filter(function (v) { return v.isCounter; }).length, loses = x.laneVs.filter(function (v) { return v.bad; }).length;
+        d += '<div class="note">На линии против: ' + x.laneVs.map(function (v) { return esc(v.e.localized_name) + (v.es.guess ? " (примерно)" : ""); }).join(", ") + ". " +
+          (loses ? "Будет тяжело — кто-то из них его контрит." : beats ? "Здесь у тебя преимущество." : "Линия примерно равная.") + "</div>";
+      }
+      d += "</div>";
+    }
+    if (x.syn.length) {
+      d += '<div class="sec"><b>Как он сочетается с командой</b>';
+      x.syn.forEach(function (s) { d += '<div class="note"><b>С ' + esc(s.a.localized_name) + ":</b> " + esc(s.why) + "</div>"; });
+      d += "</div>";
+    }
+    var myRoles = role ? (h.roles || []).filter(function (r) { return ROLE_MAP[role].indexOf(r) !== -1; }).map(function (r) { return ROLE_RU[r] || r; }) : [];
+    d += '<div class="sec"><b>Почему стоит взять</b><div class="note">' +
+      (role ? "На твоей роли он: " + (myRoles.length ? myRoles.join(", ") : "играется на этой позиции") + ". " : "Играют на позициях: " + (positionsOf(h).join(", ") || "—") + ". ") +
+      (h.primary_attr ? "Герой: " + (ATTR_RU[h.primary_attr] || "") + ", " + (ATTACK_RU[h.attack_type] || "") + ". " : "") +
+      (h.picks ? "Общий процент побед: " + Math.round(h.overall * 100) + "%. " : "") +
+      (!ctx.enemies.length ? "Враги не выбраны, поэтому подсказка по общей силе героя." : order === "last" ? "Ты пикаешь последним, поэтому контрпик важнее всего." : "Ты пикаешь не последним, поэтому учитываем и контрпик, и общую силу героя.") +
+      "</div></div>" +
+      '<button class="wbtn" type="button" data-info="' + esc(h.localized_name) + '" style="width:100%;margin-top:12px">Сборка и контрпики ' + esc(h.localized_name) + "</button>";
+    var cls = x.chance >= 58 ? "hi" : (x.chance >= 52 ? "mid" : "lo");
+    return '<article class="card glass"><div class="ph"><img src="' + imgUrl(h) + '" alt="" loading="lazy"></div><div style="min-width:0">' +
+      '<div class="top"><span class="rank">' + (idx < 0 ? "ты" : "#" + (idx + 1)) + '</span><span class="chance ' + cls + '">' + x.chance + "% шанс</span></div>" +
+      '<div class="nm">' + esc(h.localized_name) + '</div><div class="tags">' + tags + '</div><button class="more" type="button">Подробнее ▾</button></div>' +
+      '<div class="det">' + d + "</div></article>";
+  }
+
+  // ---------- подсчёт ----------
+  var calcToken = 0, lastCount = 0, statsReady = false;
+  function recommend() {
+    var my = ++calcToken, box = $("res");
+    var mate = role && LANE_MATE[role] ? allies.filter(function (a) { return a.pos === LANE_MATE[role]; })[0] || null : null;
+    Promise.all(enemies.map(function (s) { return fetchMatchups(s.id); })).then(function (results) {
+      if (my !== calcToken) return;
+      var stats = {}, noStats = false;
+      enemies.forEach(function (s, i) { stats[s.id] = results[i]; if (!results[i]) noStats = true; });
+      var ctx = { enemies: enemies, allies: allies, mate: mate, stats: stats, laneVs: role ? LANE_VS[role] : [] };
+      var taken = enemies.concat(allies).concat(myHero ? [myHero] : []).map(function (s) { return s.id; });
+      var list = heroes.filter(function (h) { return taken.indexOf(h.id) === -1 && canPlay(h, role); }).map(function (h) { return evaluate(h, ctx); });
+      list.sort(function (a, b) {
+        if (enemies.length) { var ca = a.hits > 0 ? 1 : 0, cb = b.hits > 0 ? 1 : 0; if (ca !== cb) return cb - ca; }
+        return b.score - a.score;
+      });
+      var html = "";
+      if (!statsReady) html += '<div class="info">Статистика матчей ещё грузится или недоступна — подсказки по подборке контрпиков и механикам скиллов.</div>';
+      else if (enemies.length && noStats) html += '<div class="info">Статистика матчей сейчас недоступна, подсказки по подборке контрпиков и механикам скиллов.</div>';
+      if (enemies.length && list.length && list[0].hits === 0) html += '<div class="info">Явных контрпиков на этих врагов для твоей роли нет — показываю самых сильных героев с учётом линии и команды.</div>';
+      if (myHero && byId[myHero.id]) {
+        html += '<div class="label" style="margin:2px 0 0">Твой герой</div>' + cardHtml(evaluate(byId[myHero.id], ctx), -1, ctx) +
+                '<div class="label" style="margin:10px 0 0">Если ещё не залочил — можно взять</div>';
+      }
+      list.slice(0, 8).forEach(function (x, i) { html += cardHtml(x, i, ctx); });
+      box.innerHTML = html || '<div class="loading">Никого не нашлось</div>';
+      if (enemies.length && Date.now() - lastCount > 20000) {
+        lastCount = Date.now();
+        try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "podbor", title: "Подбор героя", event: true }); } catch (e) {}
+      }
+    });
+  }
+  var recT = 0;
+  function scheduleRecommend() {
+    var t = $("resTitle"), sub = $("resSub");
+    t.textContent = !enemies.length ? (allies.length ? "Кто зайдёт к твоей команде" : "Сильные герои сейчас") : enemies.length === 1 ? "Бери против " + byId[enemies[0].id].localized_name : "Бери против них";
+    sub.textContent = (role ? "позиция: " + POS_NAME[role] + " · " : "") + (allies.length ? "учитываю союзников · " : "") + "обновляется сразу";
+    clearTimeout(recT); recT = setTimeout(recommend, 120);
+  }
+
+  // ---------- экран подбора ----------
+  function group() { return side === "enemy" ? enemies : allies; }
+  function tileHtml(h, extra) {
+    var on = enemies.some(function (s) { return s.id === h.id; }), al = allies.some(function (s) { return s.id === h.id; }), mine = myHero && myHero.id === h.id;
+    return '<button class="tile' + (mine ? " mine" : on ? " on" : al ? " al" : "") + '" type="button" data-hero="' + esc(h.localized_name) + '"' + (extra || "") + '><div class="ph"><img src="' + imgUrl(h) +
+      '" alt="" loading="lazy" draggable="false"></div><div class="nm">' + esc(h.localized_name) + "</div></button>";
+  }
+  function keepLens(h) { if (h._lens) h.appendChild(h._lens); }
+  // ячейки ряда: для союзников «ты» стоит на своём месте, герои занимают остальные по порядку
+  // у каждого героя своя ячейка (s.cell), у «ты» — meAt; пустые ячейки остаются пустыми, ничего не съезжает
+  function freeCell(g, isAlly) {
+    for (var i = 0; i < 5; i++) {
+      if (isAlly && i === meAt) continue;
+      if (!g.some(function (s) { return s.cell === i; })) return i;
+    }
+    return -1;
+  }
+  function fixCells(g, isAlly) {   // на всякий случай: у всех своя ячейка, без наложений
+    var used = {}; if (isAlly) used[meAt] = 1;
+    g.forEach(function (s) { if (s.cell === undefined || used[s.cell]) s.cell = undefined; else used[s.cell] = 1; });
+    g.forEach(function (s) { if (s.cell === undefined) { for (var i = 0; i < 5; i++) if (!used[i]) { s.cell = i; used[i] = 1; break; } } });
+  }
+  function cells() {
+    var g = group(), isAlly = side === "ally", out = [];
+    fixCells(g, isAlly);
+    for (var i = 0; i < 5; i++) {
+      if (isAlly && i === meAt) { out.push("me"); continue; }
+      var k = g.findIndex(function (s) { return s.cell === i; });
+      out.push(k !== -1 ? { s: g[k], idx: k } : null);
+    }
+    return out;
+  }
+  // поменять местами то, что лежит в ячейках a и b (герой, «ты» или пусто)
+  function swapCells(a, b) {
+    var g = group(), isAlly = side === "ally";
+    var sa = g.filter(function (s) { return s.cell === a; })[0], sb = g.filter(function (s) { return s.cell === b; })[0];
+    var meA = isAlly && meAt === a, meB = isAlly && meAt === b;
+    if (sa) sa.cell = b; if (sb) sb.cell = a;
+    if (meA) meAt = b; else if (meB) meAt = a;
+  }
+  function renderSlots() {
+    var html = "";
+    cells().forEach(function (c, i) {
+      if (c === "me") {
+        var mh = myHero && byId[myHero.id];
+        html += '<button class="slot me' + (mh ? " full" : "") + '" type="button" data-me data-cell="' + i + '" aria-label="Ты, пикаешь ' + (i + 1) + '-м">' +
+          (mh ? '<img src="' + imgUrl(mh) + '" alt="" draggable="false"><span class="metag">ты</span>' : "ты") + (role ? '<span class="pos">' + role + "</span>" : "") + "</button>";
+      } else if (c) {
+        var s = c.s, badge = s.pos ? (s.guess ? "≈" : "") + s.pos : "?";
+        html += '<button class="slot full" type="button" data-slot="' + c.idx + '" data-cell="' + i + '" aria-label="' + esc(byId[s.id].localized_name) + ', позиция"><img src="' + imgUrl(byId[s.id]) + '" alt="" draggable="false"><span class="pos' + (s.guess ? " guess" : "") + '">' + badge + "</span></button>";
+      } else html += '<button class="slot" type="button" data-add data-cell="' + i + '" aria-label="Добавить">+</button>';
+    });
+    $("dragHint").hidden = side !== "ally";
+    var sl = $("slots"); sl.innerHTML = html; sl.classList.toggle("ally", side === "ally"); keepLens(sl);
+    $("cE").textContent = enemies.length; $("cA").textContent = allies.length;
+    document.querySelectorAll(".sbtn").forEach(function (b) { b.setAttribute("aria-selected", b.dataset.side === side ? "true" : "false"); });
+    $("h1").textContent = side === "enemy" ? "Кто во врагах?" : "Кто с тобой в команде?";
+  }
+  var POPULAR = ["Pudge", "Invoker", "Juggernaut", "Phantom Assassin", "Shadow Fiend", "Meepo", "Anti-Mage", "Earthshaker"];
+  function renderGrid() {
+    var list = query ? heroes.filter(function (h) { return matches(h, query); }).slice(0, 12)
+                     : POPULAR.map(hero).filter(Boolean);
+    $("grid").innerHTML = list.length ? list.map(function (h) { return tileHtml(h); }).join("") : '<div class="empty">Не нашёл такого героя. Попробуй иначе: «пудж», «pudge».</div>';
+    keepLens($("grid"));
+  }
+  function renderRoles() {
+    var items = [[0, "Любая роль"], [1, "Керри"], [2, "Мид"], [3, "Оффлейн"], [4, "Саппорт 4"], [5, "Саппорт 5"]];
+    $("roles").innerHTML = items.map(function (r) { return '<button type="button" data-r="' + r[0] + '" aria-checked="' + (r[0] === role) + '">' + r[1] + "</button>"; }).join("");
+  }
+  function renderPick() { renderSlots(); renderGrid(); renderVs(); scheduleRecommend(); }
+
+  function toggleHero(name) {
+    var h = hero(name); if (!h) return;
+    if (myHero && myHero.id === h.id) { myHero = null; haptic(); renderPick(); if (sheetKind === "all") renderAllSheet(); return; }
+    var g = group(), other = side === "enemy" ? allies : enemies, max = side === "enemy" ? 5 : 4;
+    var k = g.findIndex(function (s) { return s.id === h.id; });
+    if (k !== -1) g.splice(k, 1);
+    else {
+      if (g.length >= max) { try { TG.HapticFeedback.notificationOccurred("warning"); } catch (e) {} return; }
+      var ko = other.findIndex(function (s) { return s.id === h.id; }); if (ko !== -1) other.splice(ko, 1);
+      g.push({ id: h.id, pos: guessPos(h, g, side === "ally"), guess: side === "enemy", cell: freeCell(g, side === "ally") });
+    }
+    haptic();
+    if (query) { $("q").value = ""; query = ""; $("clr").hidden = true; }
+    renderPick();
+    if (sheetKind === "all") renderAllSheet();
+  }
+
+  var q = $("q"), clr = $("clr");
+  q.addEventListener("input", function () { query = q.value.trim(); clr.hidden = !query; renderGrid(); });
+  clr.addEventListener("click", function () { q.value = ""; query = ""; clr.hidden = true; renderGrid(); q.focus(); });
+  function syncOrder() { order = meAt === 4 ? "last" : "mid"; $("lastPick").setAttribute("aria-pressed", order === "last" ? "true" : "false"); }
+  $("lastPick").addEventListener("click", function () {
+    var was = side; side = "ally"; fixCells(allies, true);
+    if (order === "last") {           // выключил — «ты» встаёт на первое свободное место (или меняется с 4-м)
+      var f = -1; for (var i = 0; i < 4; i++) if (!allies.some(function (s) { return s.cell === i; })) { f = i; break; }
+      swapCells(meAt, f === -1 ? 3 : f);
+    } else swapCells(meAt, 4);
+    side = was; syncOrder(); tick(); renderSlots(); scheduleRecommend();
+  });
+
+  // ---------- перетаскивание в ряду: зажал и тащишь (на телефоне — подержать) ----------
+  var drag = null, dragging = false, suppressClick = 0;
+  function cellAt(x, y) {
+    var el = document.elementFromPoint(x, y), c = el && el.closest && el.closest("#slots [data-cell]");
+    return c ? +c.dataset.cell : -1;
+  }
+  function startDrag() {
+    dragging = true; var src = drag.el, r = src.getBoundingClientRect();
+    var gh = src.cloneNode(true); gh.className = src.className + " dragghost"; gh.removeAttribute("data-cell");
+    gh.style.width = r.width + "px"; gh.style.height = r.height + "px"; document.body.appendChild(gh); drag.ghost = gh;
+    src.classList.add("dragging"); moveGhost(drag.x, drag.y);
+    try { TG.HapticFeedback.impactOccurred("medium"); } catch (e) {}
+    try { TG.disableVerticalSwipes(); } catch (e) {}
+  }
+  function moveGhost(x, y) {
+    drag.ghost.style.left = x + "px"; drag.ghost.style.top = y + "px";
+    var j = cellAt(x, y);
+    document.querySelectorAll("#slots .over").forEach(function (n) { n.classList.remove("over"); });
+    if (j >= 0 && j !== drag.from) { var t = document.querySelector('#slots [data-cell="' + j + '"]'); if (t) t.classList.add("over"); if (drag.last !== j) tick(); }
+    drag.last = j;
+  }
+  function endDrag(x, y) {
+    clearTimeout(drag.timer);
+    var wasDragging = dragging, from = drag.from;
+    if (drag.ghost) drag.ghost.remove();
+    document.querySelectorAll("#slots .dragging,#slots .over").forEach(function (n) { n.classList.remove("dragging", "over"); });
+    dragging = false; drag = null;
+    try { TG.enableVerticalSwipes(); } catch (e) {}
+    if (!wasDragging) return;
+    suppressClick = Date.now();
+    var to = cellAt(x, y); if (to < 0 || to === from) return;
+    if (side === "ally" && (from === meAt || to === meAt)) {
+      var other = from === meAt ? to : from, k = allies.findIndex(function (s) { return s.cell === other; });
+      if (k !== -1) {
+        var a = allies[k];
+        if (myHero) allies[k] = { id: myHero.id, pos: guessPos(byId[myHero.id], allies, true), guess: false, cell: other };  // прошлый твой герой уходит в союзники
+        else allies.splice(k, 1);
+        myHero = { id: a.id };
+        if (!role && a.pos) { role = a.pos; renderRoles(); }
+        haptic("medium"); renderPick(); return;
+      }
+    }
+    swapCells(from, to);
+    if (side === "ally") syncOrder();
+    haptic("medium"); renderPick();
+  }
+  $("slots").addEventListener("pointerdown", function (e) {
+    var el = e.target.closest("[data-cell]"); if (!el || el.hasAttribute("data-add") || sheetKind) return;
+    drag = { el: el, from: +el.dataset.cell, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, mouse: e.pointerType === "mouse" };
+    if (!drag.mouse) drag.timer = setTimeout(function () { if (drag) startDrag(); }, 260);   // на телефоне — подержать палец
+  });
+  document.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    if (dragging) { moveGhost(e.clientX, e.clientY); return; }
+    var moved = Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy);
+    if (drag.mouse && moved > 6) startDrag();
+    else if (!drag.mouse && moved > 10) { clearTimeout(drag.timer); drag = null; }   // это была прокрутка
+  });
+  document.addEventListener("pointerup", function (e) { if (drag) endDrag(e.clientX, e.clientY); });
+  document.addEventListener("pointercancel", function () { if (drag) endDrag(-1, -1); });
+  document.addEventListener("touchmove", function (e) { if (dragging) e.preventDefault(); }, { passive: false });
+  $("slots").addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  // ---------- шторки ----------
+  var sheetKind = null, sheetAt = 0;
+  // пока открыто окно, всё что сзади «замораживаем», чтобы нажатие не попало в героя под окном
+  function freezeBack(on) {
+    ["app", "tabs"].forEach(function (id) { var el = $(id); if (!el) return; el.inert = on; el.style.pointerEvents = on ? "none" : ""; });
+  }
+  function openSheet(kind, html) {
+    sheetKind = kind; sheetAt = Date.now(); freezeBack(true);
+    $("sheetHost").innerHTML = '<div class="sheetwrap" id="sw"><div class="sheet glass" role="dialog" aria-modal="true"><div class="grab"></div>' + html + "</div></div>";
+    $("sw").addEventListener("click", function (e) { if (e.target.id === "sw") closeSheet(); });
+    try { TG.BackButton.show(); } catch (e) {}
+  }
+  function closeSheet() { sheetKind = null; freezeBack(false); $("sheetHost").innerHTML = ""; try { TG.BackButton.hide(); } catch (e) {} }
+  try { TG.BackButton.onClick(closeSheet); } catch (e) {}
+
+  function openSlotSheet(i) {
+    var g = group(), s = g[i], h = byId[s.id], isAlly = side === "ally";
+    var opts = [1, 2, 3, 4, 5].map(function (p) { return [p, p + " · " + POS_NAME[p]]; }); if (!isAlly) opts.push([0, "не знаю"]);
+    var cur = s.guess ? -1 : s.pos;
+    openSheet("slot", '<div class="shead"><img src="' + imgUrl(h) + '" alt=""><div class="nm">' + esc(h.localized_name) + '</div><button class="xbtn" type="button" data-close>✕</button></div>' +
+      '<div class="label">' + (isAlly ? "На какой позиции играет" : "На какой позиции, как думаешь") + "</div>" +
+      '<div class="chips">' + opts.map(function (o) { return '<button type="button" data-setpos="' + o[0] + '" aria-pressed="' + (o[0] === cur) + '">' + o[1] + "</button>"; }).join("") + "</div>" +
+      (isAlly ? "" : '<div class="hint">Точно знать не обязательно — бот просто внимательнее посмотрит, кто будет против тебя на линии.</div>') +
+      '<div class="btnrow"><button class="wbtn red" type="button" data-remove>Убрать</button></div>');
+    $("sheetHost").dataset.slot = i;
+  }
+
+  var ATTRS = [["str", "Сила"], ["agi", "Ловкость"], ["int", "Интеллект"], ["all", "Универсальные"]];
+  function groupedGrid(list, tileFn) {
+    var haveAttr = list.some(function (h) { return h.primary_attr; });
+    if (!haveAttr) return '<div class="allgrid">' + list.map(tileFn).join("") + "</div>";
+    return ATTRS.map(function (a) {
+      var part = list.filter(function (h) { return h.primary_attr === a[0]; });
+      return part.length ? '<div class="attr ' + a[0] + '"><i></i>' + a[1] + '</div><div class="allgrid">' + part.map(tileFn).join("") + "</div>" : "";
+    }).join("");
+  }
+  var allQ = "";
+  function renderAllSheet() {
+    var list = heroes.filter(function (h) { return matches(h, allQ); });
+    $("allBody").innerHTML = list.length ? groupedGrid(list, function (h) { return tileHtml(h); }) : '<div class="empty">Никого не нашлось</div>';
+  }
+  $("allBtn").addEventListener("click", function () {
+    allQ = "";
+    openSheet("all", '<div class="shead"><div class="nm">' + (side === "enemy" ? "Выбери врагов" : "Выбери союзников") + '</div><button class="xbtn" type="button" data-close>Готово</button></div>' +
+      '<label class="search glass" for="aq" style="height:46px"><input id="aq" type="search" autocomplete="off" placeholder="Найти героя" aria-label="Найти героя"></label><div id="allBody"></div>');
+    $("aq").addEventListener("input", function () { allQ = this.value.trim(); renderAllSheet(); });
+    if (matchMedia("(pointer: fine)").matches) setTimeout(function () { try { $("aq").focus(); } catch (e) {} }, 50); // на компьютере сразу можно печатать
+    renderAllSheet();
+  });
+
+  function openHeroSheet(name) {
+    var h = hero(name); if (!h) return;
+    var weakTo = (SOURCE_COUNTERS[name] || []).map(hero).filter(Boolean);
+    var strongVs = Object.keys(SOURCE_COUNTERS).filter(function (e) { return SOURCE_COUNTERS[e].indexOf(name) !== -1; }).map(hero).filter(Boolean);
+    function mini(list) { return list.length ? '<div class="mini">' + list.map(function (x) { return '<button type="button" data-info="' + esc(x.localized_name) + '"><img src="' + imgUrl(x) + '" alt="" loading="lazy">' + esc(x.localized_name) + "</button>"; }).join("") + "</div>" : '<div class="hint">Пока нет данных.</div>'; }
+    var pos = positionsOf(h);
+    openSheet("hero", '<div class="shead"><img src="' + imgUrl(h) + '" alt=""><div class="nm">' + esc(name) + '</div><button class="xbtn" type="button" data-close>✕</button></div>' +
+      '<div class="hint" style="margin-top:0">' + (h.primary_attr ? (ATTR_RU[h.primary_attr] || "") + " · " + (ATTACK_RU[h.attack_type] || "") + " · " : "") + "позиции: " + (pos.join(", ") || "—") +
+      (h.picks ? " · винрейт " + Math.round(h.overall * 100) + "%" : "") + "</div>" +
+      '<div class="btnrow"><button class="wbtn red" type="button" data-addas="enemy" data-name="' + esc(name) + '">Во враги</button><button class="wbtn blue" type="button" data-addas="ally" data-name="' + esc(name) + '">В союзники</button></div>' +
+      '<div class="label">Популярная сборка у профи</div><div id="buildBox"><div class="hint">Загружаю…</div></div>' +
+      '<div class="label">Его контрят</div>' + mini(weakTo) + '<div class="label">Он силён против</div>' + mini(strongVs));
+    loadBuildInto(h);
+  }
+  function renderHeroesTab() {
+    var qq = ($("hq").value || "").trim();
+    var list = heroes.filter(function (h) { return matches(h, qq); });
+    $("hgrid").innerHTML = list.length ? groupedGrid(list, function (h) { return tileHtml(h).replace('data-hero="', 'data-info="'); }) : '<div class="empty">Никого не нашлось</div>';
+  }
+  $("hq").addEventListener("input", renderHeroesTab);
+
+  // ---------- «против чего собрать»: герои и предметы ----------
+  var ITEM_IMG = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/";
+  var VS = [
+    { id: "illus", t: "Иллюзии и призывы", weak: ["summons"], has: ["aoe", "pct"],
+      items: [["bfury", "удар по площади рубит иллюзии и существ"], ["mjollnir", "молнии бьют сразу несколько целей"], ["maelstrom", "дешёвая версия Mjollnir, тоже бьёт по нескольким"],
+              ["radiance", "аура жжёт всех вокруг"], ["shivas_guard", "волна урона по всем рядом"]] },
+    { id: "invis", t: "Невидимки", weak: ["invis"], has: ["detect"],
+      items: [["dust", "дешёвый порошок: показывает невидимых рядом"], ["ward_sentry", "вард, который видит невидимых"], ["gem", "показывает невидимых вокруг, пока он у тебя"]] },
+    { id: "phys", t: "Физ. урон", weak: ["phys"], has: ["tank", "physimm"],
+      items: [["ghost", "на время тебя нельзя бить атаками"], ["heavens_halberd", "обезоруживает врага — он не может бить"], ["blade_mail", "возвращает урон тому, кто бьёт"],
+              ["crimson_guard", "блокирует часть физ. урона всей команде"], ["assault", "броня тебе и союзникам, минус броня врагам"]] },
+    { id: "magic", t: "Маги", weak: ["magic", "spell"], has: ["magres", "silence"],
+      items: [["black_king_bar", "иммунитет к магии"], ["pipe", "щит от магии на всю команду"], ["glimmer_cape", "невидимость и щит от магии"],
+              ["lotus_orb", "отражает заклинания, кинутые в тебя"], ["eternal_shroud", "сопротивление магии"], ["orchid", "немота: враг не может колдовать"]] },
+    { id: "mobile", t: "Бегуны", weak: ["mobile"], has: ["stun"],
+      items: [["sheepstick", "превращает в свинью — никуда не убежит"], ["gungir", "держит на месте по площади"], ["abyssal_blade", "длинный стан на цель"], ["orchid", "немота: не прожмёт побег"]] },
+    { id: "heal", t: "Лечение", weak: [], has: [],
+      items: [["spirit_vessel", "сильно режет лечение врага"], ["skadi", "атаки режут лечение и замедляют"]] }
+  ];
+  var ITEM_BY_KEY = {}; Object.keys(ITEMS).forEach(function (id) { ITEM_BY_KEY[ITEMS[id][0]] = ITEMS[id]; });
+  function itemName(k) { return ITEM_BY_KEY[k] ? ITEM_BY_KEY[k][1] : k; }
+  // какие слабости есть у выбранных врагов
+  function enemyHits(v) {
+    return enemies.map(function (s) { return byId[s.id]; }).filter(function (e) {
+      if (!e) return false;
+      if (v.id === "heal") return HEALERS.indexOf(e.localized_name) !== -1;
+      var w = tagsOf(e.localized_name).weak; return v.weak.some(function (x) { return w.indexOf(x) !== -1; });
+    });
+  }
+  function renderVs() {
+    $("vsRow").innerHTML = VS.map(function (v) {
+      var n = enemyHits(v).length;
+      return '<button type="button" data-vs="' + v.id + '" class="' + (n ? "hot" : "") + '">' + v.t + (n ? " <b>" + n + "</b>" : "") + "</button>";
+    }).join("");
+  }
+  function openVs(id) {
+    var v = VS.filter(function (x) { return x.id === id; })[0]; if (!v) return;
+    var hits = enemyHits(v);
+    var hs = v.has.length ? heroes.filter(function (h) {
+      var t = tagsOf(h.localized_name).has; return v.has.some(function (x) { return t.indexOf(x) !== -1; }) && canPlay(h, role) &&
+        !enemies.concat(allies).some(function (s) { return s.id === h.id; });
+    }).sort(function (a, b) { return b.overall - a.overall; }).slice(0, 8) : [];
+    openSheet("vs", '<div class="shead"><div class="nm">Против: ' + esc(v.t.toLowerCase()) + '</div><button class="xbtn" type="button" data-close>✕</button></div>' +
+      (hits.length ? '<div class="info" style="margin-bottom:6px">У врагов это есть: <b>' + esc(hits.map(function (e) { return e.localized_name; }).join(", ")) + "</b></div>" : "") +
+      '<div class="label">Что купить</div><div class="items">' + v.items.map(function (it) {
+        return '<div class="item"><img src="' + ITEM_IMG + it[0] + '.png" alt="" loading="lazy"><div><b>' + esc(itemName(it[0])) + "</b><span>" + esc(it[1]) + "</span></div></div>";
+      }).join("") + "</div>" +
+      (hs.length ? '<div class="label">Каких героев взять' + (role ? " (" + POS_NAME[role] + ")" : "") + '</div><div class="mini">' + hs.map(function (x) {
+        return '<button type="button" data-info="' + esc(x.localized_name) + '"><img src="' + imgUrl(x) + '" alt="" loading="lazy">' + esc(x.localized_name) + "</button>";
+      }).join("") + "</div>" : ""));
+  }
+
+  // ---------- популярная сборка героя ----------
+  var BUILDS = {};
+  var SKIP = ["tpscroll", "ward_observer", "ward_sentry", "ward_dispenser", "smoke_of_deceit", "dust", "tango", "clarity", "flask", "enchanted_mango", "faerie_fire", "blood_grenade", "famango", "great_famango", "greater_famango"];
+  function fetchBuild(id) {
+    if (typeof id !== "number") return Promise.resolve(null);
+    if (BUILDS[id]) return Promise.resolve(BUILDS[id]);
+    return fetch("https://api.opendota.com/api/heroes/" + id + "/itemPopularity").then(function (r) { return r.json(); })
+      .then(function (d) { if (!d || !d.start_game_items) return null; return (BUILDS[id] = d); }).catch(function () { return null; });
+  }
+  function buildHtml(d) {
+    var stages = [["start_game_items", "Старт", 0], ["early_game_items", "Ранняя игра", 1], ["mid_game_items", "Середина", 2], ["late_game_items", "Поздняя игра", 3]];
+    var seen = {};
+    var html = stages.map(function (st) {
+      var list = Object.keys(d[st[0]] || {}).map(function (id) { return { it: ITEMS[id], n: d[st[0]][id] }; })
+        .filter(function (x) {
+          if (!x.it || SKIP.indexOf(x.it[0]) !== -1 || seen[x.it[0]]) return false;
+          if (st[2] === 0) return true;
+          if (st[2] === 1) return x.it[3] || x.it[0] === "boots";          // ранняя игра: только готовые предметы и сапоги
+          return x.it[3] && x.it[2] >= 1800;                                 // дальше: только большие готовые предметы
+        })
+        .sort(function (a, b) { return b.n - a.n; }).slice(0, 6);
+      list.forEach(function (x) { seen[x.it[0]] = 1; });
+      if (!list.length) return "";
+      return '<div class="stage"><span>' + st[1] + '</span><div class="row">' + list.map(function (x) {
+        return '<img src="' + ITEM_IMG + x.it[0] + '.png" alt="' + esc(x.it[1]) + '" title="' + esc(x.it[1]) + '" loading="lazy">';
+      }).join("") + "</div></div>";
+    }).join("");
+    return html || '<div class="hint">Пока нет данных.</div>';
+  }
+  function loadBuildInto(h) {
+    var box = $("buildBox"); if (!box) return;
+    fetchBuild(h.id).then(function (d) {
+      if (!$("buildBox") || sheetKind !== "hero") return;
+      $("buildBox").innerHTML = d ? buildHtml(d) : '<div class="hint">Сборку сейчас не загрузить, попробуй чуть позже.</div>';
+    });
+  }
+
+  // ---------- нажатия ----------
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-hero],[data-slot],[data-add],[data-info],[data-setpos],[data-remove],[data-close],[data-addas],[data-vs],[data-me],[data-freeme],[data-reset],.sbtn,#roles button,.more,.tab");
+    if (!t) return;
+    if (Date.now() - suppressClick < 400) return;                     // только что перетаскивали
+    if (sheetKind && !t.closest(".sheet")) return;                 // окно открыто — фон не нажимается
+    if (sheetKind && Date.now() - sheetAt < 350 && (t.dataset.hero || t.dataset.info)) return; // защита от случайного двойного нажатия
+    if (t.dataset.hero) toggleHero(t.dataset.hero);
+    else if (t.dataset.info) { tick(); openHeroSheet(t.dataset.info); }
+    else if (t.dataset.vs) { tick(); openVs(t.dataset.vs); }
+    else if (t.dataset.slot !== undefined) { tick(); openSlotSheet(+t.dataset.slot); }
+    else if (t.hasAttribute("data-me")) {
+      if (!myHero) { var hn = $("dragHint"); hn.classList.remove("blink"); void hn.offsetWidth; hn.classList.add("blink"); tick(); return; }
+      var mh = byId[myHero.id]; tick();
+      openSheet("me", '<div class="shead"><img src="' + imgUrl(mh) + '" alt=""><div class="nm">Твой герой: ' + esc(mh.localized_name) + '</div><button class="xbtn" type="button" data-close>✕</button></div>' +
+        '<div class="hint" style="margin-top:0">Бот показывает, как он против врагов, и что ещё можно взять, если ты не залочил.</div>' +
+        '<div class="btnrow"><button class="wbtn" type="button" data-info="' + esc(mh.localized_name) + '">Сборка и контрпики</button><button class="wbtn red" type="button" data-freeme>Убрать</button></div>');
+    }
+    else if (t.hasAttribute("data-freeme")) { myHero = null; closeSheet(); haptic(); renderPick(); }
+    else if (t.hasAttribute("data-add")) q.focus();
+    else if (t.dataset.setpos !== undefined) {
+      var s = group()[+$("sheetHost").dataset.slot]; if (s) { s.pos = +t.dataset.setpos; s.guess = false; }
+      closeSheet(); haptic(); renderPick();
+    } else if (t.hasAttribute("data-remove")) { group().splice(+$("sheetHost").dataset.slot, 1); closeSheet(); haptic(); renderPick(); }
+    else if (t.hasAttribute("data-close")) closeSheet();
+    else if (t.dataset.addas) {
+      side = t.dataset.addas; var nm = t.dataset.name; closeSheet();
+      if (!group().some(function (s) { return byId[s.id].localized_name === nm; })) toggleHero(nm); else renderPick();
+      selectTab(tabsEl.querySelector('[data-v="pick"]'));
+    }
+    else if (t.classList.contains("sbtn")) { side = t.dataset.side; tick(); renderSlots(); renderGrid(); }
+    else if (t.dataset.r !== undefined) { role = +t.dataset.r; store("dp_role", String(role)); tick(); renderRoles(); renderSlots(); scheduleRecommend(); }
+    else if (t.hasAttribute("data-reset")) {
+      enemies.length = 0; allies.length = 0; myHero = null; meAt = 4; side = "enemy"; syncOrder();
+      if (query) { $("q").value = ""; query = ""; $("clr").hidden = true; }
+      haptic("medium"); renderPick(); try { scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}
+    }
+    else if (t.classList.contains("more")) { var c = t.closest(".card"); c.classList.toggle("open"); t.textContent = c.classList.contains("open") ? "Скрыть ▴" : "Подробнее ▾"; tick(); }
+    else if (t.classList.contains("tab")) selectTab(t);
+  });
+
+  // ---------- мета ----------
+  var rateRank = 0, rateLane = 0, rateSort = "pick";
+  var RANKS = [[0, "Все ранги"], [1, "Рекрут"], [2, "Страж"], [3, "Рыцарь"], [4, "Герой"], [5, "Легенда"], [6, "Властелин"], [7, "Божество"]];
+  var LANES = [[0, "Все позиции"], [1, "Керри"], [2, "Мид"], [3, "Оффлейн"], [4, "Саппорт 4"], [5, "Саппорт 5"]];
+  function chipRow(id, items, cur, attr) {
+    $(id).innerHTML = items.map(function (r) { return '<button type="button" ' + attr + '="' + r[0] + '" aria-checked="' + (r[0] === cur) + '">' + r[1] + "</button>"; }).join("");
+  }
+  function drawRateChips() {
+    chipRow("rRanks", RANKS, rateRank, "data-rank"); chipRow("rLanes", LANES, rateLane, "data-lane");
+    chipRow("rSort", [["pick", "Популярные"], ["wr", "Самый высокий винрейт"]], rateSort, "data-sort");
+  }
+  ["rRanks", "rLanes", "rSort"].forEach(function (id) {
+    $(id).addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.rank !== undefined) rateRank = +b.dataset.rank;
+      if (b.dataset.lane !== undefined) rateLane = +b.dataset.lane;
+      if (b.dataset.sort !== undefined) rateSort = b.dataset.sort;
+      tick(); drawRateChips(); drawRates();
+    });
+  });
+  $("rq").addEventListener("input", function () { drawRates(); });
+  function rankStats(h) {
+    if (rateRank) return { p: h[rateRank + "_pick"] || 0, w: h[rateRank + "_win"] || 0 };
+    var p = 0, w = 0; for (var i = 1; i <= 8; i++) { p += h[i + "_pick"] || 0; w += h[i + "_win"] || 0; } return { p: p, w: w };
+  }
+  function drawRates() {
+    var box = $("rlist");
+    if (!statsReady) { box.innerHTML = '<div class="loading">Загружаю статистику…</div>'; return; }
+    var qq = ($("rq").value || "").trim();
+    var rows = heroes.map(function (h) { var s = rankStats(h); return { h: h, p: s.p, wr: s.p ? s.w / s.p : 0 }; });
+    var total = rows.reduce(function (a, r) { return a + r.p; }, 0);
+    if (!total) { box.innerHTML = '<div class="loading">На этом ранге пока нет данных</div>'; return; }
+    rows.forEach(function (r) { r.pr = r.p / total * 10; });
+    rows = rows.filter(function (r) { return r.p && (!rateLane || canPlay(r.h, rateLane)) && !(rateSort === "wr" && r.pr < 0.01) && matches(r.h, qq); });
+    var maxPr = Math.max.apply(null, rows.map(function (r) { return r.pr; }).concat([0.0001]));
+    rows.sort(rateSort === "wr" ? function (a, b) { return b.wr - a.wr; } : function (a, b) { return b.p - a.p; });
+    box.innerHTML = rows.slice(0, 60).map(function (r, i) {
+      var c = r.wr >= 0.52 ? " g" : (r.wr < 0.48 ? " r" : "");
+      return '<div class="rrow glass" data-info="' + esc(r.h.localized_name) + '" style="cursor:pointer"><div class="n">' + (i + 1) + '</div><img src="' + imgUrl(r.h) + '" alt="" loading="lazy">' +
+        '<div style="min-width:0"><div class="nm">' + esc(r.h.localized_name) + '</div><div class="bar"><i style="width:' + Math.round(r.pr / maxPr * 100) + '%"></i></div>' +
+        '<div class="sub2">берут в ' + (r.pr * 100).toFixed(1) + "% игр</div></div>" +
+        '<div class="wr' + c + '">' + (r.wr * 100).toFixed(1) + "%<small>винрейт</small></div></div>";
+    }).join("") || '<div class="loading">Никого не нашлось</div>';
+  }
+
+  // ---------- меню и вкладки ----------
+  var pill = $("pill"), tabsEl = $("tabs");
+  function placePill(tab, animate) {
+    var x = tab.offsetLeft, w = tab.offsetWidth, from = pill.style.transform, to = "translateX(" + (x - 7) + "px)";
+    pill.style.width = w + "px";
+    if (animate && from && from !== to && pill.animate && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      pill.animate([{ transform: from + " scaleX(1)" }, { transform: "translateX(" + ((x - 7 + parseFloat(from.slice(11))) / 2) + "px) scaleX(1.28) scaleY(.9)", offset: .45 },
+        { transform: to + " scaleX(.94) scaleY(1.04)", offset: .8 }, { transform: to + " scaleX(1)" }], { duration: 520, easing: "cubic-bezier(.3,.7,.3,1)" });
+    }
+    pill.style.transform = to;
+  }
+  function selectTab(tab) {
+    tabsEl.querySelectorAll(".tab").forEach(function (b) { b.setAttribute("aria-selected", b === tab ? "true" : "false"); });
+    document.querySelectorAll(".view").forEach(function (v) { v.hidden = v.id !== "v-" + tab.dataset.v; });
+    placePill(tab, true); tick();
+    if (tab.dataset.v === "meta") drawRates();
+    if (tab.dataset.v === "heroes") renderHeroesTab();
+    if (tab.dataset.v === "profile") drawProfile();
+    try { scrollTo({ top: 0, behavior: "smooth" }); } catch (e) { scrollTo(0, 0); }
+  }
+  addEventListener("resize", function () { placePill(tabsEl.querySelector('[aria-selected="true"]'), false); });
+
+  // ---------- жидкое стекло ----------
+  var lastGlass = null;
+  function spec(e) {
+    if (e.pointerType !== "mouse") return;   // на телефоне блик за пальцем не считаем — экономим кадры
+    var g = e.target.closest && e.target.closest(".glass");
+    if (lastGlass && lastGlass !== g) lastGlass.style.removeProperty("--glow");
+    if (!g) { lastGlass = null; return; }
+    var r = g.getBoundingClientRect();
+    g.style.setProperty("--mx", (e.clientX - r.left) + "px"); g.style.setProperty("--my", (e.clientY - r.top) + "px"); g.style.setProperty("--glow", "1");
+    lastGlass = g;
+  }
+  document.addEventListener("pointermove", spec, { passive: true });
+  document.addEventListener("pointerdown", spec, { passive: true });
+  var UA = navigator.userAgent, REFRACT = /Chrome\/\d+/.test(UA) && !/iPhone|iPad|iPod/.test(UA);
+  var mapCache = {}, lensN = 0, svgNS = "http://www.w3.org/2000/svg", defs = $("lgDefs");
+  function dispMap(w, h, r, bezel) {
+    var key = [w, h, r, bezel].join("x"); if (mapCache[key]) return mapCache[key];
+    var c = document.createElement("canvas"); c.width = w; c.height = h;
+    var ctx = c.getContext("2d"), img = ctx.createImageData(w, h), d = img.data;
+    for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
+      var px = x + .5, py = y + .5, qx = Math.min(Math.max(px, r), w - r), qy = Math.min(Math.max(py, r), h - r);
+      var vx = qx - px, vy = qy - py, L = Math.hypot(vx, vy), dist = r - L, i = (y * w + x) * 4, dx = 0, dy = 0;
+      if (dist > 0 && dist < bezel && L > 0) {
+        var t = dist / bezel, s = Math.pow(1 - t, 3) * Math.pow(1 - Math.pow(1 - t, 4), -.75), m = Math.min(s, 3) / 3;
+        dx = vx / L * m; dy = vy / L * m;
+      }
+      d[i] = 128 + dx * 127; d[i + 1] = 128 + dy * 127; d[i + 2] = 128; d[i + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0); return (mapCache[key] = c.toDataURL());
+  }
+  function Lens(host, cls) {
+    var el = document.createElement("div"); el.className = "glens " + (cls || ""); el.innerHTML = '<div class="shine"></div>'; host.appendChild(el);
+    var id = "lg" + (++lensN), f = null, img = null, dm = null;
+    if (REFRACT) {
+      f = document.createElementNS(svgNS, "filter"); f.setAttribute("id", id); f.setAttribute("filterUnits", "userSpaceOnUse"); f.setAttribute("color-interpolation-filters", "sRGB");
+      img = document.createElementNS(svgNS, "feImage"); img.setAttribute("result", "map");
+      dm = document.createElementNS(svgNS, "feDisplacementMap"); dm.setAttribute("in", "SourceGraphic"); dm.setAttribute("in2", "map"); dm.setAttribute("xChannelSelector", "R"); dm.setAttribute("yChannelSelector", "G");
+      f.appendChild(img); f.appendChild(dm); defs.appendChild(f);
+    }
+    var L = { el: el, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, w: 0, h: 0, on: false, raf: 0, onArrive: null };
+    L.size = function (w, h, r) {
+      w = Math.round(w); h = Math.round(h); if (w === L.w && h === L.h) return;
+      L.w = w; L.h = h; el.style.width = w + "px"; el.style.height = h + "px"; el.style.borderRadius = r + "px";
+      if (REFRACT) {
+        f.setAttribute("x", 0); f.setAttribute("y", 0); img.setAttribute("x", 0); img.setAttribute("y", 0);
+        f.setAttribute("width", w); f.setAttribute("height", h); img.setAttribute("width", w); img.setAttribute("height", h);
+        img.setAttribute("href", dispMap(w, h, r, Math.min(r, 16))); dm.setAttribute("scale", 22);
+        el.style.backdropFilter = el.style.webkitBackdropFilter = "url(#" + id + ") saturate(165%) brightness(1.07)";
+      }
+    };
+    function step() {
+      L.raf = 0;
+      L.vx = (L.vx + (L.tx - L.x) * .2) * .68; L.vy = (L.vy + (L.ty - L.y) * .2) * .68; L.x += L.vx; L.y += L.vy;
+      var st = Math.min(Math.abs(L.vx) * .018, .22);
+      el.style.left = L.x + "px"; el.style.top = L.y + "px";
+      el.style.transform = st > .005 ? "scale(" + (1 + st) + "," + (1 - st * .45) + ")" : "none";
+      if (Math.abs(L.tx - L.x) + Math.abs(L.ty - L.y) + Math.abs(L.vx) + Math.abs(L.vy) > .15) L.raf = requestAnimationFrame(step);
+      else if (L.onArrive) { var cb = L.onArrive; L.onArrive = null; cb(); }
+    }
+    L.to = function (x, y, jump) { L.tx = x; L.ty = y; if (jump) { L.x = x; L.y = y; L.vx = L.vy = 0; } if (!L.raf) L.raf = requestAnimationFrame(step); };
+    L.show = function () { if (!L.on) { L.on = true; L.onArrive = null; el.classList.add("on"); } };
+    L.hide = function () { L.on = false; el.classList.remove("on"); };
+    return L;
+  }
+  var tl = Lens(tabsEl, "tabl"), tdrag = false;
+  function tabAt(x) {
+    var best = null, bd = 1e9;
+    tabsEl.querySelectorAll(".tab").forEach(function (t) { var r = t.getBoundingClientRect(), c = Math.abs(r.left + r.width / 2 - x); if (c < bd) { bd = c; best = t; } });
+    return best;
+  }
+  function tabFollow(cx) {
+    var br = tabsEl.getBoundingClientRect(), t = tabsEl.querySelector(".tab");
+    tl.size(t.offsetWidth + 6, tabsEl.offsetHeight - 4, (tabsEl.offsetHeight - 4) / 2);
+    var x = Math.min(Math.max(cx - br.left - tl.w / 2, 2), br.width - tl.w - 2);
+    if (!tl.on) tl.to(x, 2, true);
+    tl.show(); tl.to(x, 2);
+  }
+  function tabRelease() { var sel = tabsEl.querySelector('[aria-selected="true"]'); tl.to(sel.offsetLeft - 3, 2); tl.onArrive = function () { if (!tdrag) tl.hide(); }; }
+  tabsEl.addEventListener("pointermove", function (e) { if (e.pointerType === "mouse" || tdrag) tabFollow(e.clientX); });
+  tabsEl.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") { tdrag = true; tabFollow(e.clientX); } });
+  tabsEl.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") tabRelease(); });
+  document.addEventListener("pointerup", function (e) {
+    if (!tdrag) return; tdrag = false;
+    var t = tabAt(e.clientX); if (t && t.getAttribute("aria-selected") !== "true") selectTab(t);
+    tabRelease();
+  });
+  document.addEventListener("pointercancel", function () { if (tdrag) { tdrag = false; tabRelease(); } });
+  function rowLens(host, itemSel, phSel) {
+    var L = Lens(host, "rowl"), drag = false; host._lens = L.el;
+    function follow(e) {
+      var it = e.target.closest(itemSel) || (L.cur && L.cur.isConnected ? L.cur : null); if (!it) return;
+      L.cur = it;
+      var ph = phSel ? it.querySelector(phSel) : it, hr = host.getBoundingClientRect(), pr = ph.getBoundingClientRect(), w = pr.width + 8, h = pr.height + 8;
+      L.size(w, h, parseFloat(getComputedStyle(ph).borderRadius) + 4 || 18);
+      var x = Math.min(Math.max(e.clientX - hr.left - w / 2, 2), hr.width - w - 2), y = pr.top - hr.top - 4;
+      if (!L.on) L.to(x, y, true);
+      L.show(); L.to(x, y);
+    }
+    host.addEventListener("pointermove", function (e) { if (e.pointerType === "mouse" || drag) follow(e); });
+    host.addEventListener("pointerdown", function (e) { if (e.pointerType !== "mouse") { drag = true; follow(e); } });
+    host.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") L.hide(); });
+    document.addEventListener("pointerup", function () { if (drag) { drag = false; setTimeout(L.hide, 160); } });
+    document.addEventListener("pointercancel", function () { drag = false; L.hide(); });
+    return L;
+  }
+  var rl = [rowLens($("grid"), ".tile", ".ph"), rowLens($("slots"), ".slot", null)];
+  addEventListener("scroll", function () { rl.forEach(function (l) { l.hide(); }); }, { passive: true });
+
+  // ---------- подписка на канал (спрашиваем один раз, помним на аккаунте) ----------
+  var initData = ""; try { initData = TG.initData || ""; } catch (e) {}
+  var forceGate = /[?&]gate=1/.test(location.search);
+  var hasCloud = false; try { hasCloud = !!(TG && TG.CloudStorage && TG.isVersionAtLeast && TG.isVersionAtLeast("6.9")); } catch (e) {}
+  function cloudGet(k) {
+    return new Promise(function (res) {
+      if (!hasCloud) return res(null);
+      var done = false; setTimeout(function () { if (!done) { done = true; res(null); } }, 1500);
+      try { TG.CloudStorage.getItem(k, function (err, v) { if (!done) { done = true; res(err ? null : v); } }); } catch (e) { done = true; res(null); }
+    });
+  }
+  function cloudSet(k, v) { if (hasCloud) try { TG.CloudStorage.setItem(k, v, function () {}); } catch (e) {} }
+  function subSaved() { var v = store("dp_sub_ok"); return !!(v && v !== "0"); }
+  function rememberSub() { store("dp_sub_ok", "1"); cloudSet("dp_sub_ok", "1"); }
+  async function checkSub() {
+    if (!initData) return { known: false, subscribed: false };
+    var down = parseInt(store("dp_srv_down") || "0", 10);
+    if (down && Date.now() - down < 3600000) return { known: false, subscribed: false };
+    try {
+      var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null, tm = ctrl ? setTimeout(function () { ctrl.abort(); }, 3500) : null;
+      var r = await fetch(WORKER_URL, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData: initData }), signal: ctrl ? ctrl.signal : undefined });
+      if (tm) clearTimeout(tm);
+      var d = await r.json();
+      if (!d.ok) { store("dp_srv_down", String(Date.now())); return { known: false, subscribed: false }; }
+      store("dp_srv_down", "0");
+      return { known: true, subscribed: d.subscribed === true };
+    } catch (e) { store("dp_srv_down", String(Date.now())); return { known: false, subscribed: false }; }
+  }
+  var gate = $("gate"), gBtn = $("gCheck"), gMsg = $("gMsg"), pressedSub = false;
+  function passGate() { rememberSub(); gBtn.className = "gbtn ok"; gBtn.textContent = "✓ Подписка есть, спасибо!"; haptic("medium"); setTimeout(function () { gate.classList.add("out"); }, 650); }
+  $("gSub").addEventListener("click", function () {
+    pressedSub = true;
+    try { TG.openTelegramLink(CHANNEL_URL); } catch (e) { window.open(CHANNEL_URL, "_blank"); }
+  });
+  gBtn.addEventListener("click", async function () {
+    if (gBtn.disabled) return;
+    gBtn.disabled = true; gBtn.innerHTML = '<span class="spin"></span>Проверяю…'; gMsg.className = "gmsg"; gMsg.textContent = "";
+    var r = await checkSub();
+    gBtn.disabled = false;
+    if (r.subscribed || (!r.known && pressedSub)) return passGate();   // сервер недоступен — верим тому, кто нажал «Подписаться»
+    gBtn.textContent = "Проверить подписку"; gMsg.className = "gmsg bad";
+    gMsg.textContent = r.known ? "Пока не вижу подписки. Подпишись и нажми ещё раз 🙏" : "Сначала нажми «Подписаться» и подпишись на канал 🙏";
+    var bx = gate.querySelector(".box"); bx.classList.remove("shake"); void bx.offsetWidth; bx.classList.add("shake");
+    try { TG.HapticFeedback.notificationOccurred("error"); } catch (e) {}
+  });
+  async function initGate() {
+    if (subSaved()) return;
+    if (!initData && !forceGate) return;                 // открыто не в Telegram — не мешаем
+    var v = await cloudGet("dp_sub_ok");
+    if (v === "1") { store("dp_sub_ok", "1"); return; }
+    gate.classList.remove("out");
+  }
+  function drawProfile() { $("subState").innerHTML = subSaved() ? '<span class="ok">✓ подписан, спасибо!</span>' : "ещё не подтверждена"; }
+  function openChannel() { try { TG.openTelegramLink(CHANNEL_URL); } catch (e) { window.open(CHANNEL_URL, "_blank"); } }
+  $("chan").addEventListener("click", openChannel);
+  $("dc").addEventListener("click", function () { try { TG.openLink(DISCORD_URL); } catch (e) { window.open(DISCORD_URL, "_blank"); } });
+  $("idea").addEventListener("click", function () {
+    try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "idea", title: "Нажали Предложить улучшение", event: true }); } catch (e) {}
+    var msg = "Напиши свою идею или что бесит прямо в чат с ботом — одним сообщением. Я читаю всё лично 🙌";
+    try { TG.showPopup({ title: "Предложить улучшение", message: msg, buttons: [{ id: "ok", type: "default", text: "Написать" }, { type: "cancel" }] }, function (id) { if (id === "ok") TG.close(); }); }
+    catch (e) { alert(msg); }
+  });
+
+  // ---------- старт ----------
+  role = parseInt(store("dp_role") || "0", 10) || 0;   // роль запоминаем: обычно играешь одну и ту же
+  renderRoles(); drawRateChips(); renderPick(); initGate();
+  requestAnimationFrame(function () { placePill(tabsEl.querySelector('[aria-selected="true"]'), false); });
+  fetch("https://api.opendota.com/api/heroStats")
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (!Array.isArray(data) || !data.length) throw new Error("empty");
+      var oldNames = {}; enemies.concat(allies).concat(myHero ? [myHero] : []).forEach(function (s) { oldNames[s.id] = byId[s.id] && byId[s.id].localized_name; });
+      setHeroes(data.map(function (h) {
+        var pick = 0, win = 0; for (var i = 1; i <= 8; i++) { pick += h[i + "_pick"] || 0; win += h[i + "_win"] || 0; }
+        h.overall = pick ? win / pick : 0.5; h.picks = pick; return h;
+      }).sort(function (a, b) { return a.localized_name.localeCompare(b.localized_name); }));
+      // герои, выбранные до загрузки, получают настоящие номера
+      enemies.concat(allies).concat(myHero ? [myHero] : []).forEach(function (s) { var h = byName[oldNames[s.id]]; if (h) s.id = h.id; });
+      POPULAR = heroes.slice().sort(function (a, b) { return b.picks - a.picks; }).slice(0, 8).map(function (h) { return h.localized_name; });
+      statsReady = true;
+      renderPick();
+      if (!$("v-meta").hidden) drawRates();
+      if (!$("v-heroes").hidden) renderHeroesTab();
+    })
+    .catch(function () { statsReady = false; scheduleRecommend(); });
+})();
+
+</script>
+<script data-goatcounter="https://dotapick.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
