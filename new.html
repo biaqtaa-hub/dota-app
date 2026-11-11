@@ -329,6 +329,20 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
 .roles { flex-wrap: wrap; overflow: visible; }
 .toggle.slim { padding: 8px 10px 8px 16px; border-radius: 999px; }
 
+/* ---------- против чего собрать ---------- */
+.vsrow button.hot { background: rgba(255,122,144,.16); box-shadow: inset 0 0 0 1px rgba(255,122,144,.55); }
+.vsrow button b { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 99px; font-size: 11px; background: var(--enemy); color: #1a0710; }
+.items { display: flex; flex-direction: column; gap: 8px; }
+.item { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 14px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.item img { width: 52px; height: 38px; object-fit: cover; border-radius: 8px; flex: none; }
+.item b { display: block; font-size: 14px; }
+.item span { display: block; font-size: 12.5px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
+/* ---------- сборка ---------- */
+.stage { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
+.stage > span { flex: none; width: 92px; font-size: 12px; font-weight: 700; color: var(--muted); }
+.stage .row { display: flex; flex-wrap: wrap; gap: 5px; }
+.stage img { width: 44px; height: 32px; object-fit: cover; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }
+
 </style>
 </head>
 <body>
@@ -380,6 +394,10 @@ h2 { font-size: 21px; font-weight: 800; margin: 0; letter-spacing: -.005em; }
       <button type="button" class="toggle glass" id="lastPick" aria-pressed="true">
         <span>Я пикаю последним<small>тогда контрпик важнее всего</small></span><span class="sw"></span>
       </button>
+      <div>
+        <div class="label" style="margin:4px 0 8px">Против чего собрать</div>
+        <div class="roles vsrow" id="vsRow"></div>
+      </div>
       <div>
         <h2 id="resTitle">Сильные герои сейчас</h2>
         <div class="sub" id="resSub">обновляется сразу, кнопку жать не нужно</div>
@@ -506,6 +524,7 @@ var RU = {
 };
 
 var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloodseeker","Crystal Maiden":"crystal_maiden","Drow Ranger":"drow_ranger","Earthshaker":"earthshaker","Juggernaut":"juggernaut","Mirana":"mirana","Morphling":"morphling","Shadow Fiend":"nevermore","Phantom Lancer":"phantom_lancer","Puck":"puck","Pudge":"pudge","Razor":"razor","Sand King":"sand_king","Storm Spirit":"storm_spirit","Sven":"sven","Tiny":"tiny","Vengeful Spirit":"vengefulspirit","Windranger":"windrunner","Zeus":"zuus","Kunkka":"kunkka","Lina":"lina","Lion":"lion","Shadow Shaman":"shadow_shaman","Slardar":"slardar","Tidehunter":"tidehunter","Witch Doctor":"witch_doctor","Lich":"lich","Riki":"riki","Enigma":"enigma","Tinker":"tinker","Sniper":"sniper","Necrophos":"necrolyte","Warlock":"warlock","Beastmaster":"beastmaster","Queen of Pain":"queenofpain","Venomancer":"venomancer","Faceless Void":"faceless_void","Wraith King":"skeleton_king","Death Prophet":"death_prophet","Phantom Assassin":"phantom_assassin","Pugna":"pugna","Templar Assassin":"templar_assassin","Viper":"viper","Luna":"luna","Dragon Knight":"dragon_knight","Dazzle":"dazzle","Clockwerk":"rattletrap","Leshrac":"leshrac","Nature's Prophet":"furion","Lifestealer":"life_stealer","Dark Seer":"dark_seer","Clinkz":"clinkz","Omniknight":"omniknight","Enchantress":"enchantress","Huskar":"huskar","Night Stalker":"night_stalker","Broodmother":"broodmother","Bounty Hunter":"bounty_hunter","Weaver":"weaver","Jakiro":"jakiro","Batrider":"batrider","Chen":"chen","Spectre":"spectre","Ancient Apparition":"ancient_apparition","Doom":"doom_bringer","Ursa":"ursa","Spirit Breaker":"spirit_breaker","Gyrocopter":"gyrocopter","Alchemist":"alchemist","Invoker":"invoker","Silencer":"silencer","Outworld Destroyer":"obsidian_destroyer","Lycan":"lycan","Brewmaster":"brewmaster","Shadow Demon":"shadow_demon","Lone Druid":"lone_druid","Chaos Knight":"chaos_knight","Meepo":"meepo","Treant Protector":"treant","Ogre Magi":"ogre_magi","Undying":"undying","Rubick":"rubick","Disruptor":"disruptor","Nyx Assassin":"nyx_assassin","Naga Siren":"naga_siren","Keeper of the Light":"keeper_of_the_light","Io":"wisp","Visage":"visage","Slark":"slark","Medusa":"medusa","Troll Warlord":"troll_warlord","Centaur Warrunner":"centaur","Magnus":"magnataur","Timbersaw":"shredder","Bristleback":"bristleback","Tusk":"tusk","Skywrath Mage":"skywrath_mage","Abaddon":"abaddon","Elder Titan":"elder_titan","Legion Commander":"legion_commander","Techies":"techies","Ember Spirit":"ember_spirit","Earth Spirit":"earth_spirit","Underlord":"abyssal_underlord","Terrorblade":"terrorblade","Phoenix":"phoenix","Oracle":"oracle","Winter Wyvern":"winter_wyvern","Arc Warden":"arc_warden","Monkey King":"monkey_king","Dark Willow":"dark_willow","Pangolier":"pangolier","Grimstroke":"grimstroke","Hoodwink":"hoodwink","Void Spirit":"void_spirit","Snapfire":"snapfire","Mars":"mars","Ringmaster":"ringmaster","Dawnbreaker":"dawnbreaker","Marci":"marci","Primal Beast":"primal_beast","Muerta":"muerta","Kez":"kez","Largo":"largo"};
+var ITEMS = {"1":["blink","Blink Dagger",2250,0],"2":["blades_of_attack","Blades of Attack",450,0],"3":["broadsword","Broadsword",1000,0],"4":["chainmail","Chainmail",500,0],"5":["claymore","Claymore",1350,0],"6":["helm_of_iron_will","Helm of Iron Will",975,0],"7":["javelin","Javelin",900,0],"8":["mithril_hammer","Mithril Hammer",1600,0],"9":["platemail","Platemail",1400,0],"10":["quarterstaff","Quarterstaff",875,0],"11":["quelling_blade","Quelling Blade",100,0],"12":["ring_of_protection","Ring of Protection",175,0],"13":["gauntlets","Gauntlets of Strength",140,0],"14":["slippers","Slippers of Agility",140,0],"15":["mantle","Mantle of Intelligence",140,0],"16":["branches","Iron Branch",55,0],"17":["belt_of_strength","Belt of Strength",450,0],"18":["boots_of_elves","Band of Elvenskin",450,0],"19":["robe","Robe of the Magi",450,0],"20":["circlet","Circlet",155,0],"21":["ogre_axe","Ogre Axe",1000,0],"22":["blade_of_alacrity","Blade of Alacrity",1000,0],"23":["staff_of_wizardry","Staff of Wizardry",1000,0],"24":["ultimate_orb","Ultimate Orb",2800,0],"25":["gloves","Gloves of Haste",450,0],"26":["lifesteal","Morbid Mask",900,0],"27":["ring_of_regen","Ring of Regen",175,0],"28":["sobi_mask","Sage's Mask",175,0],"29":["boots","Boots of Speed",500,0],"30":["gem","Gem of True Sight",900,0],"31":["cloak","Cloak",900,0],"32":["talisman_of_evasion","Talisman of Evasion",1300,0],"33":["cheese","Cheese",1000,0],"34":["magic_stick","Magic Stick",200,0],"36":["magic_wand","Magic Wand",460,1],"37":["ghost","Ghost Scepter",1500,0],"38":["clarity","Clarity",60,0],"39":["flask","Healing Salve",100,0],"40":["dust","Dust of Appearance",80,0],"41":["bottle","Bottle",675,0],"42":["ward_observer","Observer Ward",0,0],"43":["ward_sentry","Sentry Ward",50,0],"44":["tango","Tango",90,0],"45":["courier","Animal Courier",50,0],"46":["tpscroll","Town Portal Scroll",100,0],"48":["travel_boots","Boots of Travel",2500,1],"50":["phase_boots","Phase Boots",1450,1],"51":["demon_edge","Demon Edge",2200,0],"52":["eagle","Eaglesong",2800,0],"53":["reaver","Reaver",2800,0],"54":["relic","Sacred Relic",3400,0],"55":["hyperstone","Hyperstone",2000,0],"56":["ring_of_health","Ring of Health",700,0],"57":["void_stone","Void Stone",700,0],"58":["mystic_staff","Mystic Staff",2800,0],"59":["energy_booster","Energy Booster",800,0],"60":["point_booster","Point Booster",1200,0],"61":["vitality_booster","Vitality Booster",1000,0],"63":["power_treads","Power Treads",1400,1],"65":["hand_of_midas","Hand of Midas",2200,1],"67":["oblivion_staff","Oblivion Staff",1625,1],"69":["pers","Perseverance",1400,1],"71":["poor_mans_shield","Poor Man's Shield",0,0],"73":["bracer","Bracer",505,1],"75":["wraith_band","Wraith Band",505,1],"77":["null_talisman","Null Talisman",505,1],"79":["mekansm","Mekansm",1775,1],"81":["vladmir","Vladmir's Offering",2200,1],"86":["buckler","Buckler",425,1],"88":["ring_of_basilius","Ring of Basilius",425,1],"90":["pipe","Pipe of Insight",3725,1],"92":["urn_of_shadows","Urn of Shadows",825,1],"94":["headdress","Headdress",425,1],"96":["sheepstick","Scythe of Vyse",5200,1],"98":["orchid","Orchid Malevolence",3275,1],"100":["cyclone","Eul's Scepter of Divinity",2600,1],"102":["force_staff","Force Staff",2200,1],"104":["dagon","Dagon",3000,1],"106":["necronomicon","Necronomicon",2050,1],"108":["ultimate_scepter","Aghanim's Scepter",4200,1],"110":["refresher","Refresher Orb",5000,1],"112":["assault","Assault Cuirass",5125,1],"114":["heart","Heart of Tarrasque",5300,1],"116":["black_king_bar","Black King Bar",4050,1],"117":["aegis","Aegis of the Immortal",0,0],"119":["shivas_guard","Shiva's Guard",4500,1],"121":["bloodstone","Bloodstone",4700,1],"123":["sphere","Linken's Sphere",4800,1],"125":["vanguard","Vanguard",1700,1],"127":["blade_mail","Blade Mail",2400,1],"129":["soul_booster","Soul Booster",3000,1],"131":["hood_of_defiance","Hood of Defiance",0,0],"133":["rapier","Divine Rapier",5600,1],"135":["monkey_king_bar","Monkey King Bar",5000,1],"137":["radiance","Radiance",4700,1],"139":["butterfly","Butterfly",5450,1],"141":["greater_crit","Daedalus",5200,1],"143":["basher","Skull Basher",2875,1],"145":["bfury","Battle Fury",3900,1],"147":["manta","Manta Style",4650,1],"149":["lesser_crit","Crystalys",2000,1],"151":["armlet","Armlet of Mordiggian",2500,1],"152":["invis_sword","Shadow Blade",3250,1],"154":["sange_and_yasha","Sange and Yasha",4200,1],"156":["satanic","Satanic",5050,1],"158":["mjollnir","Mjollnir",5500,1],"160":["skadi","Eye of Skadi",5900,1],"162":["sange","Sange",2100,1],"164":["helm_of_the_dominator","Helm of the Dominator",2550,1],"166":["maelstrom","Maelstrom",2950,1],"168":["desolator","Desolator",3500,1],"170":["yasha","Yasha",2100,1],"172":["mask_of_madness","Mask of Madness",1900,1],"174":["diffusal_blade","Diffusal Blade",2500,1],"176":["ethereal_blade","Ethereal Blade",5200,1],"178":["soul_ring","Soul Ring",805,1],"180":["arcane_boots","Arcane Boots",1500,1],"181":["orb_of_venom","Orb of Venom",350,0],"182":["stout_shield","Stout Shield",100,0],"185":["ancient_janggo","Drum of Endurance",1625,1],"187":["medallion_of_courage","Medallion of Courage",0,1],"188":["smoke_of_deceit","Smoke of Deceit",50,0],"190":["veil_of_discord","Veil of Discord",1700,1],"193":["necronomicon_2","Necronomicon",3300,1],"194":["necronomicon_3","Necronomicon",4550,1],"196":["diffusal_blade_2","Diffusal Blade",3850,1],"201":["dagon_2","Dagon",4100,0],"202":["dagon_3","Dagon",5200,0],"203":["dagon_4","Dagon",6300,0],"204":["dagon_5","Dagon",7400,0],"206":["rod_of_atos","Rod of Atos",2250,1],"208":["abyssal_blade","Abyssal Blade",6250,1],"210":["heavens_halberd","Heaven's Halberd",3300,1],"212":["ring_of_aquila","Ring of Aquila",0,0],"214":["tranquil_boots","Tranquil Boots",900,1],"215":["shadow_amulet","Shadow Amulet",900,0],"216":["enchanted_mango","Enchanted Mango",65,0],"218":["ward_dispenser","Observer and Sentry Wards",50,1],"220":["travel_boots_2","Boots of Travel 2",4500,1],"223":["meteor_hammer","Meteor Hammer",2850,1],"225":["nullifier","Nullifier",4350,1],"226":["lotus_orb","Lotus Orb",3850,1],"229":["solar_crest","Solar Crest",2575,1],"231":["guardian_greaves","Guardian Greaves",4450,1],"232":["aether_lens","Aether Lens",2275,1],"235":["octarine_core","Octarine Core",5100,1],"236":["dragon_lance","Dragon Lance",2000,1],"237":["faerie_fire","Faerie Fire",65,0],"239":["iron_talon","Iron Talon",0,1],"240":["blight_stone","Orb of Blight",300,0],"241":["tango_single","Tango (Shared)",30,0],"242":["crimson_guard","Crimson Guard",3725,1],"244":["wind_lace","Wind Lace",225,0],"247":["moon_shard","Moon Shard",4000,1],"249":["silver_edge","Silver Edge",5700,1],"250":["bloodthorn","Bloodthorn",6400,1],"252":["echo_sabre","Echo Sabre",2700,1],"254":["glimmer_cape","Glimmer Cape",2150,1],"256":["aeon_disk","Aeon Disk",3000,1],"257":["tome_of_knowledge","Tome of Knowledge",75,0],"259":["kaya","Kaya",2100,1],"260":["refresher_shard","Refresher Shard",1000,0],"261":["crown","Crown",450,0],"263":["hurricane_pike","Hurricane Pike",4550,1],"265":["infused_raindrop","Infused Raindrops",225,0],"267":["spirit_vessel","Spirit Vessel",2725,1],"269":["holy_locket","Holy Locket",2250,1],"271":["ultimate_scepter_2","Aghanim's Blessing",5800,1],"273":["kaya_and_sange","Kaya and Sange",4200,1],"277":["yasha_and_kaya","Yasha and Kaya",4200,1],"279":["ring_of_tarrasque","Ring of Tarrasque",1700,0],"286":["flying_courier","Flying Courier",100,0],"287":["keen_optic","Keen Optic",0,0],"288":["grove_bow","Grove Bow",0,0],"289":["quickening_charm","Quickening Charm",0,0],"290":["philosophers_stone","Philosopher's Stone",0,0],"291":["force_boots","Force Boots",0,0],"292":["desolator_2","Stygian Desolator",0,0],"293":["phoenix_ash","Phoenix Ash",0,0],"294":["seer_stone","Seer Stone",0,0],"295":["greater_mango","greater_mango",0,0],"297":["vampire_fangs","Vampire Fangs",0,0],"298":["craggy_coat","Craggy Coat",0,0],"299":["greater_faerie_fire","Greater Faerie Fire",0,0],"300":["timeless_relic","Timeless Relic",0,0],"301":["mirror_shield","Mirror Shield",0,0],"302":["elixer","Elixir",0,0],"304":["ironwood_tree","Ironwood Tree",0,0],"305":["royal_jelly","Royal Jelly",0,0],"306":["pupils_gift","Pupil's Gift",0,0],"307":["tome_of_aghanim","Tome of Aghanim",0,0],"308":["repair_kit","Repair Kit",0,0],"309":["mind_breaker","Mind Breaker",0,0],"310":["third_eye","Third Eye",0,0],"311":["spell_prism","Spell Prism",0,0],"312":["horizon","horizon",0,0],"313":["fusion_rune","Fusion Rune",0,0],"325":["princes_knife","Prince's Knife",0,0],"326":["spider_legs","Spider Legs",0,0],"327":["helm_of_the_undying","Helm of the Undying",0,0],"328":["mango_tree","Mango Tree",0,0],"330":["witless_shako","Witless Shako",0,0],"331":["vambrace","Vambrace",0,0],"334":["imp_claw","Imp Claw",0,0],"335":["flicker","Flicker",0,0],"336":["spy_gadget","Telescope",0,0],"349":["arcane_ring","Arcane Ring",0,0],"354":["ocean_heart","Ocean Heart",0,0],"355":["broom_handle","Broom Handle",0,0],"356":["trusty_shovel","Trusty Shovel",0,0],"357":["nether_shawl","Nether Shawl",0,0],"358":["dragon_scale","Dragon Scale",0,0],"359":["essence_ring","Essence Ring",0,0],"360":["clumsy_net","Clumsy Net",0,0],"361":["enchanted_quiver","Enchanted Quiver",0,0],"362":["ninja_gear","Ninja Gear",0,0],"363":["illusionsts_cape","Illusionist's Cape",0,0],"364":["havoc_hammer","Havoc Hammer",0,0],"365":["panic_button","Magic Lamp",0,0],"366":["apex","Apex",0,0],"367":["ballista","Ballista",0,0],"368":["woodland_striders","Woodland Striders",0,0],"369":["trident","Trident",6301,1],"370":["demonicon","Book of the Dead",0,0],"371":["fallen_sky","Fallen Sky",0,0],"372":["pirate_hat","Pirate Hat",0,0],"374":["ex_machina","Ex Machina",0,0],"375":["faded_broach","Faded Broach",0,0],"376":["paladin_sword","Paladin Sword",0,0],"377":["minotaur_horn","Minotaur Horn",0,0],"378":["orb_of_destruction","Orb of Destruction",0,0],"379":["the_leveller","The Leveller",0,0],"381":["titan_sliver","Titan Sliver",0,0],"473":["voodoo_mask","Voodoo Mask",650,0],"485":["blitz_knuckles","Blitz Knuckles",1000,0],"534":["witch_blade","Witch Blade",2775,1],"565":["chipped_vest","Chipped Vest",0,0],"569":["orb_of_corrosion","Orb of Corrosion",1050,1],"571":["trickster_cloak","Trickster Cloak",0,0],"573":["elven_tunic","Elven Tunic",0,0],"574":["cloak_of_flames","Cloak of Flames",0,0],"577":["possessed_mask","Possessed Mask",0,0],"585":["stormcrafter","Stormcrafter",0,0],"589":["mysterious_hat","Fairy's Trinket",0,0],"593":["fluffy_hat","Fluffy Hat",250,0],"596":["falcon_blade","Falcon Blade",1125,1],"598":["mage_slayer","Mage Slayer",3100,1],"600":["overwhelming_blink","Overwhelming Blink",6800,1],"603":["swift_blink","Swift Blink",6800,1],"604":["arcane_blink","Arcane Blink",6800,1],"609":["aghanims_shard","Aghanim's Shard",1400,0],"610":["wind_waker","Wind Waker",6800,1],"635":["helm_of_the_overlord","Helm of the Overlord",5650,1],"638":["penta_edged_sword","Penta-Edged Sword",0,0],"675":["psychic_headband","Psychic Headband",0,0],"676":["ceremonial_robe","Ceremonial Robe",0,0],"677":["book_of_shadows","Book of Shadows",0,0],"678":["giants_ring","Giant's Ring",0,0],"680":["bullwhip","Bullwhip",0,0],"686":["quicksilver_amulet","Quicksilver Amulet",0,0],"692":["eternal_shroud","Eternal Shroud",3900,1],"725":["aghanims_shard_roshan","Aghanim's Shard - Consumable",1400,0],"727":["ultimate_scepter_roshan","Aghanim's Blessing - Roshan",5800,0],"825":["ascetic_cap","Ascetic's Cap",0,0],"828":["misericorde","Brigand's Blade",0,0],"829":["force_field","Arcanist's Armor",0,0],"834":["black_powder_bag","Blast Rig",0,0],"835":["paintball","Fae Grenade",0,0],"837":["heavy_blade","Witchbane",0,0],"838":["unstable_wand","Pig Pole",0,0],"840":["pogo_stick","Tumbler's Toy",0,0],"849":["mechanical_arm","mechanical_arm",0,0],"908":["wraith_pact","Wraith Pact",3800,1],"911":["revenants_brooch","Revenant's Brooch",3300,1],"931":["boots_of_bearing","Boots of Bearing",4225,1],"939":["harpoon","Harpoon",4700,1],"945":["seeds_of_serenity","Seeds of Serenity",0,0],"946":["lance_of_pursuit","Lance of Pursuit",0,0],"947":["occult_bracelet","Occult Bracelet",0,0],"949":["ogre_seal_totem","Ogre Seal Totem",0,0],"950":["defiant_shell","Defiant Shell",0,0],"990":["eye_of_the_vizier","Eye of the Vizier",0,0],"1000":["bottomless_chalice","bottomless_chalice",0,0],"1021":["river_painter","River Vial: Chrome",0,0],"1022":["river_painter2","River Vial: Dry",0,0],"1023":["river_painter3","River Vial: Slime",0,0],"1024":["river_painter4","River Vial: Oil",0,0],"1025":["river_painter5","River Vial: Electrified",0,0],"1026":["river_painter6","River Vial: Potion",0,0],"1027":["river_painter7","River Vial: Blood",0,0],"1028":["mutation_tombstone","Tombstone",0,0],"1029":["super_blink","super_blink",0,0],"1030":["pocket_tower","Pocket Tower",0,0],"1032":["pocket_roshan","Pocket Roshan",1000,0],"1076":["specialists_array","Specialist's Array",2550,1],"1077":["dagger_of_ristul","Dagger of Ristul",0,0],"1090":["muertas_gun","Mercy & Grace",0,0],"1097":["disperser","Disperser",6100,1],"1107":["phylactery","Phylactery",2600,1],"1122":["diadem","Diadem",1000,0],"1123":["blood_grenade","Blood Grenade",50,0],"1124":["spark_of_courage","Spark of Courage",0,0],"1125":["cornucopia","Cornucopia",1200,0],"1128":["pavise","Pavise",1350,1],"1154":["royale_with_cheese","Block of Cheese",2,0],"1156":["ancient_guardian","Ancient Guardian",0,0],"1157":["safety_bubble","Safety Bubble",0,0],"1158":["whisper_of_the_dread","Whisper of the Dread",0,0],"1159":["nemesis_curse","Nemesis Curse",0,0],"1160":["avianas_feather","Aviana's Feather",0,0],"1161":["unwavering_condition","Unwavering Condition",0,0],"1167":["light_collector","Light Collector",0,0],"1168":["rattlecage","Rattlecage",0,0],"1440":["black_grimoire","Black Grimoire\\n(Warlock)",0,0],"1441":["grisgris","Gris-Gris",0,0],"1466":["gungir","Gleipnir",4650,1],"1575":["orb_of_frost","Orb of Frost",300,0],"1576":["enhancement_vast","Vast",0,0],"1577":["enhancement_quickened","Quickened",0,0],"1581":["enhancement_audacious","Audacious",0,0],"1583":["enhancement_mystical","Mystical",0,0],"1584":["enhancement_alert","Alert",0,0],"1585":["enhancement_brawny","Brawny",0,0],"1586":["enhancement_tough","Tough",0,0],"1587":["enhancement_feverish","Feverish",0,0],"1588":["enhancement_fleetfooted","Fleetfooted",0,0],"1589":["enhancement_crude","Crude",0,0],"1590":["enhancement_boundless","Boundless",0,0],"1591":["enhancement_wise","Wise",0,0],"1592":["enhancement_timeless","Timeless",0,0],"1593":["enhancement_greedy","Greedy",0,0],"1594":["enhancement_vampiric","Vampiric",0,0],"1595":["enhancement_keen_eyed","Keen-eyed",0,0],"1596":["enhancement_evolved","Evolved",0,0],"1597":["enhancement_titanic","Titanic",0,0],"1598":["unrelenting_eye","Unrelenting Eye",0,0],"1599":["mana_draught","Mana Draught",0,0],"1600":["rippers_lash","Ripper's Lash",0,0],"1601":["crippling_crossbow","Crippling Crossbow",0,0],"1602":["gale_guard","Gale Guard",0,0],"1603":["gunpowder_gauntlets","Gunpowder Gauntlet",0,0],"1604":["searing_signet","Searing Signet",0,0],"1605":["serrated_shiv","Serrated Shiv",0,0],"1606":["polliwog_charm","Pollywog Charm",0,0],"1607":["magnifying_monocle","Magnifying Monocle",0,0],"1608":["pyrrhic_cloak","Pyrrhic Cloak",0,0],"1609":["madstone_bundle","Madstone Bundle",0,0],"1610":["miniboss_minion_summoner","miniboss_minion_summoner",0,0],"1637":["kobold_cup","Kobold Cup",0,0],"1638":["dormant_curio","Dormant Curio",0,0],"1639":["sisters_shroud","Sister's Shroud",0,0],"1640":["jidi_pollen_bag","Jidi Pollen Bag",0,0],"1641":["outworld_staff","Outworld Staff",0,0],"1642":["dezun_bloodrite","Dezun Bloodrite",0,0],"1643":["giant_maul","Giant's Maul",0,0],"1644":["divine_regalia","Divine Regalia",0,0],"1645":["divine_regalia_broken","Disgraced Regalia",0,0],"1647":["enhancement_fierce","Fierce",0,0],"1648":["enhancement_dominant","Dominant",0,0],"1649":["enhancement_restorative","Restorative",0,0],"1650":["enhancement_thick","Thick",0,0],"1651":["enhancement_curious","Unleashed",0,0],"1652":["furion_gold_bag","Bag of Gold",0,0],"1716":["weighted_dice","Weighted Dice",0,0],"1717":["ash_legion_shield","Ash Legion Shield",0,0],"1718":["riftshadow_prism","Riftshadow Prism",0,0],"1719":["metamorphic_mandible","Metamorphic Mandible",0,0],"1720":["idol_of_screeauk","Idol of Scree'auk",0,0],"1721":["flayers_bota","Flayer's Bota",0,0],"1801":["caster_rapier","caster_rapier",5600,0],"1802":["tiara_of_selemene","Tiara of Selemene",1700,0],"1803":["doubloon","Doubloon",0,0],"1804":["roshans_banner","Roshan's Banner",0,0],"1806":["devastator","Parasma",5975,1],"1808":["angels_demise","Khanda",5600,1],"1847":["splintmail","Splintmail",950,0],"1848":["shawl","Shawl",450,0],"1849":["wizard_hat","Wizard Hat",250,0],"1850":["eldwurms_edda","Eldwurm's Edda",0,0],"1852":["essence_distiller","Essence Distiller",1775,1],"1854":["consecrated_wraps","Consecrated Wraps",2600,1],"1856":["crellas_crozier","Crella's Crozier",4800,1],"1858":["hydras_breath","Hydra's Breath",5900,1],"1859":["spellslinger","Spellslinger",0,0],"1860":["prophets_pendulum","Prophet's Pendulum",0,0],"1861":["stonefeather_satchel","Stonefeather Satchel",0,0],"1862":["enchanters_bauble","Enchanter's Bauble",0,0],"1863":["harmonizer","Harmonizer",0,0],"1864":["conjurers_catalyst","Conjurer's Catalyst",0,0],"1865":["enhancement_vital","Vital",0,0],"1866":["enhancement_hulking","Hulking",0,0],"1867":["enhancement_manic","Manic",0,0],"1868":["foragers_kit","Forager's Kit",0,0],"1869":["foragers_health","Vital Toadstool",0,0],"1870":["foragers_stats","Ironwood Nut",0,0],"1871":["foragers_mana","Tomo'kan Ringcap",0,0],"1872":["chasm_stone","Chasm Stone",900,0],"1873":["partisans_brand","Partisan's Brand",0,0],"1874":["enhancement_nimble","Nimble",0,0],"1875":["tidehunter_fish","Leviathan's Fish",0,0],"2091":["tier1_token","Tier 1 Token",0,0],"2092":["tier2_token","Tier 2 Token",0,0],"2093":["tier3_token","Tier 3 Token",0,0],"2094":["tier4_token","Tier 4 Token",0,0],"2095":["tier5_token","Tier 5 Token",0,0],"2096":["vindicators_axe","Vindicator's Axe",0,0],"2097":["duelist_gloves","Duelist Gloves",0,0],"2190":["dandelion_amulet","Dandelion Amulet",0,0],"2192":["martyrs_plate","Martyr's Plate",0,0],"2193":["gossamer_cape","Gossamer Cape",0,0],"4204":["famango","Healing Lotus",0,0],"4205":["great_famango","Great Healing Lotus",0,1],"4206":["greater_famango","Greater Healing Lotus",0,1],"4300":["ofrenda","Beloved Memory",0,0],"4301":["ofrenda_shovel","Scrying Shovel",0,0],"4302":["ofrenda_pledge","Forebearer's Fortune",0,0]};
 </script>
 <script>
 (function () {
@@ -710,7 +729,8 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
       (h.primary_attr ? "Герой: " + (ATTR_RU[h.primary_attr] || "") + ", " + (ATTACK_RU[h.attack_type] || "") + ". " : "") +
       (h.picks ? "Общий процент побед: " + Math.round(h.overall * 100) + "%. " : "") +
       (!ctx.enemies.length ? "Враги не выбраны, поэтому подсказка по общей силе героя." : order === "last" ? "Ты пикаешь последним, поэтому контрпик важнее всего." : "Ты пикаешь не последним, поэтому учитываем и контрпик, и общую силу героя.") +
-      "</div></div>";
+      "</div></div>" +
+      '<button class="wbtn" type="button" data-info="' + esc(h.localized_name) + '" style="width:100%;margin-top:12px">Сборка и контрпики ' + esc(h.localized_name) + "</button>";
     var cls = x.chance >= 58 ? "hi" : (x.chance >= 52 ? "mid" : "lo");
     return '<article class="card glass"><div class="ph"><img src="' + imgUrl(h) + '" alt="" loading="lazy"></div><div style="min-width:0">' +
       '<div class="top"><span class="rank">#' + (idx + 1) + '</span><span class="chance ' + cls + '">' + x.chance + "% шанс</span></div>" +
@@ -788,7 +808,7 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
     var items = [[0, "Любая роль"], [1, "Керри"], [2, "Мид"], [3, "Оффлейн"], [4, "Саппорт 4"], [5, "Саппорт 5"]];
     $("roles").innerHTML = items.map(function (r) { return '<button type="button" data-r="' + r[0] + '" aria-checked="' + (r[0] === role) + '">' + r[1] + "</button>"; }).join("");
   }
-  function renderPick() { renderSlots(); renderGrid(); scheduleRecommend(); }
+  function renderPick() { renderSlots(); renderGrid(); renderVs(); scheduleRecommend(); }
 
   function toggleHero(name) {
     var h = hero(name); if (!h) return;
@@ -873,7 +893,9 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
       '<div class="hint" style="margin-top:0">' + (h.primary_attr ? (ATTR_RU[h.primary_attr] || "") + " · " + (ATTACK_RU[h.attack_type] || "") + " · " : "") + "позиции: " + (pos.join(", ") || "—") +
       (h.picks ? " · винрейт " + Math.round(h.overall * 100) + "%" : "") + "</div>" +
       '<div class="btnrow"><button class="wbtn red" type="button" data-addas="enemy" data-name="' + esc(name) + '">Во враги</button><button class="wbtn blue" type="button" data-addas="ally" data-name="' + esc(name) + '">В союзники</button></div>' +
+      '<div class="label">Популярная сборка у профи</div><div id="buildBox"><div class="hint">Загружаю…</div></div>' +
       '<div class="label">Его контрят</div>' + mini(weakTo) + '<div class="label">Он силён против</div>' + mini(strongVs));
+    loadBuildInto(h);
   }
   function renderHeroesTab() {
     var qq = ($("hq").value || "").trim();
@@ -882,14 +904,102 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
   }
   $("hq").addEventListener("input", renderHeroesTab);
 
+  // ---------- «против чего собрать»: герои и предметы ----------
+  var ITEM_IMG = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/";
+  var VS = [
+    { id: "illus", t: "Иллюзии и призывы", weak: ["summons"], has: ["aoe", "pct"],
+      items: [["bfury", "удар по площади рубит иллюзии и существ"], ["mjollnir", "молнии бьют сразу несколько целей"], ["maelstrom", "дешёвая версия Mjollnir, тоже бьёт по нескольким"],
+              ["radiance", "аура жжёт всех вокруг"], ["shivas_guard", "волна урона по всем рядом"]] },
+    { id: "invis", t: "Невидимки", weak: ["invis"], has: ["detect"],
+      items: [["dust", "дешёвый порошок: показывает невидимых рядом"], ["ward_sentry", "вард, который видит невидимых"], ["gem", "показывает невидимых вокруг, пока он у тебя"]] },
+    { id: "phys", t: "Физ. урон", weak: ["phys"], has: ["tank", "physimm"],
+      items: [["ghost", "на время тебя нельзя бить атаками"], ["heavens_halberd", "обезоруживает врага — он не может бить"], ["blade_mail", "возвращает урон тому, кто бьёт"],
+              ["crimson_guard", "блокирует часть физ. урона всей команде"], ["assault", "броня тебе и союзникам, минус броня врагам"]] },
+    { id: "magic", t: "Маги", weak: ["magic", "spell"], has: ["magres", "silence"],
+      items: [["black_king_bar", "иммунитет к магии"], ["pipe", "щит от магии на всю команду"], ["glimmer_cape", "невидимость и щит от магии"],
+              ["lotus_orb", "отражает заклинания, кинутые в тебя"], ["eternal_shroud", "сопротивление магии"], ["orchid", "немота: враг не может колдовать"]] },
+    { id: "mobile", t: "Бегуны", weak: ["mobile"], has: ["stun"],
+      items: [["sheepstick", "превращает в свинью — никуда не убежит"], ["gungir", "держит на месте по площади"], ["abyssal_blade", "длинный стан на цель"], ["orchid", "немота: не прожмёт побег"]] },
+    { id: "heal", t: "Лечение", weak: [], has: [],
+      items: [["spirit_vessel", "сильно режет лечение врага"], ["skadi", "атаки режут лечение и замедляют"]] }
+  ];
+  var ITEM_BY_KEY = {}; Object.keys(ITEMS).forEach(function (id) { ITEM_BY_KEY[ITEMS[id][0]] = ITEMS[id]; });
+  function itemName(k) { return ITEM_BY_KEY[k] ? ITEM_BY_KEY[k][1] : k; }
+  // какие слабости есть у выбранных врагов
+  function enemyHits(v) {
+    return enemies.map(function (s) { return byId[s.id]; }).filter(function (e) {
+      if (!e) return false;
+      if (v.id === "heal") return HEALERS.indexOf(e.localized_name) !== -1;
+      var w = tagsOf(e.localized_name).weak; return v.weak.some(function (x) { return w.indexOf(x) !== -1; });
+    });
+  }
+  function renderVs() {
+    $("vsRow").innerHTML = VS.map(function (v) {
+      var n = enemyHits(v).length;
+      return '<button type="button" data-vs="' + v.id + '" class="' + (n ? "hot" : "") + '">' + v.t + (n ? " <b>" + n + "</b>" : "") + "</button>";
+    }).join("");
+  }
+  function openVs(id) {
+    var v = VS.filter(function (x) { return x.id === id; })[0]; if (!v) return;
+    var hits = enemyHits(v);
+    var hs = v.has.length ? heroes.filter(function (h) {
+      var t = tagsOf(h.localized_name).has; return v.has.some(function (x) { return t.indexOf(x) !== -1; }) && canPlay(h, role) &&
+        !enemies.concat(allies).some(function (s) { return s.id === h.id; });
+    }).sort(function (a, b) { return b.overall - a.overall; }).slice(0, 8) : [];
+    openSheet("vs", '<div class="shead"><div class="nm">Против: ' + esc(v.t.toLowerCase()) + '</div><button class="xbtn" type="button" data-close>✕</button></div>' +
+      (hits.length ? '<div class="info" style="margin-bottom:6px">У врагов это есть: <b>' + esc(hits.map(function (e) { return e.localized_name; }).join(", ")) + "</b></div>" : "") +
+      '<div class="label">Что купить</div><div class="items">' + v.items.map(function (it) {
+        return '<div class="item"><img src="' + ITEM_IMG + it[0] + '.png" alt="" loading="lazy"><div><b>' + esc(itemName(it[0])) + "</b><span>" + esc(it[1]) + "</span></div></div>";
+      }).join("") + "</div>" +
+      (hs.length ? '<div class="label">Каких героев взять' + (role ? " (" + POS_NAME[role] + ")" : "") + '</div><div class="mini">' + hs.map(function (x) {
+        return '<button type="button" data-info="' + esc(x.localized_name) + '"><img src="' + imgUrl(x) + '" alt="" loading="lazy">' + esc(x.localized_name) + "</button>";
+      }).join("") + "</div>" : ""));
+  }
+
+  // ---------- популярная сборка героя ----------
+  var BUILDS = {};
+  var SKIP = ["tpscroll", "ward_observer", "ward_sentry", "ward_dispenser", "smoke_of_deceit", "dust", "tango", "clarity", "flask", "enchanted_mango", "faerie_fire", "blood_grenade", "famango", "great_famango", "greater_famango"];
+  function fetchBuild(id) {
+    if (typeof id !== "number") return Promise.resolve(null);
+    if (BUILDS[id]) return Promise.resolve(BUILDS[id]);
+    return fetch("https://api.opendota.com/api/heroes/" + id + "/itemPopularity").then(function (r) { return r.json(); })
+      .then(function (d) { if (!d || !d.start_game_items) return null; return (BUILDS[id] = d); }).catch(function () { return null; });
+  }
+  function buildHtml(d) {
+    var stages = [["start_game_items", "Старт", 0], ["early_game_items", "Ранняя игра", 1], ["mid_game_items", "Середина", 2], ["late_game_items", "Поздняя игра", 3]];
+    var html = stages.map(function (st) {
+      var list = Object.keys(d[st[0]] || {}).map(function (id) { return { it: ITEMS[id], n: d[st[0]][id] }; })
+        .filter(function (x) {
+          if (!x.it || SKIP.indexOf(x.it[0]) !== -1) return false;
+          if (st[2] === 0) return true;
+          if (st[2] === 1) return x.it[3] || x.it[2] >= 400;
+          return x.it[3] || x.it[2] >= 2000;
+        })
+        .sort(function (a, b) { return b.n - a.n; }).slice(0, 6);
+      if (!list.length) return "";
+      return '<div class="stage"><span>' + st[1] + '</span><div class="row">' + list.map(function (x) {
+        return '<img src="' + ITEM_IMG + x.it[0] + '.png" alt="' + esc(x.it[1]) + '" title="' + esc(x.it[1]) + '" loading="lazy">';
+      }).join("") + "</div></div>";
+    }).join("");
+    return html || '<div class="hint">Пока нет данных.</div>';
+  }
+  function loadBuildInto(h) {
+    var box = $("buildBox"); if (!box) return;
+    fetchBuild(h.id).then(function (d) {
+      if (!$("buildBox") || sheetKind !== "hero") return;
+      $("buildBox").innerHTML = d ? buildHtml(d) : '<div class="hint">Сборку сейчас не загрузить, попробуй чуть позже.</div>';
+    });
+  }
+
   // ---------- нажатия ----------
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-hero],[data-slot],[data-add],[data-info],[data-setpos],[data-remove],[data-close],[data-addas],.sbtn,#roles button,.more,.tab");
+    var t = e.target.closest("[data-hero],[data-slot],[data-add],[data-info],[data-setpos],[data-remove],[data-close],[data-addas],[data-vs],.sbtn,#roles button,.more,.tab");
     if (!t) return;
     if (sheetKind && !t.closest(".sheet")) return;                 // окно открыто — фон не нажимается
     if (sheetKind && Date.now() - sheetAt < 350 && (t.dataset.hero || t.dataset.info)) return; // защита от случайного двойного нажатия
     if (t.dataset.hero) toggleHero(t.dataset.hero);
     else if (t.dataset.info) { tick(); openHeroSheet(t.dataset.info); }
+    else if (t.dataset.vs) { tick(); openVs(t.dataset.vs); }
     else if (t.dataset.slot !== undefined) { tick(); openSlotSheet(+t.dataset.slot); }
     else if (t.hasAttribute("data-add")) q.focus();
     else if (t.dataset.setpos !== undefined) {
