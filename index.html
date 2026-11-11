@@ -102,7 +102,9 @@
     .sec.warn .note { border-color: #fb7185; }
     .small { font-size: 11px; color: #9ca3af; }
     .loading { text-align: center; color: #9ca3af; padding: 24px; }
-    .foot { text-align: center; margin-top: 50px; }
+    .idea { display: block; margin: 36px auto 0; padding: 12px 20px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: #fff; font: inherit; font-size: 14px; cursor: pointer; }
+    .idea:active { transform: scale(0.97); }
+    .foot { text-align: center; margin-top: 22px; }
     .foot a { font-size: 11px; color: #fff; opacity: 0.3; text-decoration: none; }
     .modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); align-items: flex-end; z-index: 10; }
     .sheet { width: 100%; max-height: 82vh; overflow-y: auto; background: #12121c; border-radius: 20px 20px 0 0; padding: 14px; }
@@ -194,6 +196,7 @@
     <div class="hint" style="margin-top:12px">Данные OpenDota по недавним публичным матчам, обновляются сами. Фильтр по линии показывает героев, которые на ней играются, а винрейт у героя общий на выбранном ранге. При сортировке по винрейту скрыты редкие герои (меньше 1% игр).</div>
   </div>
 
+  <button class="idea" id="idea">💡 Предложить улучшение</button>
   <div class="foot"><a id="dc" href="#">discord</a></div>
 
   <div class="modal" id="modal">
@@ -477,6 +480,14 @@
     $("pclose").onclick = closePicker;
     $("modal").onclick = function (e) { if (e.target === $("modal")) closePicker(); };
     $("smodal").onclick = function (e) { if (e.target === $("smodal")) closeSlot(); };
+    $("idea").onclick = function () {
+      try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "idea", title: "Нажали Предложить улучшение", event: true }); } catch (e) {}
+      var msg = "Напиши свою идею или что бесит прямо в чат с ботом — одним сообщением. Я читаю всё лично 🙌";
+      try {
+        Telegram.WebApp.showPopup({ title: "Предложить улучшение", message: msg, buttons: [{ id: "ok", type: "default", text: "Написать" }, { type: "cancel" }] },
+          function (id) { if (id === "ok") Telegram.WebApp.close(); });
+      } catch (e) { alert(msg); }
+    };
     $("dc").onclick = function (e) {
       e.preventDefault();
       try { Telegram.WebApp.openLink(DISCORD_URL); } catch (err) { window.open(DISCORD_URL, "_blank"); }
