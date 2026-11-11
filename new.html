@@ -810,14 +810,18 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
   });
 
   // ---------- шторки ----------
-  var sheetKind = null;
+  var sheetKind = null, sheetAt = 0;
+  // пока открыто окно, всё что сзади «замораживаем», чтобы нажатие не попало в героя под окном
+  function freezeBack(on) {
+    ["app", "tabs"].forEach(function (id) { var el = $(id); if (!el) return; el.inert = on; el.style.pointerEvents = on ? "none" : ""; });
+  }
   function openSheet(kind, html) {
-    sheetKind = kind;
+    sheetKind = kind; sheetAt = Date.now(); freezeBack(true);
     $("sheetHost").innerHTML = '<div class="sheetwrap" id="sw"><div class="sheet glass" role="dialog" aria-modal="true"><div class="grab"></div>' + html + "</div></div>";
     $("sw").addEventListener("click", function (e) { if (e.target.id === "sw") closeSheet(); });
     try { TG.BackButton.show(); } catch (e) {}
   }
-  function closeSheet() { sheetKind = null; $("sheetHost").innerHTML = ""; try { TG.BackButton.hide(); } catch (e) {} }
+  function closeSheet() { sheetKind = null; freezeBack(false); $("sheetHost").innerHTML = ""; try { TG.BackButton.hide(); } catch (e) {} }
   try { TG.BackButton.onClick(closeSheet); } catch (e) {}
 
   function openSlotSheet(i) {
@@ -851,6 +855,7 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
     openSheet("all", '<div class="shead"><div class="nm">' + (side === "enemy" ? "Выбери врагов" : "Выбери союзников") + '</div><button class="xbtn" type="button" data-close>Готово</button></div>' +
       '<label class="search glass" for="aq" style="height:46px"><input id="aq" type="search" autocomplete="off" placeholder="Найти героя" aria-label="Найти героя"></label><div id="allBody"></div>');
     $("aq").addEventListener("input", function () { allQ = this.value.trim(); renderAllSheet(); });
+    if (matchMedia("(pointer: fine)").matches) setTimeout(function () { try { $("aq").focus(); } catch (e) {} }, 50); // на компьютере сразу можно печатать
     renderAllSheet();
   });
 
@@ -877,6 +882,8 @@ var SLUG = {"Anti-Mage":"antimage","Axe":"axe","Bane":"bane","Bloodseeker":"bloo
   document.addEventListener("click", function (e) {
     var t = e.target.closest("[data-hero],[data-slot],[data-add],[data-info],[data-setpos],[data-remove],[data-close],[data-addas],.sbtn,#roles button,.more,.tab");
     if (!t) return;
+    if (sheetKind && !t.closest(".sheet")) return;                 // окно открыто — фон не нажимается
+    if (sheetKind && Date.now() - sheetAt < 350 && (t.dataset.hero || t.dataset.info)) return; // защита от случайного двойного нажатия
     if (t.dataset.hero) toggleHero(t.dataset.hero);
     else if (t.dataset.info) { tick(); openHeroSheet(t.dataset.info); }
     else if (t.dataset.slot !== undefined) { tick(); openSlotSheet(+t.dataset.slot); }
